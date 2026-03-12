@@ -919,6 +919,27 @@ const isDone = (t: Tarefa) => (t as any).concluida === true || normalizeStatus(t
 const isDoing = (t: Tarefa) => normalizeStatus(t.status) === 'EM EXECUCAO';
 const isNotStarted = (t: Tarefa) => normalizeStatus(t.status) === 'NAO INICIADA';
 
+type DeadlineStatus = 'OVERDUE' | 'TODAY' | 'FUTURE' | 'NO_DATE' | 'COMPLETED';
+
+const getDeadlineStatus = (task: Tarefa): DeadlineStatus => {
+  if (isDone(task)) return 'COMPLETED';
+  if (!task.data_termino) return 'NO_DATE';
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const parts = task.data_termino.split('-');
+  if (parts.length !== 3) return 'NO_DATE';
+
+  const [year, month, day] = parts.map(Number);
+  const taskDate = new Date(year, month - 1, day);
+  taskDate.setHours(0, 0, 0, 0);
+
+  if (taskDate < today) return 'OVERDUE';
+  if (taskDate.getTime() === today.getTime()) return 'TODAY';
+  return 'FUTURE';
+};
+
 const getPriorityColor = (p: string) => {
   switch (p) {
     case 'P1':
@@ -946,6 +967,40 @@ const getStatusColor = (s: string) => {
   }
 };
 
+const DeadlineIndicator: React.FC<{ status: DeadlineStatus }> = ({ status }) => {
+  if (status === 'OVERDUE') {
+    return (
+      <div className="group relative inline-flex items-center ml-1">
+        <span className="text-red-500 cursor-help text-xs">🔴</span>
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block w-max px-2 py-1 bg-brand-black text-white text-[10px] font-bold rounded shadow-lg border border-brand-gray z-50">
+          Atrasada
+        </div>
+      </div>
+    );
+  }
+  if (status === 'TODAY') {
+    return (
+      <div className="group relative inline-flex items-center ml-1">
+        <span className="text-yellow-500 cursor-help text-xs">🟡</span>
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block w-max px-2 py-1 bg-brand-black text-white text-[10px] font-bold rounded shadow-lg border border-brand-gray z-50">
+          Vence hoje
+        </div>
+      </div>
+    );
+  }
+  if (status === 'FUTURE') {
+    return (
+      <div className="group relative inline-flex items-center ml-1">
+        <span className="text-green-500 cursor-help text-xs">🟢</span>
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block w-max px-2 py-1 bg-brand-black text-white text-[10px] font-bold rounded shadow-lg border border-brand-gray z-50">
+          Dentro do prazo
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 interface TaskCardProps {
   task: Tarefa;
   isViewer: boolean;
@@ -967,6 +1022,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onViewAttachments,
   onViewObservation
 }) => {
+  const deadlineStatus = getDeadlineStatus(task);
+
   return (
     <div className="bg-brand-dark border border-brand-gray rounded-xl p-4 space-y-4 shadow-sm">
       <div className="flex justify-between items-start gap-2">
@@ -1018,7 +1075,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
         </div>
         <div>
           <span className="block text-[10px] font-bold text-brand-text-muted uppercase tracking-wider mb-0.5">Término</span>
-          <span className="text-xs text-white">{task.data_termino || '-'}</span>
+          <span className="text-xs text-white flex items-center gap-1">
+            {task.data_termino || '-'}
+            {task.data_termino && <DeadlineIndicator status={deadlineStatus} />}
+          </span>
         </div>
         <div className="col-span-2">
           <span className="block text-[10px] font-bold text-brand-text-muted uppercase tracking-wider mb-0.5">Produtos</span>
@@ -1086,10 +1146,27 @@ export const TasksTable: React.FC<TasksTableProps> = ({
   const [viewingObservation, setViewingObservation] = useState<string | null>(null);
 
   const filteredTasks = useMemo(() => {
-    return tasks.filter(task => {
-      if (priorityFilter === "ALL") return true;
-      return task.prioridade === priorityFilter;
-    });
+    const priorityOrder: Record<string, number> = { P1: 1, P2: 2, P3: 3 };
+    const deadlineOrder: Record<DeadlineStatus, number> = { OVERDUE: 1, TODAY: 2, FUTURE: 3, NO_DATE: 4, COMPLETED: 5 };
+
+    return [...tasks]
+      .filter(task => {
+        if (priorityFilter === "ALL") return true;
+        return task.prioridade === priorityFilter;
+      })
+      .sort((a, b) => {
+        const orderA = priorityOrder[a.prioridade as keyof typeof priorityOrder] || 99;
+        const orderB = priorityOrder[b.prioridade as keyof typeof priorityOrder] || 99;
+        
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
+
+        const statusA = getDeadlineStatus(a);
+        const statusB = getDeadlineStatus(b);
+        
+        return deadlineOrder[statusA] - deadlineOrder[statusB];
+      });
   }, [tasks, priorityFilter]);
 
   // ✅ Contadores corrigidos (exclui "NÃO APLICA" e normaliza)
@@ -1402,6 +1479,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
 
               {filteredTasks.map((task, idx) => {
                 const rowClass = idx % 2 === 0 ? 'bg-brand-dark' : 'bg-brand-black';
+                const deadlineStatus = getDeadlineStatus(task);
 
                 return (
                   <tr key={task.id} className={`${rowClass} hover:bg-brand-gray/50 transition-colors group`}>
@@ -1435,7 +1513,12 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                       </span>
                     </td>
                     <td className="px-4 py-3 text-brand-text-muted text-xs text-center whitespace-nowrap">{task.data_tarefa || '-'}</td>
-                    <td className="px-4 py-3 text-brand-text-muted text-xs text-center whitespace-nowrap">{task.data_termino || '-'}</td>
+                    <td className="px-4 py-3 text-brand-text-muted text-xs text-center whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-1">
+                        {task.data_termino || '-'}
+                        {task.data_termino && <DeadlineIndicator status={deadlineStatus} />}
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.aplicacao || ''}>{task.aplicacao || '-'}</td>
                     <td className="px-4 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.produtos || ''}>{task.produtos || '-'}</td>
                     <td className="px-4 py-3 text-brand-text-muted text-xs max-w-[250px]">

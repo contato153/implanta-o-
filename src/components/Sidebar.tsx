@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BarChart2, CheckSquare, Users, LogOut } from 'lucide-react';
+import { LayoutDashboard, BarChart2, CheckSquare, Users, LogOut, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { ControlPanel } from './ControlPanel';
 import { useCompany } from '../context/CompanyContext';
@@ -86,6 +86,19 @@ export function Sidebar() {
         >
           <BarChart2 size={20} />
           <span className="font-medium">Dashboard</span>
+        </NavLink>
+        <NavLink
+          to="/consultar-cnpj"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+              isActive
+                ? 'text-brand-accent bg-brand-gray shadow-md'
+                : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
+            }`
+          }
+        >
+          <Search size={20} />
+          <span className="font-medium">Consultar CNPJ</span>
         </NavLink>
         <button
           onClick={handleTasksClick}

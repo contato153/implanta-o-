@@ -5,6 +5,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Users } from './pages/Users';
 import { ProjectTasks } from './pages/ProjectTasks';
 import { ProductivityDashboard } from './pages/ProductivityDashboard';
+import { CnpjConsultation } from './pages/CnpjConsultation';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ProtectedLayout } from './components/ProtectedLayout';
 import { AuthProvider } from './context/AuthContext';
@@ -23,6 +24,7 @@ function App() {
                 <Route element={<ProtectedRoute />}>
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/dashboard-produtividade" element={<ProductivityDashboard />} />
+                  <Route path="/consultar-cnpj" element={<CnpjConsultation />} />
                   <Route path="/project/:projectId/tasks" element={<ProjectTasks />} />
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 </Route>

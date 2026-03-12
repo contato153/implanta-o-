@@ -22,7 +22,9 @@ interface AddCompanyModalProps {
 
 export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClose, onSuccess, companyId }) => {
   const [loading, setLoading] = useState(false);
+  const [loadingCnpj, setLoadingCnpj] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notFoundFields, setNotFoundFields] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
     codigo_interno: '',
@@ -53,6 +55,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
         loadCompanyData(companyId);
       } else {
         // Reset form for new company
+        setNotFoundFields([]);
         setFormData({
           codigo_interno: '',
           razao_social: '',
@@ -137,7 +140,13 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (name === 'cnpj') {
-      setFormData(prev => ({ ...prev, [name]: formatCNPJ(value) }));
+      const formatted = formatCNPJ(value);
+      setFormData(prev => ({ ...prev, [name]: formatted }));
+      
+      const cleanCnpj = formatted.replace(/\D/g, '');
+      if (cleanCnpj.length === 14) {
+        fetchCnpjData(cleanCnpj);
+      }
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -147,6 +156,127 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
     const newSocios = [...formData.socios];
     newSocios[index] = { ...newSocios[index], [field]: value };
     setFormData(prev => ({ ...prev, socios: newSocios }));
+  };
+
+  const fetchCnpjData = async (cnpj: string) => {
+    if (cnpj.length !== 14) return;
+
+    setLoadingCnpj(true);
+    setError(null);
+    setNotFoundFields([]);
+    try {
+      // Tenta primeiro a API publica.cnpj.ws que costuma retornar Inscrição Estadual
+      try {
+        const responseWs = await fetch(`https://publica.cnpj.ws/cnpj/${cnpj}`);
+        if (responseWs.ok) {
+          const dataWs = await responseWs.json();
+          const ie = dataWs.estabelecimento?.inscricoes_estaduais?.[0]?.inscricao_estadual || '';
+          const im = dataWs.estabelecimento?.inscricao_municipal || '';
+          
+          const missing: string[] = [];
+          if (!dataWs.razao_social) missing.push('razao_social');
+          if (!dataWs.estabelecimento?.nome_fantasia && !dataWs.razao_social) missing.push('nome_fantasia');
+          if (!ie) missing.push('ie');
+          if (!im) missing.push('im');
+
+          setFormData(prev => {
+            let regime = prev.regime_atual;
+            let foundRegime = false;
+            if (dataWs.simples) {
+              if (dataWs.simples.optante_mei === true || dataWs.simples.optante_mei === 'S' || dataWs.simples.optante_mei === 'Sim') {
+                regime = 'MEI';
+                foundRegime = true;
+              } else if (dataWs.simples.optante_simples === true || dataWs.simples.optante_simples === 'S' || dataWs.simples.optante_simples === 'Sim') {
+                regime = 'Simples Nacional';
+                foundRegime = true;
+              }
+            }
+            if (!foundRegime) missing.push('regime_atual');
+
+            const sociosWs = dataWs.socios || [];
+            const newSocios = [...prev.socios];
+            for (let i = 0; i < 3; i++) {
+              const socioName = sociosWs[i]?.nome || sociosWs[i]?.nome_socio || sociosWs[i]?.razao_social || '';
+              if (socioName) {
+                newSocios[i] = { ...newSocios[i], nome: socioName };
+              } else if (i === 0) {
+                missing.push(`socio_${i}`);
+              }
+            }
+
+            return {
+              ...prev,
+              razao_social: dataWs.razao_social || prev.razao_social,
+              nome_fantasia: dataWs.estabelecimento?.nome_fantasia || dataWs.razao_social || prev.nome_fantasia,
+              ie: ie || prev.ie,
+              im: im || prev.im,
+              regime_atual: regime,
+              socios: newSocios,
+            };
+          });
+          setNotFoundFields(missing);
+          setLoadingCnpj(false);
+          return; // Sucesso, não precisa chamar a API de fallback
+        }
+      } catch (e) {
+        console.warn("Falha na API publica.cnpj.ws, tentando fallback...", e);
+      }
+
+      // Fallback para BrasilAPI caso a primeira falhe (ex: limite de requisições)
+      const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+      if (!response.ok) {
+        throw new Error('CNPJ não encontrado na base de dados.');
+      }
+      const data = await response.json();
+      
+      const missing: string[] = ['ie', 'im'];
+      if (!data.razao_social) missing.push('razao_social');
+      if (!data.nome_fantasia && !data.razao_social) missing.push('nome_fantasia');
+
+      setFormData(prev => {
+        let regime = prev.regime_atual;
+        let foundRegime = false;
+        if (data.opcao_pelo_mei === true || data.opcao_pelo_mei === 'S' || data.opcao_pelo_mei === 'Sim') {
+          regime = 'MEI';
+          foundRegime = true;
+        } else if (data.opcao_pelo_simples === true || data.opcao_pelo_simples === 'S' || data.opcao_pelo_simples === 'Sim') {
+          regime = 'Simples Nacional';
+          foundRegime = true;
+        }
+        if (!foundRegime) missing.push('regime_atual');
+
+        const sociosApi = data.qsa || [];
+        const newSocios = [...prev.socios];
+        for (let i = 0; i < 3; i++) {
+          const socioName = sociosApi[i]?.nome_socio || sociosApi[i]?.nome || '';
+          if (socioName) {
+            newSocios[i] = { ...newSocios[i], nome: socioName };
+          } else if (i === 0) {
+            missing.push(`socio_${i}`);
+          }
+        }
+
+        return {
+          ...prev,
+          razao_social: data.razao_social || prev.razao_social,
+          nome_fantasia: data.nome_fantasia || data.razao_social || prev.nome_fantasia,
+          regime_atual: regime,
+          socios: newSocios,
+        };
+      });
+      setNotFoundFields(missing);
+    } catch (err: any) {
+      setError(err.message || 'Erro ao consultar CNPJ.');
+    } finally {
+      setLoadingCnpj(false);
+    }
+  };
+
+  const handleCnpjBlur = () => {
+    const cleanCnpj = formData.cnpj.replace(/\D/g, '');
+    if (cleanCnpj.length === 14) {
+      fetchCnpjData(cleanCnpj);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -261,17 +391,25 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   required
                 />
               </div>
-              <div className="md:col-span-2">
+              <div className="md:col-span-2 relative">
                 <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">CNPJ *</label>
-                <input
-                  type="text"
-                  name="cnpj"
-                  value={formData.cnpj}
-                  onChange={handleChange}
-                  placeholder="00.000.000/0000-00"
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="cnpj"
+                    value={formData.cnpj}
+                    onChange={handleChange}
+                    onBlur={handleCnpjBlur}
+                    placeholder="00.000.000/0000-00"
+                    className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                    required
+                  />
+                  {loadingCnpj && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div className="w-4 h-4 border-2 border-brand-accent border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -286,6 +424,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                   required
                 />
+                {notFoundFields.includes('razao_social') && <span className="text-[10px] text-brand-accent mt-1 block">Não encontrado automaticamente</span>}
               </div>
               <div>
                 <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Nome Fantasia *</label>
@@ -297,6 +436,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                   required
                 />
+                {notFoundFields.includes('nome_fantasia') && <span className="text-[10px] text-brand-accent mt-1 block">Não encontrado automaticamente</span>}
               </div>
             </div>
 
@@ -311,6 +451,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                   required
                 />
+                {notFoundFields.includes('ie') && <span className="text-[10px] text-brand-accent mt-1 block">Não encontrado automaticamente</span>}
               </div>
               <div>
                 <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Inscrição Municipal *</label>
@@ -322,6 +463,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                   required
                 />
+                {notFoundFields.includes('im') && <span className="text-[10px] text-brand-accent mt-1 block">Não encontrado automaticamente</span>}
               </div>
             </div>
 
@@ -341,6 +483,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   <option value="Lucro Real">Lucro Real</option>
                   <option value="MEI">MEI</option>
                 </select>
+                {notFoundFields.includes('regime_atual') && <span className="text-[10px] text-brand-accent mt-1 block">Não encontrado automaticamente</span>}
               </div>
               <div>
                 <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Regime Novo *</label>
@@ -471,6 +614,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                       className="w-full px-4 py-2 bg-brand-dark border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                       required={index === 0}
                     />
+                    {notFoundFields.includes(`socio_${index}`) && <span className="text-[10px] text-brand-accent mt-1 block">Não encontrado automaticamente</span>}
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">WhatsApp</label>
