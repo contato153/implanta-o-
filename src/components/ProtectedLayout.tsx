@@ -4,9 +4,9 @@ import { Sidebar } from './Sidebar';
 
 export function ProtectedLayout() {
   return (
-    <div className="flex min-h-screen bg-brand-black">
+    <div className="flex min-h-screen bg-brand-black overflow-x-hidden">
       <Sidebar />
-      <main className="flex-1 ml-[260px]">
+      <main className="flex-1 overflow-x-hidden">
         <Outlet />
       </main>
     </div>

@@ -21,7 +21,17 @@ export function Login() {
       if (error) throw error;
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Falha ao fazer login. Verifique suas credenciais.');
+      console.error('Login error:', err);
+      
+      let errorMessage = 'Falha ao fazer login. Verifique suas credenciais.';
+      
+      if (err.message === 'Failed to fetch') {
+        errorMessage = 'Erro de conexão com o servidor. Verifique se as variáveis de ambiente do Supabase estão configuradas corretamente no Vercel.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

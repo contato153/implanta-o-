@@ -13,70 +13,33 @@ import {
   deleteTaskAttachment 
 } from '../services/api';
 
-const ObservationCell = ({ text }: { text: string }) => {
-  const [showModal, setShowModal] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
-
-  if (!text) return <td className="px-4 py-3 text-brand-text-muted">-</td>;
+const ObservationCell = ({ text, onClick }: { text: string; onClick: () => void }) => {
+  if (!text) return (
+    <div className="flex justify-center">
+      <span className="text-brand-text-muted">*</span>
+    </div>
+  );
 
   return (
-    <>
-      <td
-        className="px-4 py-3 text-brand-text-muted relative group align-top"
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
+    <div className="flex items-center gap-2 min-w-0 w-full">
+      <button 
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick();
+        }}
+        className="p-1 text-brand-text-muted hover:text-brand-accent hover:bg-brand-black border border-transparent hover:border-brand-gray rounded transition-all flex-shrink-0"
+        title="Ver observação completa"
       >
-        <div
-          className="flex items-center justify-between gap-2 max-w-xs cursor-pointer"
-          onClick={() => setShowModal(true)}
-        >
-          <span className="truncate block flex-1">{text}</span>
-          <Eye className="w-4 h-4 text-brand-text-muted opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-        </div>
-
-        {showTooltip && !showModal && (
-          <div className="absolute z-50 right-0 top-full mt-1 w-72 p-3 bg-brand-black text-white text-xs rounded-lg shadow-xl whitespace-normal break-words pointer-events-none border border-brand-gray">
-            {text.length > 200 ? text.slice(0, 200) + '... (clique para ver mais)' : text}
-          </div>
-        )}
-      </td>
-
-      {showModal && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
-          onClick={() => setShowModal(false)}
-        >
-          <div
-            className="bg-brand-dark rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col transform transition-all scale-100 border border-brand-gray"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center p-4 border-b border-brand-gray">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <Eye className="w-5 h-5 text-brand-accent" />
-                Observações Completas
-              </h3>
-              <button
-                onClick={() => setShowModal(false)}
-                className="text-brand-text-muted hover:text-white p-1 rounded-full hover:bg-brand-gray transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto custom-scrollbar">
-              <p className="whitespace-pre-wrap text-brand-text-muted leading-relaxed text-sm md:text-base">{text}</p>
-            </div>
-            <div className="p-4 border-t border-brand-gray bg-brand-black rounded-b-xl flex justify-end">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 bg-brand-gray border border-brand-gray text-white font-medium rounded-lg hover:bg-brand-dark transition-colors shadow-sm"
-              >
-                Fechar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+        <Eye className="w-3.5 h-3.5" />
+      </button>
+      <span 
+        className="truncate text-brand-text-muted text-xs flex-1 min-w-0" 
+        title={text}
+        style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+      >
+        {text}
+      </span>
+    </div>
   );
 };
 
@@ -218,6 +181,48 @@ const TaskAttachmentsSection: React.FC<TaskAttachmentsSectionProps> = ({ taskId,
     }
   };
 
+  const handleDownload = async (file: AnexoTarefa) => {
+    try {
+      const supabase = getSupabase();
+      
+      // Extrair o caminho do arquivo da URL salva
+      // Formato esperado: .../storage/v1/object/public/task-files/projeto-id/tarefa-id/nome-arquivo.ext
+      const urlParts = file.file_url.split('task-files/');
+      if (urlParts.length <= 1) {
+        // Se não conseguir extrair o caminho, tenta abrir a URL original
+        window.open(file.file_url, '_blank');
+        return;
+      }
+      
+      const filePath = urlParts[1];
+      
+      // Tenta obter uma URL assinada (funciona para buckets públicos e privados)
+      const { data, error } = await supabase.storage
+        .from('task-files')
+        .createSignedUrl(filePath, 60);
+        
+      if (error) {
+        console.warn('Erro ao criar URL assinada, tentando URL pública:', error);
+        const { data: publicData } = supabase.storage
+          .from('task-files')
+          .getPublicUrl(filePath);
+        
+        if (publicData?.publicUrl) {
+          window.open(publicData.publicUrl, '_blank');
+        } else {
+          window.open(file.file_url, '_blank');
+        }
+      } else if (data?.signedUrl) {
+        window.open(data.signedUrl, '_blank');
+      } else {
+        window.open(file.file_url, '_blank');
+      }
+    } catch (error) {
+      console.error('Erro ao processar download:', error);
+      window.open(file.file_url, '_blank');
+    }
+  };
+
   const getFileIcon = (fileName: string) => {
     const ext = fileName.split('.').pop()?.toLowerCase();
     if (['png', 'jpg', 'jpeg', 'gif', 'svg'].includes(ext || '')) return <ImageIcon className="w-4 h-4" />;
@@ -283,23 +288,22 @@ const TaskAttachmentsSection: React.FC<TaskAttachmentsSectionProps> = ({ taskId,
               </div>
 
               <div className="flex items-center gap-1">
-                <a
-                  href={file.file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => handleDownload(file)}
                   className="p-2 text-brand-text-muted hover:text-brand-accent hover:bg-brand-gray rounded-lg transition-all"
                   title="Abrir"
                 >
                   <Eye className="w-4 h-4" />
-                </a>
-                <a
-                  href={file.file_url}
-                  download={file.file_name}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDownload(file)}
                   className="p-2 text-brand-text-muted hover:text-green-400 hover:bg-brand-gray rounded-lg transition-all"
                   title="Baixar"
                 >
                   <Download className="w-4 h-4" />
-                </a>
+                </button>
                 {canDelete(file) && (
                   <button
                     type="button"
@@ -915,6 +919,147 @@ const isDone = (t: Tarefa) => (t as any).concluida === true || normalizeStatus(t
 const isDoing = (t: Tarefa) => normalizeStatus(t.status) === 'EM EXECUCAO';
 const isNotStarted = (t: Tarefa) => normalizeStatus(t.status) === 'NAO INICIADA';
 
+const getPriorityColor = (p: string) => {
+  switch (p) {
+    case 'P1':
+      return 'bg-red-100 text-red-800 border-red-200';
+    case 'P2':
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    case 'P3':
+      return 'bg-green-100 text-green-800 border-green-200';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+const getStatusColor = (s: string) => {
+  const ns = normalizeStatus(s);
+  switch (ns) {
+    case 'CONCLUIDA':
+      return 'bg-green-100 text-green-800 border-green-200';
+    case 'EM EXECUCAO':
+      return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'NAO APLICA':
+      return 'bg-gray-200 text-gray-600 border-gray-300';
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-200';
+  }
+};
+
+interface TaskCardProps {
+  task: Tarefa;
+  isViewer: boolean;
+  canEditAll: boolean;
+  attachmentCount: number;
+  onEdit: (task: Tarefa) => void;
+  onDelete: (task: Tarefa) => void;
+  onViewAttachments: (task: Tarefa) => void;
+  onViewObservation: (text: string) => void;
+}
+
+const TaskCard: React.FC<TaskCardProps> = ({ 
+  task, 
+  isViewer, 
+  canEditAll, 
+  attachmentCount,
+  onEdit,
+  onDelete,
+  onViewAttachments,
+  onViewObservation
+}) => {
+  return (
+    <div className="bg-brand-dark border border-brand-gray rounded-xl p-4 space-y-4 shadow-sm">
+      <div className="flex justify-between items-start gap-2">
+        <div className="flex flex-col gap-2 flex-1">
+          <div className="flex items-center gap-2">
+            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getPriorityColor(task.prioridade)}`}>
+              {task.prioridade}
+            </span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusColor(task.status)}`}>
+              {task.status}
+            </span>
+          </div>
+          <h4 className="text-white font-bold text-sm leading-tight">{task.descricao}</h4>
+        </div>
+        {!isViewer && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => onEdit(task)}
+              className="text-brand-accent hover:text-brand-accent-hover p-2 rounded bg-brand-black border border-brand-gray"
+              title="Editar"
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+            {canEditAll && (
+              <button
+                onClick={() => onDelete(task)}
+                className="text-red-500 hover:text-red-400 p-2 rounded bg-brand-black border border-brand-gray"
+                title="Excluir"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-2 border-t border-brand-gray/50">
+        <div>
+          <span className="block text-[10px] font-bold text-brand-text-muted uppercase tracking-wider mb-0.5">Proprietário</span>
+          <span className="text-xs text-white">{task.proprietario || '-'}</span>
+        </div>
+        <div>
+          <span className="block text-[10px] font-bold text-brand-text-muted uppercase tracking-wider mb-0.5">Aplicação</span>
+          <span className="text-xs text-white">{task.aplicacao || '-'}</span>
+        </div>
+        <div>
+          <span className="block text-[10px] font-bold text-brand-text-muted uppercase tracking-wider mb-0.5">Início</span>
+          <span className="text-xs text-white">{task.data_tarefa || '-'}</span>
+        </div>
+        <div>
+          <span className="block text-[10px] font-bold text-brand-text-muted uppercase tracking-wider mb-0.5">Término</span>
+          <span className="text-xs text-white">{task.data_termino || '-'}</span>
+        </div>
+        <div className="col-span-2">
+          <span className="block text-[10px] font-bold text-brand-text-muted uppercase tracking-wider mb-0.5">Produtos</span>
+          <span className="text-xs text-white">{task.produtos || '-'}</span>
+        </div>
+        {task.observacoes && (
+          <div className="col-span-2">
+            <span className="block text-[10px] font-bold text-brand-text-muted uppercase tracking-wider mb-0.5">Observações</span>
+            <div className="flex items-center gap-2 bg-brand-black/30 p-2 rounded border border-brand-gray/30">
+              <button
+                onClick={() => onViewObservation(task.observacoes || '')}
+                className="p-1 text-brand-accent hover:text-brand-accent-hover flex-shrink-0"
+                title="Ver observação completa"
+              >
+                <Eye className="w-4 h-4" />
+              </button>
+              <p 
+                className="text-xs text-brand-text-muted truncate flex-1"
+                style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+              >
+                {task.observacoes}
+              </p>
+            </div>
+          </div>
+        )}
+        {attachmentCount > 0 && (
+          <div className="col-span-2 pt-1">
+            <button 
+              onClick={() => onViewAttachments(task)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-brand-black rounded-lg text-xs text-brand-accent border border-brand-gray hover:border-brand-accent transition-all"
+            >
+              <Paperclip className="w-3.5 h-3.5" />
+              {attachmentCount} Anexo(s)
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export const TasksTable: React.FC<TasksTableProps> = ({
   tasks,
   projectId,
@@ -936,6 +1081,8 @@ export const TasksTable: React.FC<TasksTableProps> = ({
   const canCreateTasks = role === 'admin' || role === 'manager';
   const canImportStandard = role === 'admin' || role === 'manager';
   const isViewer = role === 'viewer';
+
+  const [viewingObservation, setViewingObservation] = useState<string | null>(null);
 
   // ✅ Contadores corrigidos (exclui "NÃO APLICA" e normaliza)
   const { totalValid, completed, inProgress, notStarted, notApplicable, percentCompleted } = useMemo(() => {
@@ -1094,33 +1241,6 @@ export const TasksTable: React.FC<TasksTableProps> = ({
     }
   };
 
-  const getPriorityColor = (p: string) => {
-    switch (p) {
-      case 'P1':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'P2':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'P3':
-        return 'bg-green-100 text-green-800 border-green-200';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusColor = (s: string) => {
-    const ns = normalizeStatus(s);
-    switch (ns) {
-      case 'CONCLUIDA':
-        return 'bg-green-100 text-green-800';
-      case 'EM EXECUCAO':
-        return 'bg-blue-100 text-blue-800';
-      case 'NAO APLICA':
-        return 'bg-gray-200 text-gray-600';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   return (
     <div className="mt-8 relative">
       {toast && (
@@ -1170,26 +1290,62 @@ export const TasksTable: React.FC<TasksTableProps> = ({
             className="flex items-center px-3 py-2 bg-brand-accent text-brand-black text-sm font-medium rounded hover:bg-brand-accent-hover transition-colors"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Adicionar Tarefa
+            Nova Tarefa
           </button>
         )}
       </div>
 
-      <div className="bg-brand-dark shadow border border-brand-gray rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-brand-gray text-sm">
-            <thead className="bg-brand-black">
+      <div className="bg-brand-dark shadow overflow-hidden border border-brand-gray rounded-lg flex flex-col">
+        {/* Mobile View: Cards */}
+        <div className="block lg:hidden p-4 space-y-4">
+          {tasks.length === 0 ? (
+            <div className="px-4 py-12 text-center text-brand-text-muted">
+              <div className="flex flex-col items-center justify-center">
+                <p className="text-lg font-medium mb-2 text-white">Nenhuma tarefa cadastrada</p>
+                <p className="text-sm mb-4 text-gray-500">Este projeto ainda não possui tarefas.</p>
+                {canImportStandard && onImport && (
+                  <button
+                    onClick={onImport}
+                    className="flex items-center px-4 py-2 bg-brand-gray text-brand-accent text-sm font-medium rounded-lg hover:bg-brand-black transition-colors border border-brand-gray"
+                  >
+                    <FileDown className="w-4 h-4 mr-2" />
+                    Importar Padrão
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            tasks.map((task) => (
+              <TaskCard 
+                key={task.id} 
+                task={task} 
+                isViewer={isViewer}
+                canEditAll={canEditAll}
+                attachmentCount={attachmentCounts[task.id] || 0}
+                onEdit={handleEditClick}
+                onDelete={handleDeleteClick}
+                onViewAttachments={setViewingAttachmentsTask}
+                onViewObservation={setViewingObservation}
+              />
+            ))
+          )}
+        </div>
+
+        {/* Desktop View: Table */}
+        <div className="hidden lg:block overflow-x-auto custom-scrollbar">
+          <table className="min-w-full divide-y divide-brand-gray text-sm relative border-collapse">
+            <thead className="bg-brand-black sticky top-0 z-30 shadow-sm">
               <tr>
-                <th className="px-2 py-2 sm:px-4 sm:py-3 text-left font-bold text-brand-text-muted uppercase tracking-wider w-16 sm:w-20">Prior.</th>
-                <th className="px-2 py-2 sm:px-4 sm:py-3 text-left font-bold text-brand-text-muted uppercase tracking-wider">Tarefa</th>
-                <th className="px-2 py-2 sm:px-4 sm:py-3 text-left font-bold text-brand-text-muted uppercase tracking-wider hidden lg:table-cell">Proprietário</th>
-                <th className="px-2 py-2 sm:px-4 sm:py-3 text-left font-bold text-brand-text-muted uppercase tracking-wider w-24 sm:w-32">Status</th>
-                <th className="px-2 py-2 sm:px-4 sm:py-3 text-left font-bold text-brand-text-muted uppercase tracking-wider">Data</th>
-                <th className="px-2 py-2 sm:px-4 sm:py-3 text-left font-bold text-brand-text-muted uppercase tracking-wider hidden md:table-cell">Término</th>
-                <th className="px-2 py-2 sm:px-4 sm:py-3 text-left font-bold text-brand-text-muted uppercase tracking-wider hidden xl:table-cell">Aplicação</th>
-                <th className="px-2 py-2 sm:px-4 sm:py-3 text-left font-bold text-brand-text-muted uppercase tracking-wider hidden xl:table-cell">Produtos</th>
-                <th className="px-2 py-2 sm:px-4 sm:py-3 text-left font-bold text-brand-text-muted uppercase tracking-wider hidden sm:table-cell">Observações</th>
-                {!isViewer && <th className="px-2 py-2 sm:px-4 sm:py-3 text-center font-bold text-brand-text-muted uppercase tracking-wider w-20 sm:w-24 sticky right-0 z-20 border-l border-brand-gray bg-brand-black">Ações</th>}
+                <th className="px-3 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider w-[60px] bg-brand-black sticky left-0 z-40 border-r border-brand-gray/30">Prior.</th>
+                <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider w-[25%] max-w-[300px] min-w-[200px] bg-brand-black sticky left-[60px] z-40 border-r border-brand-gray/30">Tarefa</th>
+                <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider min-w-[100px]">Proprietário</th>
+                <th className="px-4 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[120px]">Status</th>
+                <th className="px-4 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[90px]">Início</th>
+                <th className="px-4 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[90px]">Término</th>
+                <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider min-w-[100px]">Aplicação</th>
+                <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider min-w-[100px]">Produtos</th>
+                <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider min-w-[180px]">Observações</th>
+                {!isViewer && <th className="px-4 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[80px] bg-brand-black sticky right-0 z-40 border-l border-brand-gray/30">Ações</th>}
               </tr>
             </thead>
             <tbody className="bg-brand-dark divide-y divide-brand-gray">
@@ -1217,61 +1373,66 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                 const rowClass = idx % 2 === 0 ? 'bg-brand-dark' : 'bg-brand-black';
 
                 return (
-                  <tr key={task.id} className={`${rowClass} hover:bg-brand-gray transition-colors group`}>
-                    <td className="px-2 py-2 sm:px-4 sm:py-3 whitespace-nowrap">
-                      <span className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-[10px] sm:text-xs font-bold border ${getPriorityColor(task.prioridade)}`}>
+                  <tr key={task.id} className={`${rowClass} hover:bg-brand-gray/50 transition-colors group`}>
+                    <td className={`px-3 py-3 whitespace-nowrap sticky left-0 z-20 border-r border-brand-gray/10 ${rowClass} group-hover:bg-brand-gray transition-colors`}>
+                      <span className={`px-2 py-1 rounded text-[10px] font-bold border ${getPriorityColor(task.prioridade)}`}>
                         {task.prioridade}
                       </span>
                     </td>
-                    <td className="px-2 py-2 sm:px-4 sm:py-3 text-white font-medium">
+                    <td className={`px-4 py-3 text-white font-bold sticky left-[60px] z-20 border-r border-brand-gray/10 ${rowClass} group-hover:bg-brand-gray transition-colors w-[25%] max-w-[300px] min-w-[200px]`}>
                       <div className="flex items-center gap-2">
-                        <span className="truncate max-w-[120px] sm:max-w-none" title={task.descricao}>{task.descricao}</span>
+                        <span className="whitespace-normal break-words leading-[1.4]" title={task.descricao}>{task.descricao}</span>
                         {attachmentCounts[task.id] > 0 && (
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
                               setViewingAttachmentsTask(task);
                             }}
-                            className="flex items-center gap-1 px-1 py-0.5 bg-brand-gray/50 rounded text-[9px] sm:text-[10px] text-brand-accent border border-brand-accent/20 hover:bg-brand-gray hover:border-brand-accent transition-all cursor-pointer"
+                            className="flex items-center gap-1 px-1.5 py-0.5 bg-brand-gray/50 rounded text-[10px] text-brand-accent border border-brand-accent/20 hover:bg-brand-gray hover:border-brand-accent transition-all cursor-pointer flex-shrink-0"
                             title="Ver anexos"
                           >
-                            <Paperclip className="w-2.5 h-2.5 sm:w-3 h-3" />
+                            <Paperclip className="w-3 h-3" />
                             {attachmentCounts[task.id]}
                           </button>
                         )}
                       </div>
                     </td>
-                    <td className="px-2 py-2 sm:px-4 sm:py-3 text-brand-text-muted hidden lg:table-cell">{task.proprietario}</td>
-                    <td className="px-2 py-2 sm:px-4 sm:py-3 whitespace-nowrap">
-                      <span className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold ${getStatusColor(task.status)}`}>
+                    <td className="px-4 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.proprietario || ''}>{task.proprietario || '-'}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-center">
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-semibold border ${getStatusColor(task.status)}`}>
                         {task.status}
                       </span>
                     </td>
-                    <td className="px-2 py-2 sm:px-4 sm:py-3 text-brand-text-muted whitespace-nowrap text-xs sm:text-sm">{task.data_tarefa}</td>
-                    <td className="px-2 py-2 sm:px-4 sm:py-3 text-brand-text-muted whitespace-nowrap hidden md:table-cell text-xs sm:text-sm">{task.data_termino}</td>
-                    <td className="px-2 py-2 sm:px-4 sm:py-3 text-brand-text-muted hidden xl:table-cell">{task.aplicacao}</td>
-                    <td className="px-2 py-2 sm:px-4 sm:py-3 text-brand-text-muted hidden xl:table-cell">{task.produtos}</td>
-                    <td className="hidden sm:table-cell px-2 py-2 sm:px-4 sm:py-3">
-                      <ObservationCell text={task.observacoes || ''} />
+                    <td className="px-4 py-3 text-brand-text-muted text-xs text-center whitespace-nowrap">{task.data_tarefa || '-'}</td>
+                    <td className="px-4 py-3 text-brand-text-muted text-xs text-center whitespace-nowrap">{task.data_termino || '-'}</td>
+                    <td className="px-4 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.aplicacao || ''}>{task.aplicacao || '-'}</td>
+                    <td className="px-4 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.produtos || ''}>{task.produtos || '-'}</td>
+                    <td className="px-4 py-3 text-brand-text-muted text-xs max-w-[250px]">
+                      <ObservationCell 
+                        text={task.observacoes || ''} 
+                        onClick={() => setViewingObservation(task.observacoes || '')}
+                      />
                     </td>
                     {!isViewer && (
-                      <td className={`px-2 py-2 sm:px-4 sm:py-3 text-center whitespace-nowrap sticky right-0 z-10 border-l border-brand-gray ${rowClass} group-hover:bg-brand-gray transition-colors`}>
-                        <button
-                          onClick={() => handleEditClick(task)}
-                          className="text-brand-accent hover:text-brand-accent-hover mr-1 sm:mr-2 p-1 rounded hover:bg-brand-black"
-                          title="Editar"
-                        >
-                          <Edit2 className="w-3.5 h-3.5 sm:w-4 h-4" />
-                        </button>
-                        {canEditAll && (
+                      <td className={`px-4 py-3 text-center whitespace-nowrap sticky right-0 z-20 border-l border-brand-gray/10 ${rowClass} group-hover:bg-brand-gray transition-colors`}>
+                        <div className="flex items-center justify-center gap-1">
                           <button
-                            onClick={() => handleDeleteClick(task)}
-                            className="text-red-500 hover:text-red-400 p-1 rounded hover:bg-red-900/20"
-                            title="Excluir"
+                            onClick={() => handleEditClick(task)}
+                            className="text-brand-accent hover:text-brand-accent-hover p-1.5 rounded hover:bg-brand-black border border-transparent hover:border-brand-gray transition-all"
+                            title="Editar"
                           >
-                            <Trash2 className="w-3.5 h-3.5 sm:w-4 h-4" />
+                            <Edit2 className="w-3.5 h-3.5" />
                           </button>
-                        )}
+                          {canEditAll && (
+                            <button
+                              onClick={() => handleDeleteClick(task)}
+                              className="text-red-500 hover:text-red-400 p-1.5 rounded hover:bg-red-900/20 border border-transparent hover:border-red-900/30 transition-all"
+                              title="Excluir"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     )}
                   </tr>
@@ -1281,6 +1442,43 @@ export const TasksTable: React.FC<TasksTableProps> = ({
           </table>
         </div>
       </div>
+
+      {/* Observation Modal */}
+      {viewingObservation && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+          onClick={() => setViewingObservation(null)}
+        >
+          <div
+            className="bg-brand-dark rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col transform transition-all scale-100 border border-brand-gray"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center p-4 border-b border-brand-gray">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Eye className="w-5 h-5 text-brand-accent" />
+                Observações Completas
+              </h3>
+              <button
+                onClick={() => setViewingObservation(null)}
+                className="text-brand-text-muted hover:text-white p-1 rounded-full hover:bg-brand-gray transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto custom-scrollbar">
+              <p className="whitespace-pre-wrap text-brand-text-muted leading-relaxed text-sm md:text-base">{viewingObservation}</p>
+            </div>
+            <div className="p-4 border-t border-brand-gray bg-brand-black rounded-b-xl flex justify-end">
+              <button
+                onClick={() => setViewingObservation(null)}
+                className="px-4 py-2 bg-brand-gray border border-brand-gray text-white font-medium rounded-lg hover:bg-brand-dark transition-colors shadow-sm"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {editingTask && (
         <EditTaskModal 

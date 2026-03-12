@@ -9,7 +9,8 @@
   --color-brand-text-muted: #BDBDBD;
 }
 
-body {
+html, body {
+  overflow-x: hidden;
   background-color: var(--color-brand-black);
   color: #FFFFFF;
 }

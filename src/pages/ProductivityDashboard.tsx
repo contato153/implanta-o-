@@ -679,7 +679,7 @@ return {
             </h3>
             <span className="text-[10px] font-semibold text-brand-text-muted bg-white/5 px-3 py-1 rounded-full border border-white/5">{projectsByStatus.todo.length}</span>
           </div>
-          <div className="p-6 space-y-4 overflow-y-auto custom-scrollbar max-h-[650px]">
+          <div className="p-6 space-y-4">
             {projectsByStatus.todo.map((p, idx) => (
               <ProjectCard key={idx} project={p} statusColor="red" />
             ))}
@@ -700,7 +700,7 @@ return {
             </h3>
             <span className="text-[10px] font-semibold text-brand-text-muted bg-white/5 px-3 py-1 rounded-full border border-white/5">{projectsByStatus.doing.length}</span>
           </div>
-          <div className="p-6 space-y-4 overflow-y-auto custom-scrollbar max-h-[650px]">
+          <div className="p-6 space-y-4">
             {projectsByStatus.doing.map((p, idx) => (
               <ProjectCard key={idx} project={p} statusColor="yellow" />
             ))}
@@ -721,7 +721,7 @@ return {
             </h3>
             <span className="text-[10px] font-semibold text-brand-text-muted bg-white/5 px-3 py-1 rounded-full border border-white/5">{projectsByStatus.done.length}</span>
           </div>
-          <div className="p-6 space-y-4 overflow-y-auto custom-scrollbar max-h-[650px]">
+          <div className="p-6 space-y-4">
             {projectsByStatus.done.map((p, idx) => (
               <ProjectCard key={idx} project={p} statusColor="green" />
             ))}

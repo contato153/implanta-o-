@@ -44,7 +44,7 @@ export function Sidebar() {
   const isTasksActive = location.pathname.includes('/tasks');
 
   return (
-    <aside className="fixed top-0 left-0 h-screen w-[260px] bg-brand-dark border-r border-brand-gray flex flex-col shadow-xl z-50">
+    <aside className="sticky top-0 min-h-screen w-[260px] flex-shrink-0 bg-brand-dark border-r border-brand-gray flex flex-col shadow-xl z-50">
       <div className="p-6">
         <div className="flex justify-center items-center mb-8 py-6">
           <img 
