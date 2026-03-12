@@ -1074,6 +1074,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
   const [deletingTask, setDeletingTask] = useState<Tarefa | null>(null);
   const [viewingAttachmentsTask, setViewingAttachmentsTask] = useState<Tarefa | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [priorityFilter, setPriorityFilter] = useState("ALL");
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [attachmentCounts, setAttachmentCounts] = useState<Record<string, number>>({});
 
@@ -1083,6 +1084,13 @@ export const TasksTable: React.FC<TasksTableProps> = ({
   const isViewer = role === 'viewer';
 
   const [viewingObservation, setViewingObservation] = useState<string | null>(null);
+
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(task => {
+      if (priorityFilter === "ALL") return true;
+      return task.prioridade === priorityFilter;
+    });
+  }, [tasks, priorityFilter]);
 
   // ✅ Contadores corrigidos (exclui "NÃO APLICA" e normaliza)
   const { totalValid, completed, inProgress, notStarted, notApplicable, percentCompleted } = useMemo(() => {
@@ -1282,28 +1290,47 @@ export const TasksTable: React.FC<TasksTableProps> = ({
         </div>
       </div>
 
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
         <h3 className="text-lg font-bold text-white uppercase">Lista de Tarefas</h3>
-        {canCreateTasks && (
-          <button
-            onClick={() => setIsAdding(true)}
-            className="flex items-center px-3 py-2 bg-brand-accent text-brand-black text-sm font-medium rounded hover:bg-brand-accent-hover transition-colors"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Tarefa
-          </button>
-        )}
+        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-brand-text-muted uppercase tracking-widest">Prioridade:</span>
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="bg-brand-black border border-brand-gray text-white text-xs font-medium rounded px-2 py-1.5 focus:ring-1 focus:ring-brand-accent outline-none transition-all"
+            >
+              <option value="ALL">Todas</option>
+              <option value="P1">P1</option>
+              <option value="P2">P2</option>
+              <option value="P3">P3</option>
+            </select>
+          </div>
+          {canCreateTasks && (
+            <button
+              onClick={() => setIsAdding(true)}
+              className="flex items-center px-3 py-2 bg-brand-accent text-brand-black text-sm font-medium rounded hover:bg-brand-accent-hover transition-colors whitespace-nowrap"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Tarefa
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="bg-brand-dark shadow overflow-hidden border border-brand-gray rounded-lg flex flex-col">
         {/* Mobile View: Cards */}
         <div className="block lg:hidden p-4 space-y-4">
-          {tasks.length === 0 ? (
+          {filteredTasks.length === 0 ? (
             <div className="px-4 py-12 text-center text-brand-text-muted">
               <div className="flex flex-col items-center justify-center">
-                <p className="text-lg font-medium mb-2 text-white">Nenhuma tarefa cadastrada</p>
-                <p className="text-sm mb-4 text-gray-500">Este projeto ainda não possui tarefas.</p>
-                {canImportStandard && onImport && (
+                <p className="text-lg font-medium mb-2 text-white">
+                  {priorityFilter === 'ALL' ? 'Nenhuma tarefa cadastrada' : 'Nenhuma tarefa encontrada'}
+                </p>
+                <p className="text-sm mb-4 text-gray-500">
+                  {priorityFilter === 'ALL' ? 'Este projeto ainda não possui tarefas.' : `Não há tarefas com prioridade ${priorityFilter}.`}
+                </p>
+                {priorityFilter === 'ALL' && canImportStandard && onImport && (
                   <button
                     onClick={onImport}
                     className="flex items-center px-4 py-2 bg-brand-gray text-brand-accent text-sm font-medium rounded-lg hover:bg-brand-black transition-colors border border-brand-gray"
@@ -1315,7 +1342,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
               </div>
             </div>
           ) : (
-            tasks.map((task) => (
+            filteredTasks.map((task) => (
               <TaskCard 
                 key={task.id} 
                 task={task} 
@@ -1349,13 +1376,17 @@ export const TasksTable: React.FC<TasksTableProps> = ({
               </tr>
             </thead>
             <tbody className="bg-brand-dark divide-y divide-brand-gray">
-              {tasks.length === 0 && (
+              {filteredTasks.length === 0 && (
                 <tr>
                   <td colSpan={role === 'viewer' ? 9 : 10} className="px-4 py-12 text-center text-brand-text-muted">
                     <div className="flex flex-col items-center justify-center">
-                      <p className="text-lg font-medium mb-2 text-white">Nenhuma tarefa cadastrada</p>
-                      <p className="text-sm mb-4 text-gray-500">Este projeto ainda não possui tarefas.</p>
-                      {canImportStandard && onImport && (
+                      <p className="text-lg font-medium mb-2 text-white">
+                        {priorityFilter === 'ALL' ? 'Nenhuma tarefa cadastrada' : 'Nenhuma tarefa encontrada'}
+                      </p>
+                      <p className="text-sm mb-4 text-gray-500">
+                        {priorityFilter === 'ALL' ? 'Este projeto ainda não possui tarefas.' : `Não há tarefas com prioridade ${priorityFilter}.`}
+                      </p>
+                      {priorityFilter === 'ALL' && canImportStandard && onImport && (
                         <button
                           onClick={onImport}
                           className="flex items-center px-4 py-2 bg-brand-gray text-brand-accent text-sm font-medium rounded-lg hover:bg-brand-black transition-colors border border-brand-gray"
@@ -1369,7 +1400,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                 </tr>
               )}
 
-              {tasks.map((task, idx) => {
+              {filteredTasks.map((task, idx) => {
                 const rowClass = idx % 2 === 0 ? 'bg-brand-dark' : 'bg-brand-black';
 
                 return (
