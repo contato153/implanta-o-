@@ -4,6 +4,7 @@ import { UserProfile, Role } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { Plus, X, CheckCircle, AlertCircle, Trash2, Lock } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
+import { changeUserPassword } from '../services/api';
 
 export function Users() {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
@@ -78,22 +79,6 @@ export function Users() {
     }
   };
 
-  const handleResetPassword = async (email: string) => {
-    try {
-      const supabase = getSupabase();
-      const appUrl = 'https://ais-dev-v5o6jmwwvlj7islgrt27om-142722563375.us-east1.run.app';
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${appUrl}/reset-password`,
-      });
-
-      if (error) throw error;
-      
-      showToast(`E-mail de redefinição enviado para ${email}`, 'success');
-    } catch (err: any) {
-      showToast('Erro ao enviar e-mail de redefinição: ' + err.message, 'error');
-    }
-  };
-
   const handleSavePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPasswordValue !== confirmPassword) {
@@ -105,16 +90,18 @@ export function Users() {
       return;
     }
     
-    // NOTE: Changing another user's password in Supabase Auth requires a backend API 
-    // with Service Role Key for security. Front-end cannot do this directly.
-    // This is a placeholder for that server-side implementation.
-    
-    console.log('Password change requested for user:', userToChangePassword?.id, 'New password:', newPasswordValue);
-    showToast('Funcionalidade de alteração de senha requer implementação no backend.', 'error');
-    setIsPasswordModalOpen(false);
-    setNewPasswordValue('');
-    setConfirmPassword('');
-    setUserToChangePassword(null);
+    if (!userToChangePassword) return;
+
+    try {
+      await changeUserPassword(userToChangePassword.id, newPasswordValue);
+      showToast('Senha alterada com sucesso!', 'success');
+      setIsPasswordModalOpen(false);
+      setNewPasswordValue('');
+      setConfirmPassword('');
+      setUserToChangePassword(null);
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao alterar senha.', 'error');
+    }
   };
 
   const handleDeleteUser = async () => {
@@ -317,9 +304,9 @@ export function Users() {
                                   <option value="admin">Admin</option>
                                 </select>
                                 <button
-                                  onClick={() => handleResetPassword(profile.email)}
+                                  onClick={() => { setUserToChangePassword(profile); setIsPasswordModalOpen(true); }}
                                   className="text-[#F4C400] hover:text-[#FFD84D] p-1.5 rounded-md hover:bg-[#F4C400]/10 transition-colors"
-                                  title="Enviar e-mail de redefinição de senha"
+                                  title="Alterar senha do usuário"
                                 >
                                   <Lock size={18} />
                                 </button>

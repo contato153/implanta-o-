@@ -711,3 +711,16 @@ export async function deleteTaskAttachment(attachmentId: string, fileUrl: string
     throw error;
   }
 }
+
+export async function changeUserPassword(userId: string, newPassword: string): Promise<void> {
+  const supabase = getSupabase();
+
+  const { error } = await supabase.rpc('admin_update_user_password', {
+    user_id: userId,
+    new_password: newPassword,
+  });
+
+  if (error) {
+    throw new Error(error.message || 'Erro ao alterar senha.');
+  }
+}
