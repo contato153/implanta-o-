@@ -189,6 +189,20 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({ data, loading, role })
     }
   };
 
+  // Format date YYYY-MM-DD to MM/YYYY
+  const formatMesAno = (dateString: string | undefined) => {
+    if (!dateString) return '';
+    try {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        const [year, month] = dateString.split('-');
+        return `${month}/${year}`;
+      }
+      return dateString;
+    } catch (e) {
+      return dateString;
+    }
+  };
+
   // Format CNPJ for display
   const formatCNPJ = (value: string | undefined) => {
     const digits = (value || '').replace(/\D/g, '').slice(0, 14);
@@ -318,6 +332,13 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({ data, loading, role })
       </div>
 
       <div className="grid grid-cols-12 border-b border-brand-gray">
+        <div className={`col-span-12 p-2 ${canEditCompany ? 'cursor-pointer hover:bg-brand-gray' : ''}`}>
+          <span className="font-bold block text-xs text-brand-text-muted">OBJETIVO DA EMPRESA</span>
+          {val(empresa?.objetivo_empresa)}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-12 border-b border-brand-gray">
         <div className={`col-span-4 p-2 border-r border-brand-gray ${canEditCompany ? 'cursor-pointer hover:bg-brand-gray' : ''}`}>
           <span className="font-bold block text-xs text-brand-text-muted">PONTO FOCAL EMPRES.</span>
           {val(empresa?.ponto_focal_nome)}
@@ -363,7 +384,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({ data, loading, role })
         </div>
         <div className={`col-span-3 p-2 border-r border-brand-gray ${canEditCompany ? 'cursor-pointer hover:bg-brand-gray' : ''}`}>
           <span className="font-bold block text-xs text-brand-text-muted">COMP. INICIAL</span>
-          {formatDate(empresa?.comp_inicial)}
+          {formatMesAno(empresa?.comp_inicial)}
         </div>
         <div className={`col-span-3 p-2 ${canEditCompany ? 'cursor-pointer hover:bg-brand-gray' : ''}`}>
           <span className="font-bold block text-xs text-brand-text-muted">APROVADO EM REUNIÃO</span>

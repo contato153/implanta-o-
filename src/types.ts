@@ -22,6 +22,7 @@ export interface Empresa {
   regime_novo: string;
   comp_inicial: string;
   aprovado_reuniao: string;
+  objetivo_empresa?: string;
   logo_url?: string;
 }
 

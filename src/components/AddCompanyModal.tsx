@@ -13,6 +13,33 @@ function formatCNPJ(value: string) {
     .replace(/(\d{4})(\d)/, '$1-$2');
 }
 
+function formatMesAno(value: string) {
+  if (!value) return '';
+  // Se for YYYY-MM-DD, converte para MM/YYYY
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month] = value.split('-');
+    return `${month}/${year}`;
+  }
+
+  let v = value.replace(/\D/g, '');
+  if (v.length > 6) v = v.slice(0, 6);
+  
+  if (v.length >= 2) {
+    let month = parseInt(v.substring(0, 2), 10);
+    if (month > 12) {
+      v = '12' + v.substring(2);
+    } else if (month === 0 && v.length >= 2) {
+      v = '01' + v.substring(2);
+    }
+  }
+  
+  if (v.length > 2) {
+    v = v.replace(/^(\d{2})(\d)/, '$1/$2');
+  }
+  
+  return v;
+}
+
 interface AddCompanyModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -40,6 +67,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
     regime_novo: '',
     comp_inicial: '',
     aprovado_reuniao: '',
+    objetivo_empresa: '',
     data_inicio_prevista: '',
     data_fim_prevista: '',
     socios: [
@@ -70,6 +98,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
           regime_novo: '',
           comp_inicial: '',
           aprovado_reuniao: '',
+          objetivo_empresa: '',
           data_inicio_prevista: '',
           data_fim_prevista: '',
           socios: [
@@ -120,8 +149,9 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
           ponto_focal_email: empresa.ponto_focal_email || '',
           regime_atual: empresa.regime_atual || '',
           regime_novo: empresa.regime_novo || '',
-          comp_inicial: empresa.comp_inicial || '',
+          comp_inicial: formatMesAno(empresa.comp_inicial || ''),
           aprovado_reuniao: empresa.aprovado_reuniao || '',
+          objetivo_empresa: empresa.objetivo_empresa || '',
           data_inicio_prevista: projeto?.data_inicio_prevista || '',
           data_fim_prevista: projeto?.data_fim_prevista || '',
           socios: loadedSocios
@@ -147,6 +177,9 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
       if (cleanCnpj.length === 14) {
         fetchCnpjData(cleanCnpj);
       }
+    } else if (name === 'comp_inicial') {
+      const formatted = formatMesAno(value);
+      setFormData(prev => ({ ...prev, [name]: formatted }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -287,7 +320,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
     const requiredFields = [
       'codigo_interno', 'razao_social', 'nome_fantasia', 'cnpj', 'ie', 'im',
       'ponto_focal_nome', 'ponto_focal_whatsapp', 'ponto_focal_email',
-      'regime_atual', 'regime_novo', 'comp_inicial', 'aprovado_reuniao'
+      'regime_atual', 'regime_novo', 'comp_inicial', 'aprovado_reuniao', 'objetivo_empresa'
     ];
 
     const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
@@ -308,6 +341,13 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
       // Normalize CNPJ
       const cleanCnpj = formData.cnpj.replace(/\D/g, '');
 
+      // Convert MM/YYYY to YYYY-MM-01
+      let compInicialFormatada = formData.comp_inicial;
+      if (/^\d{2}\/\d{4}$/.test(formData.comp_inicial)) {
+        const [month, year] = formData.comp_inicial.split('/');
+        compInicialFormatada = `${year}-${month}-01`;
+      }
+
       const empresaData: Partial<Empresa> = {
         codigo_interno: formData.codigo_interno,
         razao_social: formData.razao_social,
@@ -320,8 +360,9 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
         ponto_focal_email: formData.ponto_focal_email,
         regime_atual: formData.regime_atual,
         regime_novo: formData.regime_novo,
-        comp_inicial: formData.comp_inicial,
-        aprovado_reuniao: formData.aprovado_reuniao
+        comp_inicial: compInicialFormatada,
+        aprovado_reuniao: formData.aprovado_reuniao,
+        objetivo_empresa: formData.objetivo_empresa
       };
 
       const sociosData: Omit<Socio, 'id' | 'empresa_id'>[] = formData.socios
@@ -530,11 +571,12 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
               <div>
                 <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Comp. Inicial *</label>
                 <input
-                  type="date"
+                  type="text"
                   name="comp_inicial"
                   value={formData.comp_inicial}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all [color-scheme:dark]"
+                  placeholder="MM/AAAA"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                   required
                 />
               </div>
@@ -549,15 +591,25 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   required
                 />
               </div>
+              <div className="md:col-span-2">
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">OBJETIVO DA EMPRESA *</label>
+                <textarea
+                  name="objetivo_empresa"
+                  value={formData.objetivo_empresa}
+                  onChange={handleChange}
+                  placeholder="Descreva o objetivo da empresa ou o propósito do projeto"
+                  rows={4}
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                  required
+                />
+              </div>
             </div>
           </div>
 
           {/* Ponto Focal */}
-          <div className="space-y-6">
-            <h3 className="text-lg font-bold text-brand-accent border-b border-brand-gray pb-2 uppercase tracking-wider">Ponto Focal (Contato)</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Nome *</label>
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">PONTO FOCAL *</label>
                 <input
                   type="text"
                   name="ponto_focal_nome"
@@ -568,7 +620,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">WhatsApp *</label>
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">CONTATO TELEFÔNICO / WHATSAPP *</label>
                 <input
                   type="text"
                   name="ponto_focal_whatsapp"
@@ -579,7 +631,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Email *</label>
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">EMAIL *</label>
                 <input
                   type="email"
                   name="ponto_focal_email"
@@ -590,7 +642,6 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                 />
               </div>
             </div>
-          </div>
 
           {/* Sócios */}
           <div className="space-y-6">
