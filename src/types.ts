@@ -23,6 +23,7 @@ export interface Empresa {
   comp_inicial: string;
   aprovado_reuniao: string;
   objetivo_empresa?: string;
+  passar_bastao_link?: string;
   logo_url?: string;
 }
 

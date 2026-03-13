@@ -339,6 +339,25 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({ data, loading, role })
       </div>
 
       <div className="grid grid-cols-12 border-b border-brand-gray">
+        <div className={`col-span-12 p-2 ${canEditCompany ? 'cursor-pointer hover:bg-brand-gray' : ''}`}>
+          <span className="font-bold block text-xs text-brand-text-muted">PASSAR BASTÃO</span>
+          {empresa?.passar_bastao_link ? (
+            <a 
+              href={empresa.passar_bastao_link} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-3 py-1.5 mt-1 bg-brand-accent/10 text-brand-accent hover:bg-brand-accent/20 rounded-md transition-colors text-sm font-medium"
+              onClick={(e) => e.stopPropagation()}
+            >
+              🔗 Abrir documento
+            </a>
+          ) : (
+            <span className="text-brand-text-muted italic">Não informado</span>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-12 border-b border-brand-gray">
         <div className={`col-span-4 p-2 border-r border-brand-gray ${canEditCompany ? 'cursor-pointer hover:bg-brand-gray' : ''}`}>
           <span className="font-bold block text-xs text-brand-text-muted">PONTO FOCAL EMPRES.</span>
           {val(empresa?.ponto_focal_nome)}

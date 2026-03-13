@@ -68,6 +68,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
     comp_inicial: '',
     aprovado_reuniao: '',
     objetivo_empresa: '',
+    passar_bastao_link: '',
     data_inicio_prevista: '',
     data_fim_prevista: '',
     socios: [
@@ -99,6 +100,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
           comp_inicial: '',
           aprovado_reuniao: '',
           objetivo_empresa: '',
+          passar_bastao_link: '',
           data_inicio_prevista: '',
           data_fim_prevista: '',
           socios: [
@@ -152,6 +154,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
           comp_inicial: formatMesAno(empresa.comp_inicial || ''),
           aprovado_reuniao: empresa.aprovado_reuniao || '',
           objetivo_empresa: empresa.objetivo_empresa || '',
+          passar_bastao_link: empresa.passar_bastao_link || '',
           data_inicio_prevista: projeto?.data_inicio_prevista || '',
           data_fim_prevista: projeto?.data_fim_prevista || '',
           socios: loadedSocios
@@ -318,20 +321,13 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
 
     // Validation
     const requiredFields = [
-      'codigo_interno', 'razao_social', 'nome_fantasia', 'cnpj', 'ie', 'im',
-      'ponto_focal_nome', 'ponto_focal_whatsapp', 'ponto_focal_email',
-      'regime_atual', 'regime_novo', 'comp_inicial', 'aprovado_reuniao', 'objetivo_empresa'
+      'codigo_interno', 'razao_social', 'nome_fantasia', 'cnpj', 'ie', 'regime_atual', 'regime_novo', 'comp_inicial'
     ];
 
     const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
 
     if (missingFields.length > 0) {
-      setError('Todos os campos da empresa e ponto focal são obrigatórios.');
-      return;
-    }
-
-    if (!formData.socios[0].nome) {
-      setError('Nome do Sócio 1 é obrigatório.');
+      setError('Preencha todos os campos obrigatórios (*).');
       return;
     }
 
@@ -362,7 +358,8 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
         regime_novo: formData.regime_novo,
         comp_inicial: compInicialFormatada,
         aprovado_reuniao: formData.aprovado_reuniao,
-        objetivo_empresa: formData.objetivo_empresa
+        objetivo_empresa: formData.objetivo_empresa,
+        passar_bastao_link: formData.passar_bastao_link
       };
 
       const sociosData: Omit<Socio, 'id' | 'empresa_id'>[] = formData.socios
@@ -495,14 +492,13 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                 {notFoundFields.includes('ie') && <span className="text-[10px] text-brand-accent mt-1 block">Não encontrado automaticamente</span>}
               </div>
               <div>
-                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Inscrição Municipal *</label>
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Inscrição Municipal</label>
                 <input
                   type="text"
                   name="im"
                   value={formData.im}
                   onChange={handleChange}
                   className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
-                  required
                 />
                 {notFoundFields.includes('im') && <span className="text-[10px] text-brand-accent mt-1 block">Não encontrado automaticamente</span>}
               </div>
@@ -565,6 +561,17 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all [color-scheme:dark]"
                 />
               </div>
+              <div className="md:col-span-2">
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">PASSAR BASTÃO (LINK)</label>
+                <input
+                  type="url"
+                  name="passar_bastao_link"
+                  value={formData.passar_bastao_link}
+                  onChange={handleChange}
+                  placeholder="Cole aqui o link do documento de passar bastão"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -581,18 +588,17 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Aprovado em Reunião *</label>
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Aprovado em Reunião</label>
                 <textarea
                   name="aprovado_reuniao"
                   value={formData.aprovado_reuniao}
                   onChange={handleChange}
                   rows={3}
                   className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
-                  required
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">OBJETIVO DA EMPRESA *</label>
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">OBJETIVO DA EMPRESA</label>
                 <textarea
                   name="objetivo_empresa"
                   value={formData.objetivo_empresa}
@@ -600,45 +606,41 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   placeholder="Descreva o objetivo da empresa ou o propósito do projeto"
                   rows={4}
                   className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
-                  required
                 />
               </div>
             </div>
           </div>
 
           {/* Ponto Focal */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
               <div>
-                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">PONTO FOCAL *</label>
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">PONTO FOCAL</label>
                 <input
                   type="text"
                   name="ponto_focal_nome"
                   value={formData.ponto_focal_nome}
                   onChange={handleChange}
                   className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
-                  required
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">CONTATO TELEFÔNICO / WHATSAPP *</label>
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">CONTATO TELEFÔNICO / WHATSAPP</label>
                 <input
                   type="text"
                   name="ponto_focal_whatsapp"
                   value={formData.ponto_focal_whatsapp}
                   onChange={handleChange}
                   className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
-                  required
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">EMAIL *</label>
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">EMAIL</label>
                 <input
                   type="email"
                   name="ponto_focal_email"
                   value={formData.ponto_focal_email}
                   onChange={handleChange}
                   className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
-                  required
                 />
               </div>
             </div>
@@ -653,17 +655,16 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   <div className="w-6 h-6 rounded-full bg-brand-accent text-brand-black flex items-center justify-center text-[10px]">
                     {index + 1}
                   </div>
-                  Sócio {index + 1} {index === 0 && <span className="text-red-500">*</span>}
+                  Sócio {index + 1}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Nome {index === 0 && '*'}</label>
+                    <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Nome</label>
                     <input
                       type="text"
                       value={socio.nome}
                       onChange={(e) => handleSocioChange(index, 'nome', e.target.value)}
                       className="w-full px-4 py-2 bg-brand-dark border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
-                      required={index === 0}
                     />
                     {notFoundFields.includes(`socio_${index}`) && <span className="text-[10px] text-brand-accent mt-1 block">Não encontrado automaticamente</span>}
                   </div>
