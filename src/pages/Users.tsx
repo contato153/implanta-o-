@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getSupabase } from '../lib/supabase';
 import { UserProfile, Role } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { Plus, X, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
+import { Plus, X, CheckCircle, AlertCircle, Trash2, Lock } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
 export function Users() {
@@ -19,11 +19,17 @@ export function Users() {
   const [newRole, setNewRole] = useState<Role>('viewer');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Delete Confirmation State
-  const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
+  // Password Modal State
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [userToChangePassword, setUserToChangePassword] = useState<UserProfile | null>(null);
+  const [newPasswordValue, setNewPasswordValue] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   // Toast State
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  // Delete Confirmation State
+  const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     fetchProfiles();
@@ -70,6 +76,45 @@ export function Users() {
     } catch (err: any) {
       showToast('Erro ao atualizar permissão: ' + err.message, 'error');
     }
+  };
+
+  const handleResetPassword = async (email: string) => {
+    try {
+      const supabase = getSupabase();
+      const appUrl = 'https://ais-dev-v5o6jmwwvlj7islgrt27om-142722563375.us-east1.run.app';
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${appUrl}/reset-password`,
+      });
+
+      if (error) throw error;
+      
+      showToast(`E-mail de redefinição enviado para ${email}`, 'success');
+    } catch (err: any) {
+      showToast('Erro ao enviar e-mail de redefinição: ' + err.message, 'error');
+    }
+  };
+
+  const handleSavePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPasswordValue !== confirmPassword) {
+      showToast('As senhas não coincidem.', 'error');
+      return;
+    }
+    if (newPasswordValue.length < 6) {
+      showToast('A senha deve ter no mínimo 6 caracteres.', 'error');
+      return;
+    }
+    
+    // NOTE: Changing another user's password in Supabase Auth requires a backend API 
+    // with Service Role Key for security. Front-end cannot do this directly.
+    // This is a placeholder for that server-side implementation.
+    
+    console.log('Password change requested for user:', userToChangePassword?.id, 'New password:', newPasswordValue);
+    showToast('Funcionalidade de alteração de senha requer implementação no backend.', 'error');
+    setIsPasswordModalOpen(false);
+    setNewPasswordValue('');
+    setConfirmPassword('');
+    setUserToChangePassword(null);
   };
 
   const handleDeleteUser = async () => {
@@ -272,6 +317,13 @@ export function Users() {
                                   <option value="admin">Admin</option>
                                 </select>
                                 <button
+                                  onClick={() => handleResetPassword(profile.email)}
+                                  className="text-[#F4C400] hover:text-[#FFD84D] p-1.5 rounded-md hover:bg-[#F4C400]/10 transition-colors"
+                                  title="Enviar e-mail de redefinição de senha"
+                                >
+                                  <Lock size={18} />
+                                </button>
+                                <button
                                   onClick={() => setUserToDelete(profile)}
                                   className="text-red-400 hover:text-red-300 p-1.5 rounded-md hover:bg-red-400/10 transition-colors"
                                   title="Remover usuário"
@@ -385,6 +437,85 @@ export function Users() {
                   className="flex-1 px-4 py-2 bg-[#F4C400] text-black font-semibold rounded-lg hover:bg-[#FFD84D] transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Criando...' : 'Criar usuário'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Password Modal */}
+      {isPasswordModalOpen && userToChangePassword && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-[#161616] rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-[#1E1E1E]">
+            <div className="flex justify-between items-center p-6 border-b border-[#1E1E1E]">
+              <h2 className="text-xl font-bold text-white">Alterar Senha</h2>
+              <button 
+                onClick={() => setIsPasswordModalOpen(false)}
+                className="text-[#BDBDBD] hover:text-white transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSavePassword} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[#BDBDBD] mb-1">
+                  Usuário
+                </label>
+                <input
+                  type="text"
+                  disabled
+                  value={userToChangePassword.email}
+                  className="w-full px-4 py-2 bg-[#0B0B0B] border border-[#333333] text-[#BDBDBD] rounded-lg cursor-not-allowed"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="newPassword" className="block text-sm font-medium text-[#BDBDBD] mb-1">
+                  Nova Senha
+                </label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  required
+                  minLength={6}
+                  value={newPasswordValue}
+                  onChange={(e) => setNewPasswordValue(e.target.value)}
+                  className="w-full px-4 py-2 bg-[#0B0B0B] border border-[#333333] text-white rounded-lg focus:ring-1 focus:ring-[#F4C400] focus:border-[#F4C400] outline-none transition-all"
+                  placeholder="Mínimo 6 caracteres"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-[#BDBDBD] mb-1">
+                  Confirmar Nova Senha
+                </label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  required
+                  minLength={6}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full px-4 py-2 bg-[#0B0B0B] border border-[#333333] text-white rounded-lg focus:ring-1 focus:ring-[#F4C400] focus:border-[#F4C400] outline-none transition-all"
+                  placeholder="Confirme a nova senha"
+                />
+              </div>
+              
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsPasswordModalOpen(false)}
+                  className="flex-1 px-4 py-2 border border-[#333333] text-[#BDBDBD] font-medium rounded-lg hover:bg-[#1E1E1E] hover:text-white transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-[#F4C400] text-black font-semibold rounded-lg hover:bg-[#FFD84D] transition-colors"
+                >
+                  Salvar Nova Senha
                 </button>
               </div>
             </form>
