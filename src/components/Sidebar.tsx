@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BarChart2, CheckSquare, Users, LogOut, Search } from 'lucide-react';
+import { LayoutDashboard, BarChart2, CheckSquare, Users, LogOut, Search, Building2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { ControlPanel } from './ControlPanel';
 import { useCompany } from '../context/CompanyContext';
@@ -10,8 +10,10 @@ export function Sidebar() {
   const { signOut, role } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { selectedClientId } = useCompany();
+  const { selectedClientId, clients } = useCompany();
   const [isNavigatingTasks, setIsNavigatingTasks] = useState(false);
+
+  const selectedCompany = clients.find(c => c.id === selectedClientId);
 
   const handleLogout = async () => {
     await signOut();
@@ -21,7 +23,7 @@ export function Sidebar() {
   const handleTasksClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (!selectedClientId) {
-      alert('Por favor, selecione uma empresa primeiro.');
+      alert('Selecione uma empresa primeiro.');
       return;
     }
     
@@ -54,28 +56,51 @@ export function Sidebar() {
             referrerPolicy="no-referrer"
           />
         </div>
-
-        <div className="mb-2">
-          <ControlPanel />
-        </div>
       </div>
 
       <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
+        <div className="flex flex-col">
+          <NavLink
+            to={selectedClientId ? `/empresa/${selectedClientId}` : "/empresas"}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                (isActive || location.pathname.includes('/empresa/')) && !isTasksActive
+                  ? 'text-brand-accent bg-brand-gray shadow-md'
+                  : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
+              }`
+            }
+          >
+            <Building2 size={20} />
+            <span className="font-medium">Empresas</span>
+          </NavLink>
+          {selectedCompany && (
+            <div className="flex flex-col mt-1 ml-6 border-l-2 border-brand-gray/30 pl-2 gap-1">
+              <div className="px-3 py-1.5 rounded-md bg-brand-gray/20 border border-brand-gray/30 flex flex-col gap-0.5">
+                <span className="text-[10px] text-brand-text-muted uppercase tracking-wider font-semibold">Empresa Selecionada</span>
+                <span className="text-xs text-brand-accent font-mono font-bold truncate" title={selectedCompany.nome_fantasia || selectedCompany.razao_social}>
+                  {selectedCompany.codigo_interno ? `${selectedCompany.codigo_interno} - ` : ''}
+                  {selectedCompany.nome_fantasia || selectedCompany.razao_social}
+                </span>
+              </div>
+              <button
+                onClick={handleTasksClick}
+                disabled={isNavigatingTasks}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${
+                  isTasksActive
+                    ? 'text-brand-accent bg-brand-gray shadow-md'
+                    : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
+                } ${isNavigatingTasks ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <CheckSquare size={18} />
+                <span className="font-medium text-sm">
+                  {isNavigatingTasks ? 'Carregando...' : 'Tarefas'}
+                </span>
+              </button>
+            </div>
+          )}
+        </div>
         <NavLink
           to="/dashboard"
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-              isActive && !isTasksActive
-                ? 'text-brand-accent bg-brand-gray shadow-md'
-                : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
-            }`
-          }
-        >
-          <LayoutDashboard size={20} />
-          <span className="font-medium">Empresas</span>
-        </NavLink>
-        <NavLink
-          to="/dashboard-produtividade"
           className={({ isActive }) =>
             `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
               isActive
@@ -85,7 +110,7 @@ export function Sidebar() {
           }
         >
           <BarChart2 size={20} />
-          <span className="font-medium">Dashboard</span>
+          <span className="font-medium">Dashboard Geral</span>
         </NavLink>
         <NavLink
           to="/consultar-cnpj"
@@ -100,20 +125,7 @@ export function Sidebar() {
           <Search size={20} />
           <span className="font-medium">Consultar CNPJ</span>
         </NavLink>
-        <button
-          onClick={handleTasksClick}
-          disabled={isNavigatingTasks}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-            isTasksActive
-              ? 'text-brand-accent bg-brand-gray shadow-md'
-              : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
-          } ${isNavigatingTasks ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          <CheckSquare size={20} />
-          <span className="font-medium">
-            {isNavigatingTasks ? 'Carregando...' : 'Tarefas'}
-          </span>
-        </button>
+
         {role === 'admin' && (
           <NavLink
             to="/users"

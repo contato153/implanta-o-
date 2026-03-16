@@ -8,6 +8,7 @@ interface Task {
   titulo: string;
   descricao: string;
   status: string;
+  aplicacao?: string;
   data_tarefa: string;
   data_termino: string;
   proprietario: string;
@@ -167,7 +168,7 @@ let countDoneTasks = 0;
 let countTodoOnTime = 0;
 let countDoingOnTime = 0;
 
-const validTasks = filteredTasks.filter(t => normalizeStatus(t.status) !== 'NAO APLICA');
+const validTasks = filteredTasks.filter(t => normalizeStatus(t.aplicacao) !== 'NAO APLICA');
 totalValidTasks = validTasks.length;
 
 validTasks.forEach(t => {
@@ -281,6 +282,7 @@ return {
         done: number;
         total: number;
         delayed: number;
+        notApplicable: number;
       }
     > = {};
 
@@ -304,17 +306,23 @@ return {
           done: 0,
           total: 0,
           delayed: 0,
+          notApplicable: 0,
         };
       }
 
       const s = normalizeStatus(t.status);
+      const a = normalizeStatus(t.aplicacao);
 
-      if (s !== 'NAO APLICA') grouped[pid].total++;
-      if (s === 'CONCLUIDA') grouped[pid].done++;
-      if (s === 'EM EXECUCAO') grouped[pid].doing++;
+      if (a !== 'NAO APLICA') {
+        grouped[pid].total++;
+        if (s === 'CONCLUIDA') grouped[pid].done++;
+        if (s === 'EM EXECUCAO') grouped[pid].doing++;
 
-      if (s !== 'CONCLUIDA' && s !== 'NAO APLICA' && t.data_termino && t.data_termino < todayIso) {
-        grouped[pid].delayed++;
+        if (s !== 'CONCLUIDA' && t.data_termino && t.data_termino < todayIso) {
+          grouped[pid].delayed++;
+        }
+      } else {
+        grouped[pid].notApplicable++;
       }
     });
 
@@ -783,7 +791,7 @@ const ProjectCard = ({ project, statusColor }: any) => {
         ></div>
       </div>
 
-      <div className="grid grid-cols-4 gap-2 text-center bg-[#0a0a0a]/50 p-3 rounded-xl border border-white/5">
+      <div className="grid grid-cols-5 gap-2 text-center bg-[#0a0a0a]/50 p-3 rounded-xl border border-white/5">
         <div className="flex flex-col gap-1">
           <span className="text-[13px] font-medium text-white">{project.total}</span>
           <span className="text-[9px] font-medium text-brand-text-muted/60 uppercase tracking-wider">Total</span>
@@ -799,6 +807,10 @@ const ProjectCard = ({ project, statusColor }: any) => {
         <div className="flex flex-col gap-1">
           <span className="text-[13px] font-medium text-brand-text-muted">{project.todo}</span>
           <span className="text-[9px] font-medium text-brand-text-muted/60 uppercase tracking-wider">Fazer</span>
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-[13px] font-medium text-brand-text-muted/50">{project.notApplicable}</span>
+          <span className="text-[9px] font-medium text-brand-text-muted/40 uppercase tracking-wider">N/A</span>
         </div>
       </div>
 

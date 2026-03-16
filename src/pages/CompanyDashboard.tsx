@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { Spreadsheet } from '../components/Spreadsheet';
 import { getClientData } from '../services/api';
 import { ClientData } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
 
-export function Dashboard() {
+export function CompanyDashboard() {
   const { role } = useAuth();
-  const { selectedClientId, loading: companyLoading } = useCompany();
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { setSelectedClientId, loading: companyLoading } = useCompany();
   
   const [clientData, setClientData] = useState<ClientData | null>(null);
   const [loadingData, setLoadingData] = useState<boolean>(false);
@@ -16,13 +19,14 @@ export function Dashboard() {
 
   // Load client data when selected
   useEffect(() => {
-    if (!selectedClientId) {
+    if (!id) {
       setClientData(null);
       setError(null);
       return;
     }
-    loadData(selectedClientId);
-  }, [selectedClientId]);
+    setSelectedClientId(id);
+    loadData(id);
+  }, [id, setSelectedClientId]);
 
   const loadData = async (clientId: string) => {
     setLoadingData(true);
@@ -46,16 +50,29 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-brand-black p-4 md:p-8 font-sans text-white">
+      <div className="max-w-5xl mx-auto mb-6">
+        <button
+          onClick={() => {
+            setSelectedClientId('');
+            navigate('/empresas');
+          }}
+          className="inline-flex items-center text-brand-text-muted hover:text-white transition-colors"
+        >
+          <ArrowLeft size={20} className="mr-2" />
+          Voltar para Empresas
+        </button>
+      </div>
+
       <header className="mb-8 text-center relative">
-        <h1 className="text-3xl font-bold text-white mb-2">Empresas</h1>
-        <p className="text-brand-text-muted">Selecione um cliente para visualizar o status do projeto</p>
+        <h1 className="text-3xl font-bold text-white mb-2">Painel da Empresa</h1>
+        <p className="text-brand-text-muted">Visualize o status do projeto da empresa selecionada</p>
         <div className="mt-2 text-xs text-brand-text-muted">
           Acesso: <span className="font-semibold uppercase text-brand-accent">{role}</span>
         </div>
       </header>
 
       <div className="max-w-5xl mx-auto">
-        {companyLoading && !selectedClientId ? (
+        {companyLoading && !id ? (
           <div className="text-center p-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-accent mx-auto mb-4"></div>
             <p className="text-brand-text-muted">Carregando sistema...</p>
@@ -78,11 +95,10 @@ export function Dashboard() {
             )}
 
             <div className="mt-8">
-              {selectedClientId ? (
+              {id ? (
                 <>
-                  <Spreadsheet data={clientData} loading={isLoading} role={role} />
                   {clientData?.projeto && (
-                    <div className="mt-6 flex justify-end">
+                    <div className="mb-6 flex justify-end">
                       <Link 
                         to={`/project/${clientData.projeto.id}/tasks`}
                         className="inline-flex items-center px-4 py-2 bg-brand-accent text-brand-black font-medium rounded-lg hover:bg-brand-accent-hover transition-colors shadow-sm"
@@ -94,11 +110,17 @@ export function Dashboard() {
                       </Link>
                     </div>
                   )}
+                  <Spreadsheet data={clientData} loading={isLoading} role={role} />
                 </>
               ) : (
-                <div className="bg-brand-dark p-12 rounded-lg shadow-sm border border-brand-gray text-center text-brand-text-muted">
-                  <p className="text-lg text-white">Nenhum cliente selecionado.</p>
-                  <p className="text-sm mt-2">Utilize o menu lateral para selecionar uma empresa.</p>
+                <div className="bg-brand-dark p-12 rounded-lg shadow-sm border border-brand-gray text-center text-brand-text-muted flex flex-col items-center justify-center">
+                  <p className="text-lg text-white mb-4">Nenhuma empresa selecionada.</p>
+                  <Link 
+                    to="/empresas"
+                    className="inline-flex items-center px-6 py-3 bg-brand-accent text-brand-black font-bold rounded-lg hover:bg-brand-accent-hover transition-colors shadow-lg shadow-brand-accent/10"
+                  >
+                    Ir para a lista de Empresas
+                  </Link>
                 </div>
               )}
             </div>

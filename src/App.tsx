@@ -1,7 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './pages/Login';
-import { Dashboard } from './pages/Dashboard';
+import { Empresas } from './pages/Empresas';
+import { CompanyDashboard } from './pages/CompanyDashboard';
 import { Users } from './pages/Users';
 import { ProjectTasks } from './pages/ProjectTasks';
 import { ProductivityDashboard } from './pages/ProductivityDashboard';
@@ -22,11 +23,12 @@ function App() {
               
               <Route element={<ProtectedLayout />}>
                 <Route element={<ProtectedRoute />}>
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/dashboard-produtividade" element={<ProductivityDashboard />} />
+                  <Route path="/empresas" element={<Empresas />} />
+                  <Route path="/empresa/:id" element={<CompanyDashboard />} />
+                  <Route path="/dashboard" element={<ProductivityDashboard />} />
                   <Route path="/consultar-cnpj" element={<CnpjConsultation />} />
                   <Route path="/project/:projectId/tasks" element={<ProjectTasks />} />
-                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/" element={<Navigate to="/empresas" replace />} />
                 </Route>
 
                 <Route element={<ProtectedRoute allowedRoles={['admin']} />}>

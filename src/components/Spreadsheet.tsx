@@ -135,7 +135,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({ data, loading, role })
         // Busca somente campos necessários
         const { data: tasks, error } = await supabase
           .from('tarefas')
-          .select('id,status,concluida')
+          .select('id,status,concluida,aplicacao')
           .eq('projeto_id', projeto.id);
 
         if (error) throw error;
@@ -143,7 +143,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({ data, loading, role })
         const list = tasks || [];
 
         // Total válido (exclui NAO APLICA)
-        const valid = list.filter((t: any) => normalizeStatus(t.status) !== 'NAO APLICA');
+        const valid = list.filter((t: any) => normalizeStatus(t.aplicacao) !== 'NAO APLICA');
 
         const totalValid = valid.length;
 

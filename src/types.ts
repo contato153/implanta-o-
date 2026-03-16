@@ -13,8 +13,8 @@ export interface Empresa {
   razao_social: string;
   nome_fantasia: string;
   cnpj: string;
-  ie: string;
-  im: string;
+  inscricao_estadual: string;
+  inscricao_municipal: string;
   ponto_focal_nome: string;
   ponto_focal_whatsapp: string;
   ponto_focal_email: string;
@@ -22,7 +22,7 @@ export interface Empresa {
   regime_novo: string;
   comp_inicial: string;
   aprovado_reuniao: string;
-  objetivo_empresa?: string;
+  objetivo: string;
   passar_bastao_link?: string;
   logo_url?: string;
 }
@@ -66,6 +66,7 @@ export interface Tarefa {
   aplicacao?: string;
   produtos?: string;
   observacoes?: string;
+  checklist?: string[];
   created_at?: string;
   ordem?: number;
   titulo?: string;

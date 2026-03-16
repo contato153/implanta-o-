@@ -497,7 +497,6 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
                 <option value="NÃO INICIADA">NÃO INICIADA</option>
                 <option value="EM EXECUÇÃO">EM EXECUÇÃO</option>
                 <option value="CONCLUÍDA">CONCLUÍDA</option>
-                <option value="NÃO APLICA">NÃO APLICA</option>
               </select>
             </div>
 
@@ -514,13 +513,51 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
 
             <div>
               <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Aplicação</label>
-              <input
-                type="text"
-                value={formData.aplicacao || ''}
+              <select
+                value={formData.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}
                 onChange={(e) => handleChange('aplicacao', e.target.value)}
                 disabled={!canEditTasks}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none"
-              />
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none appearance-none"
+              >
+                <option value="APLICA">APLICA</option>
+                <option value="NÃO APLICA">NÃO APLICA</option>
+              </select>
+            </div>
+
+            <div className="col-span-2">
+              <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Checklist</label>
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  placeholder="Novo item..."
+                  className="flex-1 px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg outline-none"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const val = (e.target as HTMLInputElement).value;
+                      if (val) {
+                        handleChange('checklist', [...(formData.checklist || []), val]);
+                        (e.target as HTMLInputElement).value = '';
+                      }
+                    }
+                  }}
+                />
+              </div>
+              <div className="space-y-1">
+                {(formData.checklist || []).map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-2 text-white bg-brand-black p-2 rounded">
+                    <input type="checkbox" className="accent-brand-accent" />
+                    <span>{item}</span>
+                    <button 
+                      type="button"
+                      className="ml-auto text-red-500"
+                      onClick={() => handleChange('checklist', formData.checklist?.filter((_, i) => i !== idx))}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div>
@@ -697,7 +734,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
     status: 'NÃO INICIADA',
     data_tarefa: new Date().toISOString().split('T')[0],
     data_termino: '',
-    aplicacao: '',
+    aplicacao: 'APLICA',
     produtos: '',
     observacoes: ''
   });
@@ -729,7 +766,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
         status: 'NÃO INICIADA',
         data_tarefa: new Date().toISOString().split('T')[0],
         data_termino: '',
-        aplicacao: '',
+        aplicacao: 'APLICA',
         produtos: '',
         observacoes: ''
       });
@@ -794,7 +831,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
                 <option value="NÃO INICIADA">NÃO INICIADA</option>
                 <option value="EM EXECUÇÃO">EM EXECUÇÃO</option>
                 <option value="CONCLUÍDA">CONCLUÍDA</option>
-                <option value="NÃO APLICA">NÃO APLICA</option>
               </select>
             </div>
 
@@ -810,12 +846,14 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
 
             <div>
               <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Aplicação</label>
-              <input
-                type="text"
-                value={formData.aplicacao}
+              <select
+                value={formData.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}
                 onChange={(e) => handleChange('aplicacao', e.target.value)}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
-              />
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none appearance-none"
+              >
+                <option value="APLICA">APLICA</option>
+                <option value="NÃO APLICA">NÃO APLICA</option>
+              </select>
             </div>
 
             <div>
@@ -914,7 +952,7 @@ const normalizeStatus = (status?: string | null) =>
     .replace(/\s+/g, ' ')
     .toUpperCase();
 
-const isNotApplicable = (t: Tarefa) => normalizeStatus(t.status) === 'NAO APLICA';
+const isNotApplicable = (t: Tarefa) => normalizeStatus(t.aplicacao) === 'NAO APLICA';
 const isDone = (t: Tarefa) => (t as any).concluida === true || normalizeStatus(t.status) === 'CONCLUIDA';
 const isDoing = (t: Tarefa) => normalizeStatus(t.status) === 'EM EXECUCAO';
 const isNotStarted = (t: Tarefa) => normalizeStatus(t.status) === 'NAO INICIADA';
@@ -960,8 +998,6 @@ const getStatusColor = (s: string) => {
       return 'bg-green-100 text-green-800 border-green-200';
     case 'EM EXECUCAO':
       return 'bg-blue-100 text-blue-800 border-blue-200';
-    case 'NAO APLICA':
-      return 'bg-gray-200 text-gray-600 border-gray-300';
     default:
       return 'bg-gray-100 text-gray-800 border-gray-200';
   }
@@ -1010,6 +1046,8 @@ interface TaskCardProps {
   onDelete: (task: Tarefa) => void;
   onViewAttachments: (task: Tarefa) => void;
   onViewObservation: (text: string) => void;
+  isSelected: boolean;
+  onToggle: () => void;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ 
@@ -1020,13 +1058,21 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onEdit,
   onDelete,
   onViewAttachments,
-  onViewObservation
+  onViewObservation,
+  isSelected,
+  onToggle
 }) => {
   const deadlineStatus = getDeadlineStatus(task);
 
   return (
-    <div className="bg-brand-dark border border-brand-gray rounded-xl p-4 space-y-4 shadow-sm">
-      <div className="flex justify-between items-start gap-2">
+    <div className={`bg-brand-dark border ${isSelected ? 'border-brand-accent' : 'border-brand-gray'} rounded-xl p-4 space-y-4 shadow-sm flex gap-3`}>
+      <input
+        type="checkbox"
+        checked={isSelected}
+        onChange={onToggle}
+        className="mt-1"
+      />
+      <div className="flex justify-between items-start gap-2 flex-1">
         <div className="flex flex-col gap-2 flex-1">
           <div className="flex items-center gap-2">
             <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getPriorityColor(task.prioridade)}`}>
@@ -1067,7 +1113,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
         </div>
         <div>
           <span className="block text-[10px] font-bold text-brand-text-muted uppercase tracking-wider mb-0.5">Aplicação</span>
-          <span className="text-xs text-white">{task.aplicacao || '-'}</span>
+          <span className="text-xs text-white">{task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}</span>
         </div>
         <div>
           <span className="block text-[10px] font-bold text-brand-text-muted uppercase tracking-wider mb-0.5">Início</span>
@@ -1137,6 +1183,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
   const [priorityFilter, setPriorityFilter] = useState("ALL");
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [attachmentCounts, setAttachmentCounts] = useState<Record<string, number>>({});
+  const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
 
   const canEditAll = role === 'admin';
   const canCreateTasks = role === 'admin' || role === 'manager';
@@ -1214,6 +1261,18 @@ export const TasksTable: React.FC<TasksTableProps> = ({
     }
   }, [tasks]);
 
+  const handleBulkUpdate = async (novoValor: string) => {
+    const supabase = getSupabase();
+    const { error } = await supabase.from('tarefas').update({ aplicacao: novoValor }).in('id', selectedTasks);
+    if (error) {
+      setToast({ message: 'Erro ao atualizar tarefas.', type: 'error' });
+    } else {
+      setToast({ message: 'Tarefas atualizadas com sucesso!', type: 'success' });
+      setSelectedTasks([]);
+      if (onUpdate) onUpdate();
+    }
+  };
+
   useEffect(() => {
     fetchAttachmentCounts();
   }, [fetchAttachmentCounts]);
@@ -1245,6 +1304,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
       aplicacao: updatedTask.aplicacao,
       produtos: updatedTask.produtos,
       observacoes: updatedTask.observacoes,
+      checklist: updatedTask.checklist,
       // ✅ concluida coerente com status (normalizado)
       concluida: normalizeStatus(updatedTask.status) === 'CONCLUIDA'
     };
@@ -1430,11 +1490,36 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                 onDelete={handleDeleteClick}
                 onViewAttachments={setViewingAttachmentsTask}
                 onViewObservation={setViewingObservation}
+                isSelected={selectedTasks.includes(task.id)}
+                onToggle={() => {
+                  if (selectedTasks.includes(task.id)) {
+                    setSelectedTasks(selectedTasks.filter(id => id !== task.id));
+                  } else {
+                    setSelectedTasks([...selectedTasks, task.id]);
+                  }
+                }}
               />
             ))
           )}
         </div>
 
+        {selectedTasks.length > 0 && (
+          <div className="flex items-center gap-4 p-4 bg-brand-gray rounded-lg mb-4 border border-brand-accent/20">
+            <span className="text-white font-bold">{selectedTasks.length} tarefas selecionadas</span>
+            <button 
+              onClick={() => handleBulkUpdate('APLICA')} 
+              className="px-4 py-2 bg-brand-accent text-brand-black font-bold rounded-lg hover:bg-brand-accent-hover transition-all text-xs uppercase tracking-widest"
+            >
+              Alterar para APLICA
+            </button>
+            <button 
+              onClick={() => handleBulkUpdate('NÃO APLICA')} 
+              className="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-500 transition-all text-xs uppercase tracking-widest"
+            >
+              Alterar para NÃO APLICA
+            </button>
+          </div>
+        )}
         {/* Desktop View: Table */}
         <div className="hidden lg:block overflow-x-auto custom-scrollbar">
           <table className="min-w-full divide-y divide-brand-gray text-sm relative border-collapse">
@@ -1447,6 +1532,19 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                 <th className="px-4 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[90px]">Início</th>
                 <th className="px-4 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[90px]">Término</th>
                 <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider min-w-[100px]">Aplicação</th>
+                <th className="px-3 py-4 text-center w-[40px] bg-brand-black border-r border-brand-gray/30">
+                  <input
+                    type="checkbox"
+                    checked={selectedTasks.length === filteredTasks.length && filteredTasks.length > 0}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedTasks(filteredTasks.map(t => t.id));
+                      } else {
+                        setSelectedTasks([]);
+                      }
+                    }}
+                  />
+                </th>
                 <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider min-w-[100px]">Produtos</th>
                 <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider min-w-[180px]">Observações</th>
                 {!isViewer && <th className="px-4 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[80px] bg-brand-black sticky right-0 z-40 border-l border-brand-gray/30">Ações</th>}
@@ -1483,12 +1581,12 @@ export const TasksTable: React.FC<TasksTableProps> = ({
 
                 return (
                   <tr key={task.id} className={`${rowClass} hover:bg-brand-gray/50 transition-colors group`}>
-                    <td className={`px-3 py-3 whitespace-nowrap sticky left-0 z-20 border-r border-brand-gray/10 ${rowClass} group-hover:bg-brand-gray transition-colors`}>
-                      <span className={`px-2 py-1 rounded text-[10px] font-bold border ${getPriorityColor(task.prioridade)}`}>
-                        {task.prioridade}
-                      </span>
-                    </td>
-                    <td className={`px-4 py-3 text-white font-bold sticky left-[60px] z-20 border-r border-brand-gray/10 ${rowClass} group-hover:bg-brand-gray transition-colors w-[25%] max-w-[300px] min-w-[200px]`}>
+                  <td className={`px-3 py-3 whitespace-nowrap sticky left-0 z-20 border-r border-brand-gray/10 ${rowClass} group-hover:bg-brand-gray transition-colors`}>
+                    <span className={`px-2 py-1 rounded text-[10px] font-bold border ${getPriorityColor(task.prioridade)}`}>
+                      {task.prioridade}
+                    </span>
+                  </td>
+                  <td className={`px-4 py-3 text-white font-bold sticky left-[60px] z-20 border-r border-brand-gray/10 ${rowClass} group-hover:bg-brand-gray transition-colors w-[25%] max-w-[300px] min-w-[200px]`}>
                       <div className="flex items-center gap-2">
                         <span className="whitespace-normal break-words leading-[1.4]" title={task.descricao}>{task.descricao}</span>
                         {attachmentCounts[task.id] > 0 && (
@@ -1519,7 +1617,20 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                         {task.data_termino && <DeadlineIndicator status={deadlineStatus} />}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.aplicacao || ''}>{task.aplicacao || '-'}</td>
+                    <td className="px-4 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}>{task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}</td>
+                    <td className={`px-3 py-3 text-center ${rowClass} group-hover:bg-brand-gray transition-colors`}>
+                    <input
+                      type="checkbox"
+                      checked={selectedTasks.includes(task.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedTasks([...selectedTasks, task.id]);
+                        } else {
+                          setSelectedTasks(selectedTasks.filter(id => id !== task.id));
+                        }
+                      }}
+                    />
+                  </td>
                     <td className="px-4 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.produtos || ''}>{task.produtos || '-'}</td>
                     <td className="px-4 py-3 text-brand-text-muted text-xs max-w-[250px]">
                       <ObservationCell 

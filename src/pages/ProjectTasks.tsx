@@ -5,7 +5,7 @@ import { getProjectData, getClientData } from '../services/api';
 import { Projeto, Tarefa } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
-import { ArrowLeft, FileDown } from 'lucide-react';
+import { ArrowLeft, FileDown, Building2 } from 'lucide-react';
 import { STANDARD_TASKS_TEMPLATE } from '../constants';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -23,7 +23,7 @@ const normalizeStatus = (status?: string | null) => {
     .toUpperCase();
 };
 
-const isNotApplicable = (t: Tarefa) => normalizeStatus((t as any).status) === 'NAO APLICA';
+const isNotApplicable = (t: Tarefa) => normalizeStatus((t as any).aplicacao) === 'NAO APLICA';
 const isDone = (t: Tarefa) =>
   (t as any).concluida === true || normalizeStatus((t as any).status) === 'CONCLUIDA';
 
@@ -31,7 +31,11 @@ export function ProjectTasks() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { role } = useAuth();
-  const { selectedClientId } = useCompany();
+  const { selectedClientId, clients, setSelectedClientId } = useCompany();
+
+  const selectedCompany = useMemo(() => {
+    return clients.find(c => c.id === selectedClientId);
+  }, [clients, selectedClientId]);
 
   const [project, setProject] = useState<Projeto | null>(null);
   const [tasks, setTasks] = useState<Tarefa[]>([]);
@@ -130,7 +134,11 @@ export function ProjectTasks() {
   }, [selectedClientId, navigate, projectId, project, error]);
 
   const handleBack = () => {
-    navigate('/dashboard');
+    if (selectedClientId) {
+      navigate(`/empresa/${selectedClientId}`);
+    } else {
+      navigate('/empresas');
+    }
   };
 
   const handleDownloadStandardPdf = () => {
@@ -209,6 +217,29 @@ export function ProjectTasks() {
     };
   }, [tasks]);
 
+  // 1. Verificação de Empresa Selecionada
+  if (!selectedClientId) {
+    return (
+      <div className="min-h-screen bg-brand-black flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-brand-dark p-8 rounded-xl shadow-2xl border border-brand-gray text-center">
+          <div className="w-16 h-16 bg-brand-gray/50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Building2 className="w-8 h-8 text-brand-text-muted" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-4">Acesso Bloqueado</h2>
+          <p className="text-brand-text-muted mb-8 text-lg">
+            Selecione uma empresa antes de acessar as tarefas.
+          </p>
+          <button
+            onClick={() => navigate('/empresas')}
+            className="w-full py-3 px-4 bg-brand-accent text-brand-black font-bold rounded-lg hover:bg-brand-accent-hover transition-colors shadow-lg shadow-brand-accent/20"
+          >
+            Ir para Empresas
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-brand-black flex items-center justify-center">
@@ -230,7 +261,7 @@ export function ProjectTasks() {
             onClick={handleBack}
             className="px-4 py-2 bg-brand-accent text-brand-black rounded hover:bg-brand-accent-hover transition-colors font-medium"
           >
-            Voltar para Dashboard
+            Voltar para Painel da Empresa
           </button>
         </div>
       </div>
@@ -245,8 +276,15 @@ export function ProjectTasks() {
           className="flex items-center text-brand-text-muted hover:text-brand-accent transition-colors mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Voltar para Dashboard
+          Voltar para Painel da Empresa
         </button>
+
+        {selectedCompany && (
+          <div className="mb-4 inline-flex items-center px-3 py-1.5 rounded-full bg-brand-accent/10 border border-brand-accent/20 text-brand-accent text-sm font-medium">
+            <Building2 className="w-4 h-4 mr-2" />
+            Empresa selecionada: {selectedCompany.nome_fantasia || selectedCompany.razao_social}
+          </div>
+        )}
 
         <div className="flex justify-between items-end">
           <div>

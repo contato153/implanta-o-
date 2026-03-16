@@ -23,12 +23,9 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
       const data = await getClients();
       setClients(data || []);
       
-      // If no client is selected but we have clients, select the first one
-      if (!selectedClientId && data && data.length > 0) {
-        setSelectedClientId(data[0].id);
-      } else if (selectedClientId && data && !data.find(c => c.id === selectedClientId)) {
-        // If selected client no longer exists, clear selection or select first
-        setSelectedClientId(data.length > 0 ? data[0].id : '');
+      // Check if selected client still exists
+      if (selectedClientId && data && !data.find(c => c.id === selectedClientId)) {
+        setSelectedClientId('');
       }
     } catch (error) {
       console.error('Failed to load clients', error);

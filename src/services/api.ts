@@ -240,7 +240,7 @@ export async function getClientData(clientId: string): Promise<ClientData | null
   .order('created_at', { ascending: true });
        if (t) {
          tarefas = t;
-         const total = tarefas.filter(task => task.status !== 'NÃO APLICA').length;
+         const total = tarefas.filter(task => (task.aplicacao || '').toUpperCase() !== 'NÃO APLICA' && (task.aplicacao || '').toUpperCase() !== 'NAO APLICA').length;
          const completed = tarefas.filter(task => task.status === 'CONCLUÍDA').length;
          percentual_conclusao = total > 0 ? Math.round((completed / total) * 100) : 0;
        }
