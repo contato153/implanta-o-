@@ -1,5 +1,5 @@
 import { getSupabase } from '../lib/supabase';
-import { ClientData, Empresa, Projeto, Socio, Participante, Tarefa, AnexoTarefa } from '../types';
+import { ClientData, Empresa, Projeto, Socio, Participante, Tarefa, AnexoTarefa, TarefasTemplate } from '../types';
 import { STANDARD_TASKS_TEMPLATE } from '../constants';
 
 // Mock data for demonstration when Supabase is not configured
@@ -330,11 +330,37 @@ export async function importStandardTasks(projectId: string): Promise<boolean> {
       return false;
     }
     
-    // Prepare tasks for insertion
-    const tasksToInsert = STANDARD_TASKS_TEMPLATE.map(task => ({
-      ...task,
-      projeto_id: projectId
-    }));
+    // Fetch tasks from template table
+    const { data: templateTasks, error: templateError } = await supabase
+      .from('tarefas_template')
+      .select('*');
+
+    if (templateError) throw templateError;
+
+    let tasksToInsert;
+
+    if (templateTasks && templateTasks.length > 0) {
+      // Prepare tasks for insertion from database template
+      tasksToInsert = templateTasks.map(task => ({
+        projeto_id: projectId,
+        descricao: task.descricao,
+        prioridade: task.prioridade,
+        proprietario: task.proprietario,
+        aplicacao: task.aplicacao,
+        produtos: task.produtos,
+        observacoes: task.observacoes,
+        status: 'NÃO INICIADA',
+        concluida: false
+      }));
+    } else {
+      // Fallback to hardcoded template if table is empty
+      tasksToInsert = STANDARD_TASKS_TEMPLATE.map(task => ({
+        ...task,
+        projeto_id: projectId,
+        status: 'NÃO INICIADA',
+        concluida: false
+      }));
+    }
     
     const { error: insertError } = await supabase
       .from('tarefas')
@@ -347,6 +373,47 @@ export async function importStandardTasks(projectId: string): Promise<boolean> {
     console.error('Error importing standard tasks:', error);
     throw error;
   }
+}
+
+export async function getTasksTemplate(): Promise<TarefasTemplate[]> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from('tarefas_template')
+    .select('*');
+  if (error) throw error;
+  return data || [];
+}
+
+export async function createTemplateTask(task: Omit<TarefasTemplate, 'id' | 'created_at'>): Promise<TarefasTemplate> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from('tarefas_template')
+    .insert(task)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateTemplateTask(id: string, task: Partial<TarefasTemplate>): Promise<TarefasTemplate> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from('tarefas_template')
+    .update(task)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteTemplateTask(id: string): Promise<void> {
+  const supabase = getSupabase();
+  const { error } = await supabase
+    .from('tarefas_template')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
 }
 
 export async function createCompany(

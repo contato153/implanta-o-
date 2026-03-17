@@ -67,7 +67,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
     regime_novo: '',
     comp_inicial: '',
     aprovado_reuniao: '',
-    objetivo_empresa: '',
+    objetivo: '',
     passar_bastao_link: '',
     data_inicio_prevista: '',
     data_fim_prevista: '',
@@ -99,7 +99,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
           regime_novo: '',
           comp_inicial: '',
           aprovado_reuniao: '',
-          objetivo_empresa: '',
+          objetivo: '',
           passar_bastao_link: '',
           data_inicio_prevista: '',
           data_fim_prevista: '',
@@ -153,7 +153,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
           regime_novo: empresa.regime_novo || '',
           comp_inicial: formatMesAno(empresa.comp_inicial || ''),
           aprovado_reuniao: empresa.aprovado_reuniao || '',
-          objetivo_empresa: empresa.objetivo_empresa || '',
+          objetivo: empresa.objetivo || '',
           passar_bastao_link: empresa.passar_bastao_link || '',
           data_inicio_prevista: projeto?.data_inicio_prevista || '',
           data_fim_prevista: projeto?.data_fim_prevista || '',
@@ -358,7 +358,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
         regime_novo: formData.regime_novo,
         comp_inicial: compInicialFormatada,
         aprovado_reuniao: formData.aprovado_reuniao,
-        objetivo_empresa: formData.objetivo_empresa,
+        objetivo: formData.objetivo,
         passar_bastao_link: formData.passar_bastao_link
       };
 
@@ -600,8 +600,8 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
               <div className="md:col-span-2">
                 <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">OBJETIVO DA EMPRESA</label>
                 <textarea
-                  name="objetivo_empresa"
-                  value={formData.objetivo_empresa}
+                  name="objetivo"
+                  value={formData.objetivo}
                   onChange={handleChange}
                   placeholder="Descreva o objetivo da empresa ou o propósito do projeto"
                   rows={4}

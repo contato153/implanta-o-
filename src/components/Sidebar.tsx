@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BarChart2, CheckSquare, Users, LogOut, Search, Building2 } from 'lucide-react';
+import { LayoutDashboard, BarChart2, CheckSquare, Users, LogOut, Search, Building2, ClipboardList, Clock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { ControlPanel } from './ControlPanel';
 import { useCompany } from '../context/CompanyContext';
 import { getClientData } from '../services/api';
 
@@ -127,19 +126,34 @@ export function Sidebar() {
         </NavLink>
 
         {role === 'admin' && (
-          <NavLink
-            to="/users"
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                isActive
-                  ? 'text-brand-accent bg-brand-gray shadow-md'
-                  : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
-              }`
-            }
-          >
-            <Users size={20} />
-            <span className="font-medium">Usuários</span>
-          </NavLink>
+          <>
+            <NavLink
+              to="/tasks-template"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                  isActive
+                    ? 'text-brand-accent bg-brand-gray shadow-md'
+                    : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
+                }`
+              }
+            >
+              <ClipboardList size={20} />
+              <span className="font-medium">Tarefas Padrão</span>
+            </NavLink>
+            <NavLink
+              to="/users"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                  isActive
+                    ? 'text-brand-accent bg-brand-gray shadow-md'
+                    : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
+                }`
+              }
+            >
+              <Users size={20} />
+              <span className="font-medium">Usuários</span>
+            </NavLink>
+          </>
         )}
       </nav>
       <div className="p-4 border-t border-brand-gray">

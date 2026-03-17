@@ -334,7 +334,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({ data, loading, role })
       <div className="grid grid-cols-12 border-b border-brand-gray">
         <div className={`col-span-12 p-2 ${canEditCompany ? 'cursor-pointer hover:bg-brand-gray' : ''}`}>
           <span className="font-bold block text-xs text-brand-text-muted">OBJETIVO DA EMPRESA</span>
-          {val(empresa?.objetivo_empresa)}
+          {val(empresa?.objetivo)}
         </div>
       </div>
 

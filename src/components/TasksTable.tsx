@@ -502,13 +502,18 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
 
             <div>
               <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Proprietário</label>
-              <input
-                type="text"
-                value={formData.proprietario || ''}
+              <select
+                value={formData.proprietario || 'DITE'}
                 onChange={(e) => handleChange('proprietario', e.target.value)}
                 disabled={!canEditTasks}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none"
-              />
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none appearance-none"
+              >
+                <option value="DITE">DITE</option>
+                <option value="FISCAL">FISCAL</option>
+                <option value="CLIENTE">CLIENTE</option>
+                <option value="PESSOAL">PESSOAL</option>
+                <option value="CONTÁBIL">CONTÁBIL</option>
+              </select>
             </div>
 
             <div>
@@ -836,12 +841,17 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
 
             <div>
               <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Proprietário</label>
-              <input
-                type="text"
-                value={formData.proprietario}
+              <select
+                value={formData.proprietario || 'DITE'}
                 onChange={(e) => handleChange('proprietario', e.target.value)}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
-              />
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none appearance-none"
+              >
+                <option value="DITE">DITE</option>
+                <option value="FISCAL">FISCAL</option>
+                <option value="CLIENTE">CLIENTE</option>
+                <option value="PESSOAL">PESSOAL</option>
+                <option value="CONTÁBIL">CONTÁBIL</option>
+              </select>
             </div>
 
             <div>
@@ -1261,14 +1271,26 @@ export const TasksTable: React.FC<TasksTableProps> = ({
     }
   }, [tasks]);
 
-  const handleBulkUpdate = async (novoValor: string) => {
+  const handleBulkUpdate = async (field: 'proprietario' | 'aplicacao', novoValor: string) => {
     const supabase = getSupabase();
-    const { error } = await supabase.from('tarefas').update({ aplicacao: novoValor }).in('id', selectedTasks);
+    const { error } = await supabase.from('tarefas').update({ [field]: novoValor }).in('id', selectedTasks);
     if (error) {
       setToast({ message: 'Erro ao atualizar tarefas.', type: 'error' });
     } else {
       setToast({ message: 'Tarefas atualizadas com sucesso!', type: 'success' });
       setSelectedTasks([]);
+      if (onUpdate) onUpdate();
+    }
+  };
+
+  const handleInlineUpdate = async (taskId: string, field: 'proprietario' | 'aplicacao', value: string) => {
+    if (isViewer) return;
+    const supabase = getSupabase();
+    const { error } = await supabase.from('tarefas').update({ [field]: value }).eq('id', taskId);
+    if (error) {
+      setToast({ message: `Erro ao atualizar ${field}.`, type: 'error' });
+    } else {
+      setToast({ message: 'Tarefa atualizada com sucesso!', type: 'success' });
       if (onUpdate) onUpdate();
     }
   };
@@ -1504,20 +1526,40 @@ export const TasksTable: React.FC<TasksTableProps> = ({
         </div>
 
         {selectedTasks.length > 0 && (
-          <div className="flex items-center gap-4 p-4 bg-brand-gray rounded-lg mb-4 border border-brand-accent/20">
+          <div className="flex flex-wrap items-center gap-4 p-4 bg-brand-gray rounded-lg mb-4 border border-brand-accent/20">
             <span className="text-white font-bold">{selectedTasks.length} tarefas selecionadas</span>
-            <button 
-              onClick={() => handleBulkUpdate('APLICA')} 
-              className="px-4 py-2 bg-brand-accent text-brand-black font-bold rounded-lg hover:bg-brand-accent-hover transition-all text-xs uppercase tracking-widest"
-            >
-              Alterar para APLICA
-            </button>
-            <button 
-              onClick={() => handleBulkUpdate('NÃO APLICA')} 
-              className="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-500 transition-all text-xs uppercase tracking-widest"
-            >
-              Alterar para NÃO APLICA
-            </button>
+            
+            <div className="flex items-center gap-2 border-l border-brand-gray/50 pl-4">
+              <span className="text-xs text-brand-text-muted uppercase font-bold">Aplicação:</span>
+              <button 
+                onClick={() => handleBulkUpdate('aplicacao', 'APLICA')} 
+                className="px-3 py-1.5 bg-brand-accent text-brand-black font-bold rounded hover:bg-brand-accent-hover transition-all text-[10px] uppercase tracking-widest"
+              >
+                APLICA
+              </button>
+              <button 
+                onClick={() => handleBulkUpdate('aplicacao', 'NÃO APLICA')} 
+                className="px-3 py-1.5 bg-red-600 text-white font-bold rounded hover:bg-red-500 transition-all text-[10px] uppercase tracking-widest"
+              >
+                NÃO APLICA
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 border-l border-brand-gray/50 pl-4">
+              <span className="text-xs text-brand-text-muted uppercase font-bold">Proprietário:</span>
+              <select
+                onChange={(e) => handleBulkUpdate('proprietario', e.target.value)}
+                value=""
+                className="px-3 py-1.5 bg-brand-black text-white font-bold rounded hover:bg-brand-gray transition-all text-[10px] uppercase tracking-widest border border-brand-gray/50 cursor-pointer outline-none"
+              >
+                <option value="" disabled>Alterar para...</option>
+                <option value="DITE">DITE</option>
+                <option value="FISCAL">FISCAL</option>
+                <option value="CLIENTE">CLIENTE</option>
+                <option value="PESSOAL">PESSOAL</option>
+                <option value="CONTÁBIL">CONTÁBIL</option>
+              </select>
+            </div>
           </div>
         )}
         {/* Desktop View: Table */}
@@ -1604,7 +1646,23 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.proprietario || ''}>{task.proprietario || '-'}</td>
+                    <td className="px-4 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.proprietario || ''}>
+                      {isViewer ? (
+                        task.proprietario || '-'
+                      ) : (
+                        <select
+                          value={task.proprietario || 'DITE'}
+                          onChange={(e) => handleInlineUpdate(task.id, 'proprietario', e.target.value)}
+                          className="w-full bg-transparent border-none outline-none text-brand-text-muted focus:text-white cursor-pointer appearance-none"
+                        >
+                          <option value="DITE">DITE</option>
+                          <option value="FISCAL">FISCAL</option>
+                          <option value="CLIENTE">CLIENTE</option>
+                          <option value="PESSOAL">PESSOAL</option>
+                          <option value="CONTÁBIL">CONTÁBIL</option>
+                        </select>
+                      )}
+                    </td>
                     <td className="px-4 py-3 whitespace-nowrap text-center">
                       <span className={`px-2 py-1 rounded-full text-[10px] font-semibold border ${getStatusColor(task.status)}`}>
                         {task.status}
@@ -1617,7 +1675,20 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                         {task.data_termino && <DeadlineIndicator status={deadlineStatus} />}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}>{task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}</td>
+                    <td className="px-4 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}>
+                      {isViewer ? (
+                        task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'
+                      ) : (
+                        <select
+                          value={task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}
+                          onChange={(e) => handleInlineUpdate(task.id, 'aplicacao', e.target.value)}
+                          className="w-full bg-transparent border-none outline-none text-brand-text-muted focus:text-white cursor-pointer appearance-none"
+                        >
+                          <option value="APLICA">APLICA</option>
+                          <option value="NÃO APLICA">NÃO APLICA</option>
+                        </select>
+                      )}
+                    </td>
                     <td className={`px-3 py-3 text-center ${rowClass} group-hover:bg-brand-gray transition-colors`}>
                     <input
                       type="checkbox"

@@ -13,8 +13,8 @@ export interface Empresa {
   razao_social: string;
   nome_fantasia: string;
   cnpj: string;
-  inscricao_estadual: string;
-  inscricao_municipal: string;
+  ie: string;
+  im: string;
   ponto_focal_nome: string;
   ponto_focal_whatsapp: string;
   ponto_focal_email: string;
@@ -22,7 +22,8 @@ export interface Empresa {
   regime_novo: string;
   comp_inicial: string;
   aprovado_reuniao: string;
-  objetivo: string;
+  objetivo?: string;
+  objetivo_empresa?: string;
   passar_bastao_link?: string;
   logo_url?: string;
 }
@@ -59,7 +60,7 @@ export interface Tarefa {
   projeto_id: string;
   descricao: string;
   prioridade: 'P1' | 'P2' | 'P3';
-  proprietario: string;
+  proprietario: 'DITE' | 'FISCAL' | 'CLIENTE' | 'PESSOAL' | 'CONTÁBIL' | string;
   status: string;
   data_tarefa?: string;
   data_termino?: string;
@@ -80,6 +81,17 @@ export interface AnexoTarefa {
   file_url: string;
   created_at: string;
   uploaded_by: string;
+}
+
+export interface TarefasTemplate {
+  id: string;
+  descricao: string;
+  prioridade: 'P1' | 'P2' | 'P3';
+  proprietario: 'DITE' | 'FISCAL' | 'CLIENTE' | 'PESSOAL' | 'CONTÁBIL' | string;
+  aplicacao?: string;
+  produtos?: string;
+  observacoes?: string;
+  created_at?: string;
 }
 
 export interface ClientData {

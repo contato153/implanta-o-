@@ -6,6 +6,7 @@ import { CompanyDashboard } from './pages/CompanyDashboard';
 import { Users } from './pages/Users';
 import { ProjectTasks } from './pages/ProjectTasks';
 import { ProductivityDashboard } from './pages/ProductivityDashboard';
+import { TasksTemplate } from './pages/TasksTemplate';
 import { CnpjConsultation } from './pages/CnpjConsultation';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ProtectedLayout } from './components/ProtectedLayout';
@@ -33,6 +34,7 @@ function App() {
 
                 <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
                   <Route path="/users" element={<Users />} />
+                  <Route path="/tasks-template" element={<TasksTemplate />} />
                 </Route>
               </Route>
 

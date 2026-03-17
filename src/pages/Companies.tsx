@@ -175,8 +175,8 @@ export function Companies() {
                       <td className="p-4 text-xs">{formatCNPJ(client.cnpj)}</td>
                       <td className="p-4 text-xs">{client.ie || '-'}</td>
                       <td className="p-4 text-xs">{client.im || '-'}</td>
-                      <td className="p-4 text-xs max-w-xs truncate" title={client.objetivo_empresa}>
-                        {client.objetivo_empresa || '-'}
+                      <td className="p-4 text-xs max-w-xs truncate" title={client.objetivo}>
+                        {client.objetivo || '-'}
                       </td>
                       <td className="p-4">
                         <div className="flex items-center justify-center gap-2">
