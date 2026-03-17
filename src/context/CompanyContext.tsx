@@ -18,8 +18,8 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
   const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
-  const carregarEmpresas = async () => {
-    setLoading(true);
+  const carregarEmpresas = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const data = await getClients();
       setClients(data || []);
@@ -31,7 +31,7 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Failed to load clients', error);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -45,23 +45,17 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'empresas' },
         () => {
-          carregarEmpresas();
+          carregarEmpresas(false);
         }
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'projetos' },
         () => {
-          carregarEmpresas();
+          carregarEmpresas(false);
         }
       )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'tarefas' },
-        () => {
-          carregarEmpresas();
-        }
-      )
+
       .subscribe();
 
     return () => {

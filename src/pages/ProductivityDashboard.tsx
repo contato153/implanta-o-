@@ -51,25 +51,26 @@ export function ProductivityDashboard() {
     const supabase = getSupabase();
     const channel = supabase
       .channel('realtime-dashboard')
+
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'tarefas' },
         () => {
-          carregarDados();
+          carregarDados(false);
         }
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'empresas' },
         () => {
-          carregarDados();
+          carregarDados(false);
         }
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'projetos' },
         () => {
-          carregarDados();
+          carregarDados(false);
         }
       )
       .subscribe();
@@ -79,8 +80,8 @@ export function ProductivityDashboard() {
     };
   }, []);
 
-  const carregarDados = async () => {
-    setLoading(true);
+  const carregarDados = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     const supabase = getSupabase();
 
     const tasksPromise = supabase
@@ -129,7 +130,7 @@ export function ProductivityDashboard() {
       setCompanies([]);
     }
 
-    setLoading(false);
+    if (showLoading) setLoading(false);
   };
 
   // ✅ helper: evita "undefined" aparecendo na tela

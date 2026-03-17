@@ -120,9 +120,11 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({ data, loading, role })
     return s;
   };
 
-  // ✅ Buscar tarefas do projeto e calcular percentual real
+  // ✅ Buscar tarefas do projeto e calcular percentual real (COM SUBSCRIPTION EM TEMPO REAL)
   useEffect(() => {
-    const run = async () => {
+    let subscription: any;
+
+    const fetchAndCalculate = async () => {
       // sem projeto selecionado
       if (!projeto?.id) {
         setProgress({ percent: 0, done: 0, totalValid: 0 });
@@ -165,7 +167,37 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({ data, loading, role })
       }
     };
 
-    run();
+    // Chamada inicial
+    fetchAndCalculate();
+
+    // Setup da subscription em tempo real
+    if (projeto?.id) {
+      const supabase = getSupabase();
+      subscription = supabase
+        .channel(`public:tarefas:projeto_${projeto.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Escuta INSERT, UPDATE e DELETE
+            schema: 'public',
+            table: 'tarefas',
+            filter: `projeto_id=eq.${projeto.id}`
+          },
+          () => {
+            console.log('🔄 Tarefa alterada! Recalculando progresso em tempo real...');
+            fetchAndCalculate();
+          }
+        )
+        .subscribe();
+    }
+
+    // Cleanup: Remove a subscription ao desmontar o componente ou mudar de projeto
+    return () => {
+      if (subscription) {
+        const supabase = getSupabase();
+        supabase.removeChannel(subscription);
+      }
+    };
   }, [projeto?.id, percentual_conclusao]);
 
   // ✅ Se preferir, usa sempre o calculado; se totalValid=0, cai no percentual_conclusao

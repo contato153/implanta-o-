@@ -41,15 +41,15 @@ export function ProjectTasks() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const carregarTarefas = async (idToLoad: string) => {
+  const carregarTarefas = async (idToLoad: string, showLoading = true) => {
     console.log('projectId usado:', idToLoad);
     if (!idToLoad) {
       setError('ID do projeto inválido.');
-      setLoading(false);
+      if (showLoading) setLoading(false);
       return;
     }
 
-    setLoading(true);
+    if (showLoading) setLoading(true);
     setError(null);
 
     try {
@@ -77,7 +77,7 @@ export function ProjectTasks() {
         setError('Erro ao carregar tarefas do projeto.');
       }
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -90,16 +90,16 @@ export function ProjectTasks() {
         .channel('realtime-tarefas')
         .on(
           'postgres_changes',
-          { event: '*', schema: 'public', table: 'tarefas' },
+          { event: '*', schema: 'public', table: 'tarefas', filter: `projeto_id=eq.${projectId}` },
           () => {
-            carregarTarefas(projectId);
+            carregarTarefas(projectId, false);
           }
         )
         .on(
           'postgres_changes',
-          { event: '*', schema: 'public', table: 'projetos' },
+          { event: '*', schema: 'public', table: 'projetos', filter: `id=eq.${projectId}` },
           () => {
-            carregarTarefas(projectId);
+            carregarTarefas(projectId, false);
           }
         )
         .subscribe();
