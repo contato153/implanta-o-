@@ -46,10 +46,40 @@ export function ProductivityDashboard() {
   const [companies, setCompanies] = useState<Company[]>([]);
 
   useEffect(() => {
-    fetchData();
+    carregarDados();
+
+    const supabase = getSupabase();
+    const channel = supabase
+      .channel('realtime-dashboard')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tarefas' },
+        () => {
+          carregarDados();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'empresas' },
+        () => {
+          carregarDados();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'projetos' },
+        () => {
+          carregarDados();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
-  const fetchData = async () => {
+  const carregarDados = async () => {
     setLoading(true);
     const supabase = getSupabase();
 
