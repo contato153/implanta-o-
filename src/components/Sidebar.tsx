@@ -58,6 +58,20 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
+        <NavLink
+          to="/dashboard"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+              isActive
+                ? 'text-brand-accent bg-brand-gray shadow-md'
+                : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
+            }`
+          }
+        >
+          <BarChart2 size={20} />
+          <span className="font-medium">Dashboard Geral</span>
+        </NavLink>
+
         <div className="flex flex-col">
           <NavLink
             to={selectedClientId ? `/empresa/${selectedClientId}` : "/empresas"}
@@ -98,19 +112,23 @@ export function Sidebar() {
             </div>
           )}
         </div>
-        <NavLink
-          to="/dashboard"
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-              isActive
-                ? 'text-brand-accent bg-brand-gray shadow-md'
-                : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
-            }`
-          }
-        >
-          <BarChart2 size={20} />
-          <span className="font-medium">Dashboard Geral</span>
-        </NavLink>
+
+        {role === 'admin' && (
+          <NavLink
+            to="/tasks-template"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                isActive
+                  ? 'text-brand-accent bg-brand-gray shadow-md'
+                  : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
+              }`
+            }
+          >
+            <ClipboardList size={20} />
+            <span className="font-medium">Tarefas Padrão</span>
+          </NavLink>
+        )}
+
         <NavLink
           to="/consultar-cnpj"
           className={({ isActive }) =>
@@ -126,34 +144,19 @@ export function Sidebar() {
         </NavLink>
 
         {role === 'admin' && (
-          <>
-            <NavLink
-              to="/tasks-template"
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  isActive
-                    ? 'text-brand-accent bg-brand-gray shadow-md'
-                    : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
-                }`
-              }
-            >
-              <ClipboardList size={20} />
-              <span className="font-medium">Tarefas Padrão</span>
-            </NavLink>
-            <NavLink
-              to="/users"
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  isActive
-                    ? 'text-brand-accent bg-brand-gray shadow-md'
-                    : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
-                }`
-              }
-            >
-              <Users size={20} />
-              <span className="font-medium">Usuários</span>
-            </NavLink>
-          </>
+          <NavLink
+            to="/users"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                isActive
+                  ? 'text-brand-accent bg-brand-gray shadow-md'
+                  : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
+              }`
+            }
+          >
+            <Users size={20} />
+            <span className="font-medium">Usuários</span>
+          </NavLink>
         )}
       </nav>
       <div className="p-4 border-t border-brand-gray">
