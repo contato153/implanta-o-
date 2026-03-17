@@ -16,7 +16,7 @@ import { AddCompanyModal } from '../components/AddCompanyModal';
 import { deleteCompany, getClientData } from '../services/api';
 
 export function Empresas() {
-  const { clients, loading, refreshClients, setSelectedClientId } = useCompany();
+  const { clients, loading, carregarEmpresas, setSelectedClientId } = useCompany();
   const { role } = useAuth();
   const navigate = useNavigate();
 
@@ -64,7 +64,7 @@ export function Empresas() {
     setIsDeleting(true);
     try {
       await deleteCompany(showDeleteConfirm);
-      await refreshClients();
+      await carregarEmpresas();
       setShowDeleteConfirm(null);
       alert('Empresa excluída com sucesso!');
     } catch (error: any) {
@@ -80,7 +80,7 @@ export function Empresas() {
   };
 
   const handleSuccess = async (newId: string) => {
-    await refreshClients();
+    await carregarEmpresas();
     setIsModalOpen(false);
     setEditingCompanyId(null);
   };
@@ -97,7 +97,7 @@ export function Empresas() {
             <p className="text-brand-text-muted text-sm">Gerencie o cadastro de empresas do sistema</p>
           </div>
           <button 
-            onClick={refreshClients}
+            onClick={carregarEmpresas}
             className="p-2 text-brand-text-muted hover:text-white transition-colors"
             title="Atualizar"
           >

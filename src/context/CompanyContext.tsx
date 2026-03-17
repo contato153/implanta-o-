@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Empresa } from '../types';
 import { getClients } from '../services/api';
+import { getSupabase } from '../lib/supabase';
 
 interface CompanyContextType {
   clients: Empresa[];
   selectedClientId: string;
   setSelectedClientId: (id: string) => void;
   loading: boolean;
-  refreshClients: () => Promise<void>;
+  carregarEmpresas: () => Promise<void>;
 }
 
 const CompanyContext = createContext<CompanyContextType | undefined>(undefined);
@@ -17,7 +18,7 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
   const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
-  const refreshClients = async () => {
+  const carregarEmpresas = async () => {
     setLoading(true);
     try {
       const data = await getClients();
@@ -35,11 +36,41 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    refreshClients();
+    carregarEmpresas();
+
+    const supabase = getSupabase();
+    const channel = supabase
+      .channel('realtime-empresas')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'empresas' },
+        () => {
+          carregarEmpresas();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'projetos' },
+        () => {
+          carregarEmpresas();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tarefas' },
+        () => {
+          carregarEmpresas();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return (
-    <CompanyContext.Provider value={{ clients, selectedClientId, setSelectedClientId, loading, refreshClients }}>
+    <CompanyContext.Provider value={{ clients, selectedClientId, setSelectedClientId, loading, carregarEmpresas }}>
       {children}
     </CompanyContext.Provider>
   );

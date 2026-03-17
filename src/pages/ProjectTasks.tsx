@@ -1,11 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { TasksTable } from '../components/TasksTable';
-import { getProjectData, getClientData, importStandardTasks } from '../services/api';
+import { getProjectData, getClientData } from '../services/api';
+import { getSupabase } from '../lib/supabase';
 import { Projeto, Tarefa } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
 import { ArrowLeft, FileDown, Building2 } from 'lucide-react';
+import { STANDARD_TASKS_TEMPLATE } from '../constants';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -41,7 +43,7 @@ export function ProjectTasks() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadData = async (idToLoad: string) => {
+  const carregarTarefas = async (idToLoad: string) => {
     console.log('projectId usado:', idToLoad);
     if (!idToLoad) {
       setError('ID do projeto inválido.');
@@ -83,7 +85,30 @@ export function ProjectTasks() {
 
   useEffect(() => {
     if (projectId) {
-      loadData(projectId);
+      carregarTarefas(projectId);
+
+      const supabase = getSupabase();
+      const channel = supabase
+        .channel('realtime-tarefas')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'tarefas' },
+          () => {
+            carregarTarefas(projectId);
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'projetos' },
+          () => {
+            carregarTarefas(projectId);
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [projectId]);
 
@@ -112,7 +137,7 @@ export function ProjectTasks() {
           } else {
             // Se o ID é o mesmo mas o estado está vazio ou com erro (ex: vindo de uma empresa sem projeto)
             if (!project || error) {
-              loadData(clientData.projeto.id);
+              carregarTarefas(clientData.projeto.id);
             }
           }
         } else {
@@ -140,22 +165,54 @@ export function ProjectTasks() {
     }
   };
 
-  const handleImportStandardTasks = async () => {
-    if (!projectId) return;
-    
-    if (!window.confirm('Deseja importar as tarefas padrão para este projeto? Isso não afetará as tarefas já existentes.')) {
-      return;
-    }
-
+  const handleDownloadStandardPdf = () => {
     try {
-      setLoading(true);
-      await importStandardTasks(projectId);
-      await loadData(projectId);
-    } catch (error) {
-      console.error('Erro ao importar tarefas:', error);
-      alert('Erro ao importar tarefas padrão.');
-    } finally {
-      setLoading(false);
+      const doc = new jsPDF();
+
+      // Title
+      doc.setFontSize(18);
+      doc.text('Lista de Tarefas Padrão', 14, 20);
+      
+      doc.setFontSize(10);
+      doc.text(`Gerado em: ${new Date().toLocaleDateString()}`, 14, 28);
+
+      // Table columns
+      const tableColumn = ["ID", "Descrição", "Prioridade", "Proprietário", "Aplicação", "Produtos"];
+      
+      // Table rows
+      const tableRows = STANDARD_TASKS_TEMPLATE.map((task, index) => [
+        index + 1,
+        task.descricao,
+        task.prioridade,
+        task.proprietario,
+        task.aplicacao,
+        task.produtos
+      ]);
+
+      // Generate table
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 35,
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        columnStyles: {
+          0: { cellWidth: 10 },
+          1: { cellWidth: 'auto' },
+          2: { cellWidth: 20 },
+          3: { cellWidth: 25 },
+          4: { cellWidth: 25 },
+          5: { cellWidth: 25 }
+        }
+      });
+
+      // Save PDF
+      doc.save('tarefas_padrao.pdf');
+      
+    } catch (error: any) {
+      console.error('Erro ao gerar PDF:', error);
+      alert('Erro ao gerar o arquivo PDF.');
     }
   };
 
@@ -321,7 +378,7 @@ export function ProjectTasks() {
           onTaskUpdate={handleTaskUpdate}
           onTaskAdd={handleTaskAdd}
           onTaskDelete={handleTaskDelete}
-          onImport={handleImportStandardTasks}
+          onImport={handleDownloadStandardPdf}
         />
       </main>
 

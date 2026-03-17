@@ -7,7 +7,7 @@ import { AddCompanyModal } from '../components/AddCompanyModal';
 import { deleteCompany } from '../services/api';
 
 export function Companies() {
-  const { clients, setSelectedClientId, refreshClients, loading } = useCompany();
+  const { clients, setSelectedClientId, carregarEmpresas, loading } = useCompany();
   const { role } = useAuth();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,7 +33,7 @@ export function Companies() {
     if (window.confirm(`Tem certeza que deseja excluir a empresa ${name}?`)) {
       try {
         await deleteCompany(id);
-        await refreshClients();
+        await carregarEmpresas();
       } catch (error) {
         console.error('Erro ao excluir empresa:', error);
         alert('Erro ao excluir empresa.');
@@ -76,7 +76,7 @@ export function Companies() {
           <p className="text-brand-text-muted">Gerencie o cadastro de empresas do sistema</p>
         </div>
         <button
-          onClick={refreshClients}
+          onClick={carregarEmpresas}
           className="p-2 text-brand-text-muted hover:text-brand-accent transition-colors"
           title="Atualizar lista"
         >
@@ -175,8 +175,8 @@ export function Companies() {
                       <td className="p-4 text-xs">{formatCNPJ(client.cnpj)}</td>
                       <td className="p-4 text-xs">{client.ie || '-'}</td>
                       <td className="p-4 text-xs">{client.im || '-'}</td>
-                      <td className="p-4 text-xs max-w-xs truncate" title={client.objetivo}>
-                        {client.objetivo || '-'}
+                      <td className="p-4 text-xs max-w-xs truncate" title={client.objetivo_empresa}>
+                        {client.objetivo_empresa || '-'}
                       </td>
                       <td className="p-4">
                         <div className="flex items-center justify-center gap-2">
@@ -220,7 +220,7 @@ export function Companies() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         onSuccess={async (id) => {
-          await refreshClients();
+          await carregarEmpresas();
           setIsModalOpen(false);
         }} 
         companyId={editingCompanyId}
