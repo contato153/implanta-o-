@@ -56,7 +56,7 @@ export function ProjectTasks() {
       const data = await getProjectData(idToLoad);
       if (data) {
         setProject(data.projeto);
-        setTasks(data.tarefas ?? []);
+        setTasks([...(data.tarefas ?? [])]);
 
         // Debug útil (se ainda der errado)
         const statusesRaw = (data.tarefas ?? []).map((t: any) => t.status);
@@ -226,20 +226,9 @@ export function ProjectTasks() {
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
   };
 
-  const [percentual, setPercentual] = useState(0);
-  const [totalTarefas, setTotalTarefas] = useState(0);
-  const [totalConcluidas, setTotalConcluidas] = useState(0);
-
-  useEffect(() => {
-    const total = tasks.length;
-    const concluidas = tasks.filter(t => t.status === "CONCLUÍDA").length;
-
-    const porcentagem = total === 0 ? 0 : Math.round((concluidas / total) * 100);
-
-    setPercentual(porcentagem);
-    setTotalTarefas(total);
-    setTotalConcluidas(concluidas);
-  }, [tasks]);
+  const total = tasks.length;
+  const concluidas = tasks.filter(t => t.status === "CONCLUÍDA").length;
+  const percentual = total === 0 ? 0 : Math.round((concluidas / total) * 100);
 
   // 1. Verificação de Empresa Selecionada
   if (!selectedClientId) {
@@ -357,7 +346,7 @@ export function ProjectTasks() {
                 <div className="text-xs text-brand-text-muted font-bold uppercase">Relógio de Conclusão</div>
                 <div className="text-2xl font-black text-white">{percentual}%</div>
                 <div className="text-xs text-brand-text-muted">
-                  {totalConcluidas} concluídas de {totalTarefas} (total)
+                  {concluidas} concluídas de {total} (total)
                 </div>
               </div>
             </div>
