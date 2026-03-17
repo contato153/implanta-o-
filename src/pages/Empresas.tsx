@@ -152,6 +152,9 @@ export function Empresas() {
                 <th className="px-6 py-4 w-24">Código</th>
                 <th className="px-6 py-4">Nome Empresarial</th>
                 <th className="px-6 py-4">CNPJ</th>
+                <th className="px-6 py-4">I.E.</th>
+                <th className="px-6 py-4">I.M.</th>
+                <th className="px-6 py-4">Objetivo</th>
                 <th className="px-6 py-4 text-center">Ações</th>
               </tr>
             </thead>
@@ -186,9 +189,15 @@ export function Empresas() {
                     <td className="px-6 py-4 text-sm text-brand-text-muted">
                       {client.cnpj ? formatCnpj(client.cnpj) : '-'}
                     </td>
-                   
-                   
-                   
+                    <td className="px-6 py-4 text-sm text-brand-text-muted">
+                      {client.ie || '-'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-brand-text-muted">
+                      {client.im || '-'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-brand-text-muted max-w-xs truncate" title={client.objetivo_empresa}>
+                      {client.objetivo_empresa || '-'}
+                    </td>
                     <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center gap-3">
                         <button 

@@ -25,8 +25,6 @@ const normalizeStatus = (status?: string | null) => {
 };
 
 const isNotApplicable = (t: Tarefa) => normalizeStatus((t as any).aplicacao) === 'NAO APLICA';
-const isDone = (t: Tarefa) =>
-  (t as any).concluida === true || normalizeStatus((t as any).status) === 'CONCLUIDA';
 
 export function ProjectTasks() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -228,17 +226,25 @@ export function ProjectTasks() {
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
   };
 
-  // ✅ Cálculo definitivo do “Relógio de Conclusão”
-  const completionPercent = useMemo(() => {
+  const [completionPercent, setCompletionPercent] = useState({
+    percent: 0,
+    totalValid: 0,
+    totalDone: 0
+  });
+
+  useEffect(() => {
+    const isDone = (t: Tarefa) =>
+      (t as any).concluida === true || (t as any).status === 'CONCLUÍDA';
+
     const valid = tasks.filter((t) => !isNotApplicable(t));
     const done = valid.filter((t) => isDone(t));
     const percent = valid.length > 0 ? Math.round((done.length / valid.length) * 100) : 0;
 
-    return {
+    setCompletionPercent({
       percent,
       totalValid: valid.length,
       totalDone: done.length
-    };
+    });
   }, [tasks]);
 
   // 1. Verificação de Empresa Selecionada
@@ -374,7 +380,7 @@ export function ProjectTasks() {
           tasks={tasks}
           projectId={project.id}
           role={role}
-          onUpdate={() => projectId && loadData(projectId)}
+          onUpdate={() => projectId && carregarTarefas(projectId)}
           onTaskUpdate={handleTaskUpdate}
           onTaskAdd={handleTaskAdd}
           onTaskDelete={handleTaskDelete}
