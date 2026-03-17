@@ -226,25 +226,19 @@ export function ProjectTasks() {
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
   };
 
-  const [completionPercent, setCompletionPercent] = useState({
-    percent: 0,
-    totalValid: 0,
-    totalDone: 0
-  });
+  const [percentual, setPercentual] = useState(0);
+  const [totalTarefas, setTotalTarefas] = useState(0);
+  const [totalConcluidas, setTotalConcluidas] = useState(0);
 
   useEffect(() => {
-    const isDone = (t: Tarefa) =>
-      (t as any).concluida === true || (t as any).status === 'CONCLUÍDA';
+    const total = tasks.length;
+    const concluidas = tasks.filter(t => t.status === "CONCLUÍDA").length;
 
-    const valid = tasks.filter((t) => !isNotApplicable(t));
-    const done = valid.filter((t) => isDone(t));
-    const percent = valid.length > 0 ? Math.round((done.length / valid.length) * 100) : 0;
+    const porcentagem = total === 0 ? 0 : Math.round((concluidas / total) * 100);
 
-    setCompletionPercent({
-      percent,
-      totalValid: valid.length,
-      totalDone: done.length
-    });
+    setPercentual(porcentagem);
+    setTotalTarefas(total);
+    setTotalConcluidas(concluidas);
   }, [tasks]);
 
   // 1. Verificação de Empresa Selecionada
@@ -361,16 +355,16 @@ export function ProjectTasks() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <div className="text-xs text-brand-text-muted font-bold uppercase">Relógio de Conclusão</div>
-                <div className="text-2xl font-black text-white">{completionPercent.percent}%</div>
+                <div className="text-2xl font-black text-white">{percentual}%</div>
                 <div className="text-xs text-brand-text-muted">
-                  {completionPercent.totalDone} concluídas de {completionPercent.totalValid} (válidas)
+                  {totalConcluidas} concluídas de {totalTarefas} (total)
                 </div>
               </div>
             </div>
             <div className="w-full bg-brand-gray h-2 rounded-full overflow-hidden">
               <div 
                 className="bg-brand-accent h-full transition-all duration-500 ease-out"
-                style={{ width: `${completionPercent.percent}%` }}
+                style={{ width: `${percentual}%` }}
               />
             </div>
           </div>
