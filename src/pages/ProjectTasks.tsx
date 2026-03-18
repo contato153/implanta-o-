@@ -226,9 +226,11 @@ export function ProjectTasks() {
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
   };
 
-  const total = tasks.length;
-  const concluidas = tasks.filter(t => t.status === "CONCLUÍDA").length;
-  const percentual = total === 0 ? 0 : Math.round((concluidas / total) * 100);
+  // 1. Cálculo do relógio de conclusão ignorando "NAO APLICA"
+  const tarefasValidas = tasks.filter(t => normalizeStatus((t as any).aplicacao) !== 'NAO APLICA');
+  const totalValidas = tarefasValidas.length;
+  const concluidasValidas = tarefasValidas.filter(t => normalizeStatus(t.status) === 'CONCLUIDA').length;
+  const percentual = totalValidas === 0 ? 0 : Math.round((concluidasValidas / totalValidas) * 100);
 
   // 1. Verificação de Empresa Selecionada
   if (!selectedClientId) {
@@ -346,7 +348,7 @@ export function ProjectTasks() {
                 <div className="text-xs text-brand-text-muted font-bold uppercase">Relógio de Conclusão</div>
                 <div className="text-2xl font-black text-white">{percentual}%</div>
                 <div className="text-xs text-brand-text-muted">
-                  {concluidas} concluídas de {total} (total)
+                  {concluidasValidas} concluídas de {totalValidas} (total válidas)
                 </div>
               </div>
             </div>
