@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BarChart2, CheckSquare, Users, LogOut, Search, Building2, ClipboardList, Clock } from 'lucide-react';
+import { LayoutDashboard, BarChart2, CheckSquare, Users, LogOut, Search, Building2, ClipboardList, Clock, Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
 import { getClientData } from '../services/api';
@@ -11,6 +11,7 @@ export function Sidebar() {
   const location = useLocation();
   const { selectedClientId, clients } = useCompany();
   const [isNavigatingTasks, setIsNavigatingTasks] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
 
   const selectedCompany = clients.find(c => c.id === selectedClientId);
 
@@ -45,13 +46,19 @@ export function Sidebar() {
   const isTasksActive = location.pathname.includes('/tasks');
 
   return (
-    <aside className="sticky top-0 min-h-screen w-[260px] flex-shrink-0 bg-brand-dark border-r border-brand-gray flex flex-col shadow-xl z-50">
-      <div className="p-6">
+    <aside className={`sticky top-0 min-h-screen ${isMinimized ? 'w-[80px]' : 'w-[260px]'} flex-shrink-0 bg-brand-dark border-r border-brand-gray flex flex-col shadow-xl z-50 transition-all duration-300`}>
+      <div className="p-6 relative">
+        <button
+          onClick={() => setIsMinimized(!isMinimized)}
+          className="absolute -right-3 top-6 bg-brand-accent text-brand-black rounded-full p-1 shadow-md hover:bg-brand-accent-hover transition-all"
+        >
+          <Menu size={16} />
+        </button>
         <div className="flex justify-center items-center mb-8 py-6">
           <img 
             src="https://i.imgur.com/8SuQt5R.png" 
             alt="L&M Logo" 
-            className="h-14 w-auto object-contain"
+            className={`object-contain transition-all duration-300 ${isMinimized ? 'h-8 w-8' : 'h-14 w-auto'}`}
             referrerPolicy="no-referrer"
           />
         </div>
@@ -67,9 +74,10 @@ export function Sidebar() {
                 : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
             }`
           }
+          title={isMinimized ? "Dashboard Geral" : ""}
         >
           <BarChart2 size={20} />
-          <span className="font-medium">Dashboard Geral</span>
+          {!isMinimized && <span className="font-medium">Dashboard Geral</span>}
         </NavLink>
 
         <div className="flex flex-col">
@@ -82,11 +90,12 @@ export function Sidebar() {
                   : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
               }`
             }
+            title={isMinimized ? "Empresas" : ""}
           >
             <Building2 size={20} />
-            <span className="font-medium">Empresas</span>
+            {!isMinimized && <span className="font-medium">Empresas</span>}
           </NavLink>
-          {selectedCompany && (
+          {selectedCompany && !isMinimized && (
             <div className="flex flex-col mt-1 ml-6 border-l-2 border-brand-gray/30 pl-2 gap-1">
               <div className="px-3 py-1.5 rounded-md bg-brand-gray/20 border border-brand-gray/30 flex flex-col gap-0.5">
                 <span className="text-[10px] text-brand-text-muted uppercase tracking-wider font-semibold">Empresa Selecionada</span>
@@ -123,9 +132,10 @@ export function Sidebar() {
                   : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
               }`
             }
+            title={isMinimized ? "Tarefas Padrão" : ""}
           >
             <ClipboardList size={20} />
-            <span className="font-medium">Tarefas Padrão</span>
+            {!isMinimized && <span className="font-medium">Tarefas Padrão</span>}
           </NavLink>
         )}
 
@@ -138,9 +148,10 @@ export function Sidebar() {
                 : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
             }`
           }
+          title={isMinimized ? "Consultar CNPJ" : ""}
         >
           <Search size={20} />
-          <span className="font-medium">Consultar CNPJ</span>
+          {!isMinimized && <span className="font-medium">Consultar CNPJ</span>}
         </NavLink>
 
         {role === 'admin' && (
@@ -153,9 +164,10 @@ export function Sidebar() {
                   : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
               }`
             }
+            title={isMinimized ? "Usuários" : ""}
           >
             <Users size={20} />
-            <span className="font-medium">Usuários</span>
+            {!isMinimized && <span className="font-medium">Usuários</span>}
           </NavLink>
         )}
       </nav>
@@ -163,9 +175,10 @@ export function Sidebar() {
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 px-4 py-3 w-full rounded-lg transition-all duration-200 text-brand-text-muted hover:bg-red-900/20 hover:text-red-400"
+          title={isMinimized ? "Sair" : ""}
         >
           <LogOut size={20} />
-          <span className="font-medium">Sair</span>
+          {!isMinimized && <span className="font-medium">Sair</span>}
         </button>
       </div>
     </aside>

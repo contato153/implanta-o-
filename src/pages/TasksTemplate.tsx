@@ -10,6 +10,7 @@ export function TasksTemplate() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [prioridadeFiltro, setPrioridadeFiltro] = useState<string>('Todas');
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const { role } = useAuth();
 
   // Modal State
@@ -147,9 +148,11 @@ export function TasksTemplate() {
     return (ordem[prioridadeA] || 4) - (ordem[prioridadeB] || 4);
   });
 
-  const filteredTasks = prioridadeFiltro === 'Todas'
-    ? sortedTasks
-    : sortedTasks.filter(t => t.prioridade === prioridadeFiltro);
+  const filteredTasks = sortedTasks.filter(t => {
+    const matchesPriority = prioridadeFiltro === 'Todas' || t.prioridade === prioridadeFiltro;
+    const matchesSearch = t.descricao.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesPriority && matchesSearch;
+  });
 
   return (
     <div className="min-h-screen bg-brand-black p-4 md:p-8 font-sans text-white">
@@ -166,6 +169,16 @@ export function TasksTemplate() {
           <p className="text-brand-text-muted">Gerencie a lista mestra de tarefas para novos projetos</p>
         </div>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-bold text-brand-text-muted uppercase">Buscar:</label>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-brand-black border border-brand-gray text-white rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-brand-accent focus:border-brand-accent outline-none"
+              placeholder="Nome da tarefa..."
+            />
+          </div>
           <div className="flex items-center gap-2">
             <label className="text-sm font-bold text-brand-text-muted uppercase">Prioridade:</label>
             <select

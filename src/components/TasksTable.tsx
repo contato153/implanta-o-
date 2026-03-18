@@ -1193,6 +1193,8 @@ export const TasksTable: React.FC<TasksTableProps> = ({
   const [viewingAttachmentsTask, setViewingAttachmentsTask] = useState<Tarefa | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [priorityFilter, setPriorityFilter] = useState("ALL");
+  const [deadlineFilter, setDeadlineFilter] = useState("ALL");
+  const [departmentFilter, setDepartmentFilter] = useState("ALL");
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [attachmentCounts, setAttachmentCounts] = useState<Record<string, number>>({});
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
@@ -1210,8 +1212,19 @@ export const TasksTable: React.FC<TasksTableProps> = ({
 
     return [...tasks]
       .filter(task => {
-        if (priorityFilter === "ALL") return true;
-        return task.prioridade === priorityFilter;
+        const priorityMatch = priorityFilter === "ALL" || task.prioridade === priorityFilter;
+        
+        let deadlineMatch = true;
+        if (deadlineFilter !== "ALL") {
+          const status = getDeadlineStatus(task);
+          if (deadlineFilter === "OVERDUE") deadlineMatch = status === 'OVERDUE';
+          else if (deadlineFilter === "TODAY") deadlineMatch = status === 'TODAY';
+          else if (deadlineFilter === "FUTURE") deadlineMatch = status === 'FUTURE';
+        }
+        
+        const departmentMatch = departmentFilter === "ALL" || task.proprietario === departmentFilter;
+        
+        return priorityMatch && deadlineMatch && departmentMatch;
       })
       .sort((a, b) => {
         const orderA = priorityOrder[a.prioridade as keyof typeof priorityOrder] || 99;
@@ -1226,7 +1239,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
         
         return deadlineOrder[statusA] - deadlineOrder[statusB];
       });
-  }, [tasks, priorityFilter]);
+  }, [tasks, priorityFilter, deadlineFilter, departmentFilter]);
 
   // ✅ Contadores corrigidos (exclui "NÃO APLICA" e normaliza)
   const { totalValid, completed, inProgress, notStarted, notApplicable, percentCompleted } = useMemo(() => {
@@ -1467,6 +1480,34 @@ export const TasksTable: React.FC<TasksTableProps> = ({
               <option value="P3">P3</option>
             </select>
           </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-brand-text-muted uppercase tracking-widest">Prazo:</span>
+            <select
+              value={deadlineFilter}
+              onChange={(e) => setDeadlineFilter(e.target.value)}
+              className="bg-brand-black border border-brand-gray text-white text-xs font-medium rounded px-2 py-1.5 focus:ring-1 focus:ring-brand-accent outline-none transition-all"
+            >
+              <option value="ALL">Todos</option>
+              <option value="OVERDUE">Atrasada</option>
+              <option value="TODAY">Vence hoje</option>
+              <option value="FUTURE">Dentro do prazo</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-brand-text-muted uppercase tracking-widest">Dept:</span>
+            <select
+              value={departmentFilter}
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+              className="bg-brand-black border border-brand-gray text-white text-xs font-medium rounded px-2 py-1.5 focus:ring-1 focus:ring-brand-accent outline-none transition-all"
+            >
+              <option value="ALL">Todos</option>
+              <option value="DITE">DITE</option>
+              <option value="FISCAL">FISCAL</option>
+              <option value="CLIENTE">CLIENTE</option>
+              <option value="PESSOAL">PESSOAL</option>
+              <option value="CONTÁBIL">CONTÁBIL</option>
+            </select>
+          </div>
           {canCreateTasks && (
             <button
               onClick={() => setIsAdding(true)}
@@ -1491,15 +1532,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                 <p className="text-sm mb-4 text-gray-500">
                   {priorityFilter === 'ALL' ? 'Este projeto ainda não possui tarefas.' : `Não há tarefas com prioridade ${priorityFilter}.`}
                 </p>
-                {priorityFilter === 'ALL' && canImportStandard && onImport && (
-                  <button
-                    onClick={onImport}
-                    className="flex items-center px-4 py-2 bg-brand-gray text-brand-accent text-sm font-medium rounded-lg hover:bg-brand-black transition-colors border border-brand-gray"
-                  >
-                    <FileDown className="w-4 h-4 mr-2" />
-                    Importar Padrão
-                  </button>
-                )}
+                {/* Removed Importar Padrão button */}
               </div>
             </div>
           ) : (
@@ -1606,15 +1639,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                       <p className="text-sm mb-4 text-gray-500">
                         {priorityFilter === 'ALL' ? 'Este projeto ainda não possui tarefas.' : `Não há tarefas com prioridade ${priorityFilter}.`}
                       </p>
-                      {priorityFilter === 'ALL' && canImportStandard && onImport && (
-                        <button
-                          onClick={onImport}
-                          className="flex items-center px-4 py-2 bg-brand-gray text-brand-accent text-sm font-medium rounded-lg hover:bg-brand-black transition-colors border border-brand-gray"
-                        >
-                          <FileDown className="w-4 h-4 mr-2" />
-                          Importar Padrão
-                        </button>
-                      )}
+                      {/* Removed Importar Padrão button */}
                     </div>
                   </td>
                 </tr>
