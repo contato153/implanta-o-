@@ -152,23 +152,20 @@ export function Empresas() {
                 <th className="px-6 py-4 w-24">Código</th>
                 <th className="px-6 py-4">Nome Empresarial</th>
                 <th className="px-6 py-4">CNPJ</th>
-                <th className="px-6 py-4">I.E.</th>
-                <th className="px-6 py-4">I.M.</th>
-                <th className="px-6 py-4">Objetivo</th>
                 <th className="px-6 py-4 text-center">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-gray/30">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center">
+                  <td colSpan={4} className="px-6 py-12 text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-accent mx-auto mb-4"></div>
                     <p className="text-brand-text-muted text-sm">Carregando empresas...</p>
                   </td>
                 </tr>
               ) : filteredClients.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-brand-text-muted">
+                  <td colSpan={4} className="px-6 py-12 text-center text-brand-text-muted">
                     Nenhuma empresa encontrada.
                   </td>
                 </tr>
@@ -188,15 +185,6 @@ export function Empresas() {
                     </td>
                     <td className="px-6 py-4 text-sm text-brand-text-muted">
                       {client.cnpj ? formatCnpj(client.cnpj) : '-'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-brand-text-muted">
-                      {client.ie || '-'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-brand-text-muted">
-                      {client.im || '-'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-brand-text-muted max-w-xs truncate" title={client.objetivo_empresa}>
-                      {client.objetivo_empresa || '-'}
                     </td>
                     <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center gap-3">

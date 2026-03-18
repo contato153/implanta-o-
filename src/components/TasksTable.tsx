@@ -503,11 +503,12 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
             <div>
               <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Departamento</label>
               <select
-                value={formData.proprietario || 'DITE'}
+                value={formData.proprietario || ''}
                 onChange={(e) => handleChange('proprietario', e.target.value)}
                 disabled={!canEditTasks}
                 className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none appearance-none"
               >
+                <option value="">-</option>
                 <option value="DITE">DITE</option>
                 <option value="FISCAL">FISCAL</option>
                 <option value="CLIENTE">CLIENTE</option>
@@ -842,10 +843,11 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
             <div>
               <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Departamento</label>
               <select
-                value={formData.proprietario || 'DITE'}
+                value={formData.proprietario || ''}
                 onChange={(e) => handleChange('proprietario', e.target.value)}
                 className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none appearance-none"
               >
+                <option value="">-</option>
                 <option value="DITE">DITE</option>
                 <option value="FISCAL">FISCAL</option>
                 <option value="CLIENTE">CLIENTE</option>
@@ -1553,6 +1555,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                 className="px-3 py-1.5 bg-brand-black text-white font-bold rounded hover:bg-brand-gray transition-all text-[10px] uppercase tracking-widest border border-brand-gray/50 cursor-pointer outline-none"
               >
                 <option value="" disabled>Alterar para...</option>
+                <option value="">-</option>
                 <option value="DITE">DITE</option>
                 <option value="FISCAL">FISCAL</option>
                 <option value="CLIENTE">CLIENTE</option>
@@ -1651,10 +1654,11 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                         task.proprietario || '-'
                       ) : (
                         <select
-                          value={task.proprietario || 'DITE'}
+                          value={task.proprietario || ''}
                           onChange={(e) => handleInlineUpdate(task.id, 'proprietario', e.target.value)}
                           className="w-full bg-transparent border-none outline-none text-brand-text-muted focus:text-white cursor-pointer appearance-none"
                         >
+                          <option value="">-</option>
                           <option value="DITE">DITE</option>
                           <option value="FISCAL">FISCAL</option>
                           <option value="CLIENTE">CLIENTE</option>

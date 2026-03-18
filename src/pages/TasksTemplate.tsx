@@ -56,7 +56,7 @@ export function TasksTemplate() {
       setFormData({
         descricao: task.descricao,
         prioridade: task.prioridade,
-        proprietario: task.proprietario,
+        proprietario: task.proprietario === 'DITE' ? '' : task.proprietario,
         aplicacao: task.aplicacao || '',
         produtos: task.produtos || '',
         observacoes: task.observacoes || ''
@@ -79,11 +79,12 @@ export function TasksTemplate() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      const dataToSave = { ...formData, proprietario: formData.proprietario || null };
       if (editingTask) {
-        await updateTemplateTask(editingTask.id, formData);
+        await updateTemplateTask(editingTask.id, dataToSave);
         showToast('Tarefa padrão atualizada com sucesso!', 'success');
       } else {
-        await createTemplateTask(formData);
+        await createTemplateTask(dataToSave);
         showToast('Tarefa padrão criada com sucesso!', 'success');
       }
       setIsModalOpen(false);
@@ -239,17 +240,18 @@ export function TasksTemplate() {
                       </td>
                       <td className="p-4 text-sm font-medium">{task.descricao}</td>
                       <td className="p-4 text-sm text-brand-text-muted">
-                        <select
-                          value={task.proprietario || 'DITE'}
-                          onChange={(e) => handleInlineUpdate(task.id, 'proprietario', e.target.value)}
-                          className="w-full bg-transparent border-none outline-none text-brand-text-muted focus:text-white cursor-pointer appearance-none"
-                        >
-                          <option value="DITE">DITE</option>
-                          <option value="FISCAL">FISCAL</option>
-                          <option value="CLIENTE">CLIENTE</option>
-                          <option value="PESSOAL">PESSOAL</option>
-                          <option value="CONTÁBIL">CONTÁBIL</option>
-                        </select>
+                      <select
+                        value={task.proprietario && task.proprietario.trim() !== 'DITE' ? task.proprietario : ''}
+                        onChange={(e) => handleInlineUpdate(task.id, 'proprietario', e.target.value)}
+                        className="w-full bg-transparent border-none outline-none text-brand-text-muted focus:text-white cursor-pointer appearance-none"
+                      >
+                        <option value="">-</option>
+                        <option value="DITE">DITE</option>
+                        <option value="FISCAL">FISCAL</option>
+                        <option value="CLIENTE">CLIENTE</option>
+                        <option value="PESSOAL">PESSOAL</option>
+                        <option value="CONTÁBIL">CONTÁBIL</option>
+                      </select>
                       </td>
                       <td className="p-4 text-sm text-brand-text-muted">
                         <select
@@ -363,13 +365,13 @@ export function TasksTemplate() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Departamento *</label>
+                  <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Departamento</label>
                   <select
-                    required
-                    value={formData.proprietario || 'DITE'}
+                    value={formData.proprietario || ''}
                     onChange={(e) => setFormData({ ...formData, proprietario: e.target.value })}
                     className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none appearance-none"
                   >
+                    <option value="">Selecione...</option>
                     <option value="DITE">DITE</option>
                     <option value="FISCAL">FISCAL</option>
                     <option value="CLIENTE">CLIENTE</option>
