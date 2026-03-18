@@ -202,7 +202,7 @@ export function TasksTemplate() {
                 <tr className="bg-brand-black border-b border-brand-gray">
                   <th className="p-4 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Prioridade</th>
                   <th className="p-4 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Descrição</th>
-                  <th className="p-4 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Proprietário</th>
+                  <th className="p-4 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Departamento</th>
                   <th className="p-4 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Aplicação</th>
                   <th className="p-4 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Produtos</th>
                   <th className="p-4 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Observações</th>
@@ -363,7 +363,7 @@ export function TasksTemplate() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Proprietário *</label>
+                  <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Departamento *</label>
                   <select
                     required
                     value={formData.proprietario || 'DITE'}

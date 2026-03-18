@@ -357,9 +357,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
         regime_atual: formData.regime_atual,
         regime_novo: formData.regime_novo,
         comp_inicial: compInicialFormatada,
-        aprovado_reuniao: formData.aprovado_reuniao,
-        objetivo: formData.objetivo,
-        passar_bastao_link: formData.passar_bastao_link
+        aprovado_reuniao: formData.aprovado_reuniao
       };
 
       const sociosData: Omit<Socio, 'id' | 'empresa_id'>[] = formData.socios

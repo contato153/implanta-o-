@@ -501,7 +501,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Proprietário</label>
+              <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Departamento</label>
               <select
                 value={formData.proprietario || 'DITE'}
                 onChange={(e) => handleChange('proprietario', e.target.value)}
@@ -840,7 +840,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Proprietário</label>
+              <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Departamento</label>
               <select
                 value={formData.proprietario || 'DITE'}
                 onChange={(e) => handleChange('proprietario', e.target.value)}
@@ -1118,7 +1118,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
       <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-2 border-t border-brand-gray/50">
         <div>
-          <span className="block text-[10px] font-bold text-brand-text-muted uppercase tracking-wider mb-0.5">Proprietário</span>
+          <span className="block text-[10px] font-bold text-brand-text-muted uppercase tracking-wider mb-0.5">Departamento</span>
           <span className="text-xs text-white">{task.proprietario || '-'}</span>
         </div>
         <div>
@@ -1546,7 +1546,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
             </div>
 
             <div className="flex items-center gap-2 border-l border-brand-gray/50 pl-4">
-              <span className="text-xs text-brand-text-muted uppercase font-bold">Proprietário:</span>
+              <span className="text-xs text-brand-text-muted uppercase font-bold">Departamento:</span>
               <select
                 onChange={(e) => handleBulkUpdate('proprietario', e.target.value)}
                 value=""
@@ -1569,7 +1569,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
               <tr>
                 <th className="px-3 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider w-[60px] bg-brand-black sticky left-0 z-40 border-r border-brand-gray/30">Prior.</th>
                 <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider w-[25%] max-w-[300px] min-w-[200px] bg-brand-black sticky left-[60px] z-40 border-r border-brand-gray/30">Tarefa</th>
-                <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider min-w-[100px]">Proprietário</th>
+                <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider min-w-[100px]">Departamento</th>
                 <th className="px-4 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[120px]">Status</th>
                 <th className="px-4 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[90px]">Início</th>
                 <th className="px-4 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[90px]">Término</th>

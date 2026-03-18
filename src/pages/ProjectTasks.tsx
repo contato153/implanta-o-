@@ -175,7 +175,7 @@ export function ProjectTasks() {
       doc.text(`Gerado em: ${new Date().toLocaleDateString()}`, 14, 28);
 
       // Table columns
-      const tableColumn = ["ID", "Descrição", "Prioridade", "Proprietário", "Aplicação", "Produtos"];
+      const tableColumn = ["ID", "Descrição", "Prioridade", "Departamento", "Aplicação", "Produtos"];
       
       // Table rows
       const tableRows = STANDARD_TASKS_TEMPLATE.map((task, index) => [
