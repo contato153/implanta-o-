@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { TasksTable } from '../components/TasksTable';
 import { getProjectData, getClientData } from '../services/api';
 import { getSupabase } from '../lib/supabase';
@@ -29,6 +29,8 @@ const isNotApplicable = (t: Tarefa) => normalizeStatus((t as any).aplicacao) ===
 export function ProjectTasks() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const highlightTaskId = location.state?.highlightTaskId;
   const { role } = useAuth();
   const { selectedClientId, clients, setSelectedClientId } = useCompany();
 
@@ -57,6 +59,12 @@ export function ProjectTasks() {
       if (data) {
         setProject(data.projeto);
         setTasks([...(data.tarefas ?? [])]);
+
+        // ✅ Sincroniza a empresa selecionada no contexto se estiver vindo de um link direto (ex: Histórico)
+        if (data.projeto.empresa_id && selectedClientId !== data.projeto.empresa_id) {
+          console.log('Sincronizando selectedClientId:', data.projeto.empresa_id);
+          setSelectedClientId(data.projeto.empresa_id);
+        }
 
         // Debug útil (se ainda der errado)
         const statusesRaw = (data.tarefas ?? []).map((t: any) => t.status);
@@ -112,19 +120,28 @@ export function ProjectTasks() {
 
   // Reagir à troca de empresa no menu lateral
   useEffect(() => {
+    // Se não houver empresa selecionada
+    if (!selectedClientId) {
+      // Se temos um projectId na URL, o useEffect do projectId vai carregar
+      // e sincronizar o selectedClientId. Não mostramos erro prematuro.
+      if (projectId) return;
+
+      // Se já temos o projeto (vindo de link direto), não limpamos
+      if (project) return;
+
+      setProject(null);
+      setTasks([]);
+      setError('Por favor, selecione uma empresa no menu lateral.');
+      return;
+    }
+
+    // Se já temos um projeto carregado e a empresa dele é a mesma selecionada, não faz nada
+    if (project && project.empresa_id === selectedClientId) return;
+
+    // Se estamos carregando um projeto via URL, aguarda concluir para evitar conflitos
+    if (loading && projectId) return;
+
     const handleCompanyChange = async () => {
-      // Se não houver empresa selecionada, limpa os dados e mostra mensagem
-      if (!selectedClientId) {
-        setProject(null);
-        setTasks([]);
-        setError('Por favor, selecione uma empresa no menu lateral.');
-        setLoading(false);
-        return;
-      }
-
-      // Se já temos um projeto carregado e a empresa dele é a mesma selecionada, não faz nada
-      if (project && project.empresa_id === selectedClientId) return;
-
       try {
         const clientData = await getClientData(selectedClientId);
         
@@ -153,7 +170,7 @@ export function ProjectTasks() {
     };
 
     handleCompanyChange();
-  }, [selectedClientId, navigate, projectId, project, error]);
+  }, [selectedClientId, navigate, projectId, project, error, loading]);
 
   const handleBack = () => {
     if (selectedClientId) {
@@ -232,15 +249,27 @@ export function ProjectTasks() {
   const concluidasValidas = tarefasValidas.filter(t => normalizeStatus(t.status) === 'CONCLUIDA').length;
   const percentual = totalValidas === 0 ? 0 : Math.round((concluidasValidas / totalValidas) * 100);
 
-  // 1. Verificação de Empresa Selecionada
-  if (!selectedClientId) {
+  // 1. Verificação de Carregamento Inicial
+  if (loading && !project) {
+    return (
+      <div className="min-h-screen bg-brand-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-accent mx-auto mb-4"></div>
+          <p className="text-brand-text-muted">Carregando tarefas...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Verificação de Empresa Selecionada (Apenas se não houver projeto carregado e não estiver carregando)
+  if (!selectedClientId && !project && !loading && !projectId) {
     return (
       <div className="min-h-screen bg-brand-black flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-brand-dark p-8 rounded-xl shadow-2xl border border-brand-gray text-center">
           <div className="w-16 h-16 bg-brand-gray/50 rounded-full flex items-center justify-center mx-auto mb-6">
             <Building2 className="w-8 h-8 text-brand-text-muted" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-4">Acesso Bloqueado</h2>
+          <h2 className="text-2xl font-bold text-brand-text-primary mb-4">Acesso Bloqueado</h2>
           <p className="text-brand-text-muted mb-8 text-lg">
             Selecione uma empresa antes de acessar as tarefas.
           </p>
@@ -284,7 +313,7 @@ export function ProjectTasks() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-black p-4 md:p-8 font-sans text-white">
+    <div className="min-h-screen bg-brand-black p-4 md:p-8 font-sans text-brand-text-primary">
       <header className="mb-8 max-w-6xl mx-auto">
         <button
           onClick={handleBack}
@@ -303,7 +332,7 @@ export function ProjectTasks() {
 
         <div className="flex justify-between items-end">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Gestão de Tarefas</h1>
+            <h1 className="text-3xl font-bold text-brand-text-primary mb-2">Gestão de Tarefas</h1>
             <p className="text-brand-text-muted">
               Projeto: <span className="font-semibold text-brand-accent">{project.nome}</span>
             </p>
@@ -322,7 +351,7 @@ export function ProjectTasks() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-sm">
             <div className="md:col-span-2">
               <span className="block text-brand-text-muted mb-1">Objetivo</span>
-              <p className="font-medium text-white">{project.objetivo}</p>
+              <p className="font-medium text-brand-text-primary">{project.objetivo}</p>
             </div>
 
             <div>
@@ -334,7 +363,7 @@ export function ProjectTasks() {
 
             <div>
               <span className="block text-brand-text-muted mb-1">Prazo</span>
-              <p className="font-medium text-white">
+              <p className="font-medium text-brand-text-primary">
                 {new Date(project.data_inicio_prevista).toLocaleDateString()} -{' '}
                 {new Date(project.data_fim_prevista).toLocaleDateString()}
               </p>
@@ -346,7 +375,7 @@ export function ProjectTasks() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <div className="text-xs text-brand-text-muted font-bold uppercase">Relógio de Conclusão</div>
-                <div className="text-2xl font-black text-white">{percentual}%</div>
+                <div className="text-2xl font-black text-brand-text-primary">{percentual}%</div>
                 <div className="text-xs text-brand-text-muted">
                   {concluidasValidas} concluídas de {totalValidas} (total válidas)
                 </div>
@@ -364,12 +393,14 @@ export function ProjectTasks() {
         <TasksTable
           tasks={tasks}
           projectId={project.id}
+          companyName={project.nome}
           role={role}
           onUpdate={() => projectId && carregarTarefas(projectId)}
           onTaskUpdate={handleTaskUpdate}
           onTaskAdd={handleTaskAdd}
           onTaskDelete={handleTaskDelete}
           onImport={handleDownloadStandardPdf}
+          highlightedTaskId={highlightTaskId}
         />
       </main>
 

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { Plus, X, CheckCircle, AlertCircle, Trash2, Lock } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { changeUserPassword } from '../services/api';
+import { registrarHistorico } from '../services/historico';
 
 export function Users() {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
@@ -62,6 +63,8 @@ export function Users() {
     if (currentUserRole !== 'admin') return;
     
     try {
+      const oldUser = profiles.find(p => p.id === userId);
+      
       const supabase = getSupabase();
       const { error } = await supabase
         .from('profiles')
@@ -73,6 +76,21 @@ export function Users() {
       setProfiles(profiles.map(p => 
         p.id === userId ? { ...p, role: newRole } : p
       ));
+
+      if (oldUser) {
+        const newUser = { ...oldUser, role: newRole };
+        await registrarHistorico({
+          entidade: 'usuario',
+          entidade_id: userId,
+          acao: 'EDITADO',
+          descricao: `Permissão de ${oldUser.full_name || oldUser.email} alterada para ${newRole}`,
+          detalhes: {
+            antes: oldUser,
+            depois: newUser
+          }
+        });
+      }
+
       showToast('Permissão atualizada com sucesso', 'success');
     } catch (err: any) {
       showToast('Erro ao atualizar permissão: ' + err.message, 'error');
@@ -117,6 +135,14 @@ export function Users() {
       if (error) throw error;
       
       setProfiles(profiles.filter(p => p.id !== userToDelete.id));
+
+      await registrarHistorico({
+        entidade: 'usuario',
+        entidade_id: userToDelete.id,
+        acao: 'EXCLUIDO',
+        descricao: `Usuário excluído: ${userToDelete.full_name || userToDelete.email}`
+      });
+
       showToast('Usuário removido com sucesso', 'success');
       setUserToDelete(null);
     } catch (err: any) {
@@ -179,6 +205,12 @@ export function Users() {
           console.error('Erro ao salvar perfil:', profileError);
           showToast('Usuário criado na autenticação, mas houve erro ao salvar o perfil.', 'error');
         } else {
+          await registrarHistorico({
+            entidade: 'usuario',
+            entidade_id: data.user.id,
+            acao: 'CRIADO',
+            descricao: `Usuário criado: ${newName || newEmail}`
+          });
           showToast('Usuário criado com sucesso', 'success');
         }
       }
@@ -205,12 +237,12 @@ export function Users() {
         return 'bg-green-900/50 text-green-300 border border-green-700/50';
       case 'viewer':
       default:
-        return 'bg-[#1E1E1E] text-[#BDBDBD] border border-[#333333]';
+        return 'bg-brand-gray text-brand-text-muted border border-brand-gray';
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0B0B] p-8 relative">
+    <div className="min-h-screen bg-brand-black p-8 relative">
       {/* Toast Notification */}
       {toast && (
         <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded shadow-lg text-white transition-opacity duration-300 ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
@@ -221,11 +253,11 @@ export function Users() {
 
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-white">Gerenciar Usuários</h1>
+          <h1 className="text-2xl font-bold text-brand-text-primary">Gerenciar Usuários</h1>
           {currentUserRole === 'admin' && (
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#F4C400] text-black font-semibold rounded-lg hover:bg-[#FFD84D] transition-colors shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-brand-accent text-black font-semibold rounded-lg hover:bg-brand-accent-hover transition-colors shadow-sm"
             >
               <Plus size={20} />
               Adicionar Usuário
@@ -239,46 +271,46 @@ export function Users() {
           </div>
         )}
 
-        <div className="bg-[#161616] shadow-xl overflow-hidden sm:rounded-xl border border-[#1E1E1E]">
-          <table className="min-w-full divide-y divide-[#1E1E1E]">
-            <thead className="bg-[#1E1E1E]">
+        <div className="bg-brand-dark shadow-xl overflow-hidden sm:rounded-xl border border-brand-gray">
+          <table className="min-w-full divide-y divide-brand-gray">
+            <thead className="bg-brand-gray">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-[#BDBDBD] uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-brand-text-muted uppercase tracking-wider">
                   Email
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-[#BDBDBD] uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-brand-text-muted uppercase tracking-wider">
                   Nome
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-[#BDBDBD] uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-brand-text-muted uppercase tracking-wider">
                   Permissão
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-[#BDBDBD] uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-brand-text-muted uppercase tracking-wider">
                   Ações
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#1E1E1E]">
+            <tbody className="divide-y divide-brand-gray">
               {loading ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-[#BDBDBD]">
+                  <td colSpan={4} className="px-6 py-8 text-center text-brand-text-muted">
                     <div className="flex justify-center items-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F4C400]"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-accent"></div>
                     </div>
                   </td>
                 </tr>
               ) : profiles.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-[#BDBDBD]">
+                  <td colSpan={4} className="px-6 py-8 text-center text-brand-text-muted">
                     Nenhum usuário encontrado.
                   </td>
                 </tr>
               ) : (
                 profiles.map((profile) => (
-                  <tr key={profile.id} className="hover:bg-[#1E1E1E]/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-medium">
+                  <tr key={profile.id} className="hover:bg-brand-gray/50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text-primary font-medium">
                       {profile.email}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#BDBDBD]">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-text-muted">
                       {profile.full_name || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -291,13 +323,13 @@ export function Users() {
                         {currentUserRole === 'admin' ? (
                           <>
                             {profile.id === user?.id ? (
-                              <span className="text-[#F4C400] italic text-xs w-[120px] font-semibold">Você</span>
+                              <span className="text-brand-accent italic text-xs w-[120px] font-semibold">Você</span>
                             ) : (
                               <div className="flex items-center gap-3">
                                 <select
                                   value={profile.role}
                                   onChange={(e) => updateRole(profile.id, e.target.value as Role)}
-                                  className="block w-[120px] py-1.5 px-3 border border-[#333333] bg-[#0B0B0B] text-white rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#F4C400] focus:border-[#F4C400] sm:text-sm transition-colors"
+                                  className="block w-[120px] py-1.5 px-3 border border-brand-gray bg-brand-black text-brand-text-primary rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-brand-accent focus:border-brand-accent sm:text-sm transition-colors"
                                 >
                                   <option value="viewer">Viewer</option>
                                   <option value="manager">Gestor</option>
@@ -305,7 +337,7 @@ export function Users() {
                                 </select>
                                 <button
                                   onClick={() => { setUserToChangePassword(profile); setIsPasswordModalOpen(true); }}
-                                  className="text-[#F4C400] hover:text-[#FFD84D] p-1.5 rounded-md hover:bg-[#F4C400]/10 transition-colors"
+                                  className="text-brand-accent hover:text-brand-accent-hover p-1.5 rounded-md hover:bg-brand-accent/10 transition-colors"
                                   title="Alterar senha do usuário"
                                 >
                                   <Lock size={18} />
@@ -321,7 +353,7 @@ export function Users() {
                             )}
                           </>
                         ) : (
-                          <span className="text-[#BDBDBD] italic text-xs">Sem permissão</span>
+                          <span className="text-brand-text-muted italic text-xs">Sem permissão</span>
                         )}
                       </div>
                     </td>
@@ -336,12 +368,12 @@ export function Users() {
       {/* Add User Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-[#161616] rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-[#1E1E1E]">
-            <div className="flex justify-between items-center p-6 border-b border-[#1E1E1E]">
-              <h2 className="text-xl font-bold text-white">Adicionar Usuário</h2>
+          <div className="bg-brand-dark rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-brand-gray">
+            <div className="flex justify-between items-center p-6 border-b border-brand-gray">
+              <h2 className="text-xl font-bold text-brand-text-primary">Adicionar Usuário</h2>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="text-[#BDBDBD] hover:text-white transition-colors"
+                className="text-[#BDBDBD] hover:text-brand-text-primary transition-colors"
               >
                 <X size={24} />
               </button>
@@ -358,7 +390,7 @@ export function Users() {
                   required
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
-                  className="w-full px-4 py-2 bg-[#0B0B0B] border border-[#333333] text-white rounded-lg focus:ring-1 focus:ring-[#F4C400] focus:border-[#F4C400] outline-none transition-all"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-[#F4C400] focus:border-[#F4C400] outline-none transition-all"
                   placeholder="exemplo@email.com"
                 />
               </div>
@@ -373,7 +405,7 @@ export function Users() {
                   required
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  className="w-full px-4 py-2 bg-[#0B0B0B] border border-[#333333] text-white rounded-lg focus:ring-1 focus:ring-[#F4C400] focus:border-[#F4C400] outline-none transition-all"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-[#F4C400] focus:border-[#F4C400] outline-none transition-all"
                   placeholder="Nome completo"
                 />
               </div>
@@ -389,7 +421,7 @@ export function Users() {
                   minLength={6}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-2 bg-[#0B0B0B] border border-[#333333] text-white rounded-lg focus:ring-1 focus:ring-[#F4C400] focus:border-[#F4C400] outline-none transition-all"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-[#F4C400] focus:border-[#F4C400] outline-none transition-all"
                   placeholder="Mínimo 6 caracteres"
                 />
               </div>
@@ -402,7 +434,7 @@ export function Users() {
                   id="role"
                   value={newRole}
                   onChange={(e) => setNewRole(e.target.value as Role)}
-                  className="w-full px-4 py-2 bg-[#0B0B0B] border border-[#333333] text-white rounded-lg focus:ring-1 focus:ring-[#F4C400] focus:border-[#F4C400] outline-none transition-all"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-[#F4C400] focus:border-[#F4C400] outline-none transition-all"
                 >
                   <option value="viewer">Viewer</option>
                   <option value="manager">Gestor</option>
@@ -414,7 +446,7 @@ export function Users() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 px-4 py-2 border border-[#333333] text-[#BDBDBD] font-medium rounded-lg hover:bg-[#1E1E1E] hover:text-white transition-colors"
+                  className="flex-1 px-4 py-2 border border-brand-gray text-[#BDBDBD] font-medium rounded-lg hover:bg-brand-gray hover:text-brand-text-primary transition-colors"
                 >
                   Cancelar
                 </button>
@@ -434,12 +466,12 @@ export function Users() {
       {/* Password Modal */}
       {isPasswordModalOpen && userToChangePassword && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-[#161616] rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-[#1E1E1E]">
-            <div className="flex justify-between items-center p-6 border-b border-[#1E1E1E]">
-              <h2 className="text-xl font-bold text-white">Alterar Senha</h2>
+          <div className="bg-brand-dark rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-brand-gray">
+            <div className="flex justify-between items-center p-6 border-b border-brand-gray">
+              <h2 className="text-xl font-bold text-brand-text-primary">Alterar Senha</h2>
               <button 
                 onClick={() => setIsPasswordModalOpen(false)}
-                className="text-[#BDBDBD] hover:text-white transition-colors"
+                className="text-[#BDBDBD] hover:text-brand-text-primary transition-colors"
               >
                 <X size={24} />
               </button>
@@ -454,7 +486,7 @@ export function Users() {
                   type="text"
                   disabled
                   value={userToChangePassword.email}
-                  className="w-full px-4 py-2 bg-[#0B0B0B] border border-[#333333] text-[#BDBDBD] rounded-lg cursor-not-allowed"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-[#BDBDBD] rounded-lg cursor-not-allowed"
                 />
               </div>
               
@@ -469,7 +501,7 @@ export function Users() {
                   minLength={6}
                   value={newPasswordValue}
                   onChange={(e) => setNewPasswordValue(e.target.value)}
-                  className="w-full px-4 py-2 bg-[#0B0B0B] border border-[#333333] text-white rounded-lg focus:ring-1 focus:ring-[#F4C400] focus:border-[#F4C400] outline-none transition-all"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-[#F4C400] focus:border-[#F4C400] outline-none transition-all"
                   placeholder="Mínimo 6 caracteres"
                 />
               </div>
@@ -485,7 +517,7 @@ export function Users() {
                   minLength={6}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-2 bg-[#0B0B0B] border border-[#333333] text-white rounded-lg focus:ring-1 focus:ring-[#F4C400] focus:border-[#F4C400] outline-none transition-all"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-[#F4C400] focus:border-[#F4C400] outline-none transition-all"
                   placeholder="Confirme a nova senha"
                 />
               </div>
@@ -494,7 +526,7 @@ export function Users() {
                 <button
                   type="button"
                   onClick={() => setIsPasswordModalOpen(false)}
-                  className="flex-1 px-4 py-2 border border-[#333333] text-[#BDBDBD] font-medium rounded-lg hover:bg-[#1E1E1E] hover:text-white transition-colors"
+                  className="flex-1 px-4 py-2 border border-brand-gray text-[#BDBDBD] font-medium rounded-lg hover:bg-brand-gray hover:text-brand-text-primary transition-colors"
                 >
                   Cancelar
                 </button>
@@ -513,22 +545,22 @@ export function Users() {
       {/* Delete Confirmation Modal */}
       {userToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-[#161616] rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border border-[#1E1E1E]">
+          <div className="bg-brand-dark rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border border-brand-gray">
             <div className="p-6">
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-900/30 text-red-500 mx-auto mb-4">
                 <AlertCircle size={24} />
               </div>
-              <h3 className="text-xl font-bold text-white text-center mb-2">Excluir Usuário</h3>
+              <h3 className="text-xl font-bold text-brand-text-primary text-center mb-2">Excluir Usuário</h3>
               <p className="text-[#BDBDBD] text-center mb-6">
                 Tem certeza que deseja apagar este usuário?
                 <br />
-                <span className="text-white font-medium mt-2 block">{userToDelete.email}</span>
+                <span className="text-brand-text-primary font-medium mt-2 block">{userToDelete.email}</span>
               </p>
               <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={() => setUserToDelete(null)}
-                  className="flex-1 px-4 py-2 border border-[#333333] text-[#BDBDBD] font-medium rounded-lg hover:bg-[#1E1E1E] hover:text-white transition-colors"
+                  className="flex-1 px-4 py-2 border border-brand-gray text-[#BDBDBD] font-medium rounded-lg hover:bg-brand-gray hover:text-brand-text-primary transition-colors"
                 >
                   Cancelar
                 </button>

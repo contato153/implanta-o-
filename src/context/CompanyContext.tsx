@@ -9,6 +9,8 @@ interface CompanyContextType {
   setSelectedClientId: (id: string) => void;
   loading: boolean;
   carregarEmpresas: () => Promise<void>;
+  isSidebarMinimized: boolean;
+  setIsSidebarMinimized: (minimized: boolean) => void;
 }
 
 const CompanyContext = createContext<CompanyContextType | undefined>(undefined);
@@ -17,6 +19,14 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
   const [clients, setClients] = useState<Empresa[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [isSidebarMinimized, setIsSidebarMinimized] = useState(() => {
+    const saved = localStorage.getItem('sidebar-minimized');
+    return saved === 'true';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('sidebar-minimized', String(isSidebarMinimized));
+  }, [isSidebarMinimized]);
 
   const carregarEmpresas = async (showLoading = true) => {
     if (showLoading) setLoading(true);
@@ -64,7 +74,15 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <CompanyContext.Provider value={{ clients, selectedClientId, setSelectedClientId, loading, carregarEmpresas }}>
+    <CompanyContext.Provider value={{ 
+      clients, 
+      selectedClientId, 
+      setSelectedClientId, 
+      loading, 
+      carregarEmpresas,
+      isSidebarMinimized,
+      setIsSidebarMinimized
+    }}>
       {children}
     </CompanyContext.Provider>
   );

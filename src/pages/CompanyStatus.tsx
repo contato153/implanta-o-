@@ -38,7 +38,7 @@ export function CompanyStatus() {
     return (
       <div className="min-h-screen bg-brand-black p-8 flex flex-col items-center justify-center text-center">
         <Building2 size={64} className="text-brand-gray mb-4" />
-        <h2 className="text-2xl font-bold text-white mb-2">Nenhuma Empresa Selecionada</h2>
+        <h2 className="text-2xl font-bold text-brand-text-primary mb-2">Nenhuma Empresa Selecionada</h2>
         <p className="text-brand-text-muted mb-6">Selecione uma empresa na página de Empresas para visualizar o status do projeto.</p>
         <Link 
           to="/empresas"
@@ -51,7 +51,7 @@ export function CompanyStatus() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-black font-sans text-white">
+    <div className="min-h-screen bg-brand-black font-sans text-brand-text-primary">
       <header className="p-4 md:p-8 border-b border-brand-gray bg-brand-dark/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -60,7 +60,7 @@ export function CompanyStatus() {
               <ChevronRight size={14} />
               <span className="text-brand-accent font-medium">Status do Projeto</span>
             </div>
-            <h1 className="text-3xl font-bold text-white">
+            <h1 className="text-3xl font-bold text-brand-text-primary">
               {data?.empresa?.nome_fantasia || data?.empresa?.razao_social || 'Carregando...'}
             </h1>
             <p className="text-brand-text-muted mt-1">Visualização detalhada do status e progresso do projeto</p>

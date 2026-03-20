@@ -54,7 +54,7 @@ export const CnpjConsultation: React.FC = () => {
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Consulta de CNPJ</h1>
+        <h1 className="text-3xl font-bold text-brand-text-primary mb-2">Consulta de CNPJ</h1>
         <p className="text-brand-text-muted">Consulte os dados completos de qualquer empresa pelo CNPJ.</p>
       </div>
 
@@ -69,7 +69,7 @@ export const CnpjConsultation: React.FC = () => {
               value={cnpj}
               onChange={handleCnpjChange}
               placeholder="00.000.000/0000-00"
-              className="w-full px-4 py-3 bg-brand-dark border border-brand-gray text-white rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600 text-lg font-mono"
+              className="w-full px-4 py-3 bg-brand-dark border border-brand-gray text-brand-text-primary rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600 text-lg font-mono"
               required
             />
           </div>

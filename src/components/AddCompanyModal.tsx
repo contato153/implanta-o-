@@ -396,10 +396,10 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto animate-in fade-in duration-200">
       <div className="bg-brand-dark rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-brand-gray">
         <div className="flex justify-between items-center p-6 border-b border-brand-gray sticky top-0 bg-brand-dark z-10">
-          <h2 className="text-xl font-bold text-white">
+          <h2 className="text-xl font-bold text-brand-text-primary">
             {companyId ? 'Editar Empresa' : 'Adicionar Nova Empresa'}
           </h2>
-          <button onClick={onClose} className="text-brand-text-muted hover:text-white transition-colors p-1 rounded-full hover:bg-brand-gray">
+          <button onClick={onClose} className="text-brand-text-muted hover:text-brand-text-primary transition-colors p-1 rounded-full hover:bg-brand-gray">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -423,7 +423,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   name="codigo_interno"
                   value={formData.codigo_interno}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                   required
                 />
               </div>
@@ -437,7 +437,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                     onChange={handleChange}
                     onBlur={handleCnpjBlur}
                     placeholder="00.000.000/0000-00"
-                    className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                    className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                     required
                   />
                   {loadingCnpj && (
@@ -457,7 +457,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   name="razao_social"
                   value={formData.razao_social}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                   required
                 />
                 {notFoundFields.includes('razao_social') && <span className="text-[10px] text-brand-accent mt-1 block">Não encontrado automaticamente</span>}
@@ -469,7 +469,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   name="nome_fantasia"
                   value={formData.nome_fantasia}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                   required
                 />
                 {notFoundFields.includes('nome_fantasia') && <span className="text-[10px] text-brand-accent mt-1 block">Não encontrado automaticamente</span>}
@@ -484,7 +484,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   name="ie"
                   value={formData.ie}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                   required
                 />
                 {notFoundFields.includes('ie') && <span className="text-[10px] text-brand-accent mt-1 block">Não encontrado automaticamente</span>}
@@ -496,7 +496,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   name="im"
                   value={formData.im}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                 />
                 {notFoundFields.includes('im') && <span className="text-[10px] text-brand-accent mt-1 block">Não encontrado automaticamente</span>}
               </div>
@@ -509,7 +509,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   name="regime_atual"
                   value={formData.regime_atual}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all"
                   required
                 >
                   <option value="">Selecione...</option>
@@ -526,7 +526,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   name="regime_novo"
                   value={formData.regime_novo}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all"
                   required
                 >
                   <option value="">Selecione...</option>
@@ -542,21 +542,21 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
               <div>
                 <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Data Início Prevista</label>
                 <input
-                  type="date"
+                  type="datetime-local"
                   name="data_inicio_prevista"
                   value={formData.data_inicio_prevista}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all [color-scheme:dark]"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all [color-scheme:dark]"
                 />
               </div>
               <div>
                 <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Data Fim Prevista</label>
                 <input
-                  type="date"
+                  type="datetime-local"
                   name="data_fim_prevista"
                   value={formData.data_fim_prevista}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all [color-scheme:dark]"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all [color-scheme:dark]"
                 />
               </div>
               <div className="md:col-span-2">
@@ -567,7 +567,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   value={formData.passar_bastao_link}
                   onChange={handleChange}
                   placeholder="Cole aqui o link do documento de passar bastão"
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                 />
               </div>
             </div>
@@ -581,7 +581,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   value={formData.comp_inicial}
                   onChange={handleChange}
                   placeholder="MM/AAAA"
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                   required
                 />
               </div>
@@ -592,7 +592,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   value={formData.aprovado_reuniao}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                 />
               </div>
               <div className="md:col-span-2">
@@ -603,7 +603,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   onChange={handleChange}
                   placeholder="Descreva o objetivo da empresa ou o propósito do projeto"
                   rows={4}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                 />
               </div>
             </div>
@@ -618,7 +618,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   name="ponto_focal_nome"
                   value={formData.ponto_focal_nome}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                 />
               </div>
               <div>
@@ -628,7 +628,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   name="ponto_focal_whatsapp"
                   value={formData.ponto_focal_whatsapp}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                 />
               </div>
               <div>
@@ -638,7 +638,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                   name="ponto_focal_email"
                   value={formData.ponto_focal_email}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                 />
               </div>
             </div>
@@ -662,7 +662,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                       type="text"
                       value={socio.nome}
                       onChange={(e) => handleSocioChange(index, 'nome', e.target.value)}
-                      className="w-full px-4 py-2 bg-brand-dark border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                      className="w-full px-4 py-2 bg-brand-dark border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                     />
                     {notFoundFields.includes(`socio_${index}`) && <span className="text-[10px] text-brand-accent mt-1 block">Não encontrado automaticamente</span>}
                   </div>
@@ -672,7 +672,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                       type="text"
                       value={socio.whatsapp}
                       onChange={(e) => handleSocioChange(index, 'whatsapp', e.target.value)}
-                      className="w-full px-4 py-2 bg-brand-dark border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                      className="w-full px-4 py-2 bg-brand-dark border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                     />
                   </div>
                   <div>
@@ -681,7 +681,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                       type="email"
                       value={socio.email}
                       onChange={(e) => handleSocioChange(index, 'email', e.target.value)}
-                      className="w-full px-4 py-2 bg-brand-dark border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                      className="w-full px-4 py-2 bg-brand-dark border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
                     />
                   </div>
                 </div>
@@ -693,7 +693,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2.5 border border-brand-gray rounded-lg shadow-sm text-sm font-bold text-brand-text-muted bg-brand-black hover:bg-brand-gray hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-gray transition-all"
+              className="px-6 py-2.5 border border-brand-gray rounded-lg shadow-sm text-sm font-bold text-brand-text-muted bg-brand-black hover:bg-brand-gray hover:text-brand-text-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-gray transition-all"
               disabled={loading}
             >
               Cancelar

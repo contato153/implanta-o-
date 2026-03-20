@@ -67,7 +67,6 @@ export interface Tarefa {
   aplicacao?: string;
   produtos?: string;
   observacoes?: string;
-  checklist?: string[];
   created_at?: string;
   ordem?: number;
   titulo?: string;

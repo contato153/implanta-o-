@@ -25,7 +25,7 @@ export function TasksTemplate() {
     descricao: '',
     prioridade: 'P1' as 'P1' | 'P2' | 'P3',
     proprietario: '',
-    aplicacao: '',
+    aplicacao: 'APLICA',
     produtos: '',
     observacoes: ''
   });
@@ -57,8 +57,8 @@ export function TasksTemplate() {
       setFormData({
         descricao: task.descricao,
         prioridade: task.prioridade,
-        proprietario: task.proprietario === 'DITE' ? '' : task.proprietario,
-        aplicacao: task.aplicacao || '',
+        proprietario: task.proprietario || '',
+        aplicacao: task.aplicacao || 'APLICA',
         produtos: task.produtos || '',
         observacoes: task.observacoes || ''
       });
@@ -68,7 +68,7 @@ export function TasksTemplate() {
         descricao: '',
         prioridade: 'P1',
         proprietario: '',
-        aplicacao: '',
+        aplicacao: 'APLICA',
         produtos: '',
         observacoes: ''
       });
@@ -121,7 +121,8 @@ export function TasksTemplate() {
 
   const handleInlineUpdate = async (id: string, field: 'proprietario' | 'aplicacao', value: string) => {
     try {
-      await updateTemplateTask(id, { [field]: value });
+      const dbValue = value === '' ? null : value;
+      await updateTemplateTask(id, { [field]: dbValue });
       showToast(`Campo atualizado com sucesso!`, 'success');
       fetchTasks();
     } catch (err: any) {
@@ -134,7 +135,7 @@ export function TasksTemplate() {
       <div className="min-h-screen bg-brand-black flex items-center justify-center p-8">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-white mb-2">Acesso Negado</h1>
+          <h1 className="text-2xl font-bold text-brand-text-primary mb-2">Acesso Negado</h1>
           <p className="text-brand-text-muted">Apenas administradores podem acessar esta página.</p>
         </div>
       </div>
@@ -155,9 +156,9 @@ export function TasksTemplate() {
   });
 
   return (
-    <div className="min-h-screen bg-brand-black p-4 md:p-8 font-sans text-white">
+    <div className="min-h-screen bg-brand-black p-4 md:p-8 font-sans text-brand-text-primary">
       {toast && (
-        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded shadow-lg text-white transition-opacity duration-300 ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded shadow-lg text-brand-text-primary transition-opacity duration-300 ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
           {toast.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
           <span className="font-medium">{toast.message}</span>
         </div>
@@ -165,7 +166,7 @@ export function TasksTemplate() {
 
       <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Tarefas Padrão</h1>
+          <h1 className="text-3xl font-bold text-brand-text-primary mb-2">Tarefas Padrão</h1>
           <p className="text-brand-text-muted">Gerencie a lista mestra de tarefas para novos projetos</p>
         </div>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -175,7 +176,7 @@ export function TasksTemplate() {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-brand-black border border-brand-gray text-white rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-brand-accent focus:border-brand-accent outline-none"
+              className="bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-brand-accent focus:border-brand-accent outline-none"
               placeholder="Nome da tarefa..."
             />
           </div>
@@ -184,7 +185,7 @@ export function TasksTemplate() {
             <select
               value={prioridadeFiltro}
               onChange={(e) => setPrioridadeFiltro(e.target.value)}
-              className="bg-brand-black border border-brand-gray text-white rounded-lg px-3 py-2.5 text-sm focus:ring-1 focus:ring-brand-accent focus:border-brand-accent outline-none"
+              className="bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg px-3 py-2.5 text-sm focus:ring-1 focus:ring-brand-accent focus:border-brand-accent outline-none"
             >
               <option value="Todas">Todas</option>
               <option value="P1">P1</option>
@@ -253,28 +254,10 @@ export function TasksTemplate() {
                       </td>
                       <td className="p-4 text-sm font-medium">{task.descricao}</td>
                       <td className="p-4 text-sm text-brand-text-muted">
-                      <select
-                        value={task.proprietario && task.proprietario.trim() !== 'DITE' ? task.proprietario : ''}
-                        onChange={(e) => handleInlineUpdate(task.id, 'proprietario', e.target.value)}
-                        className="w-full bg-transparent border-none outline-none text-brand-text-muted focus:text-white cursor-pointer appearance-none"
-                      >
-                        <option value="">-</option>
-                        <option value="DITE">DITE</option>
-                        <option value="FISCAL">FISCAL</option>
-                        <option value="CLIENTE">CLIENTE</option>
-                        <option value="PESSOAL">PESSOAL</option>
-                        <option value="CONTÁBIL">CONTÁBIL</option>
-                      </select>
+                        {task.proprietario || '-'}
                       </td>
                       <td className="p-4 text-sm text-brand-text-muted">
-                        <select
-                          value={task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}
-                          onChange={(e) => handleInlineUpdate(task.id, 'aplicacao', e.target.value)}
-                          className="w-full bg-transparent border-none outline-none text-brand-text-muted focus:text-white cursor-pointer appearance-none"
-                        >
-                          <option value="APLICA">APLICA</option>
-                          <option value="NÃO APLICA">NÃO APLICA</option>
-                        </select>
+                        {task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}
                       </td>
                       <td className="p-4 text-sm text-brand-text-muted">{task.produtos || '-'}</td>
                       <td className="p-4 text-sm text-brand-text-muted max-w-xs truncate" title={task.observacoes}>
@@ -284,7 +267,7 @@ export function TasksTemplate() {
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => handleOpenModal(task)}
-                            className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+                            className="p-2 text-brand-text-primary hover:bg-white/10 rounded-lg transition-colors"
                             title="Editar"
                           >
                             <Edit2 size={18} />
@@ -314,14 +297,14 @@ export function TasksTemplate() {
             <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-8 h-8 text-red-500" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Confirmar Exclusão</h2>
+            <h2 className="text-xl font-bold text-brand-text-primary mb-2">Confirmar Exclusão</h2>
             <p className="text-brand-text-muted mb-6">
               Tem certeza que deseja excluir esta tarefa padrão? Esta ação não pode ser desfeita.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setTaskToDelete(null)}
-                className="flex-1 px-4 py-2 border border-brand-gray text-brand-text-muted font-bold rounded-lg hover:bg-brand-gray hover:text-white transition-colors"
+                className="flex-1 px-4 py-2 border border-brand-gray text-brand-text-muted font-bold rounded-lg hover:bg-brand-gray hover:text-brand-text-primary transition-colors"
               >
                 Cancelar
               </button>
@@ -341,12 +324,12 @@ export function TasksTemplate() {
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="bg-brand-dark rounded-xl shadow-2xl w-full max-w-lg overflow-hidden border border-brand-gray">
             <div className="flex justify-between items-center p-6 border-b border-brand-gray">
-              <h2 className="text-xl font-bold text-white">
+              <h2 className="text-xl font-bold text-brand-text-primary">
                 {editingTask ? 'Editar Tarefa Padrão' : 'Nova Tarefa Padrão'}
               </h2>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="text-brand-text-muted hover:text-white transition-colors"
+                className="text-brand-text-muted hover:text-brand-text-primary transition-colors"
               >
                 <X size={24} />
               </button>
@@ -359,7 +342,7 @@ export function TasksTemplate() {
                   required
                   value={formData.descricao}
                   onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
                   rows={3}
                 />
               </div>
@@ -370,7 +353,7 @@ export function TasksTemplate() {
                   <select
                     value={formData.prioridade}
                     onChange={(e) => setFormData({ ...formData, prioridade: e.target.value as 'P1' | 'P2' | 'P3' })}
-                    className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
+                    className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
                   >
                     <option value="P1">P1</option>
                     <option value="P2">P2</option>
@@ -382,9 +365,9 @@ export function TasksTemplate() {
                   <select
                     value={formData.proprietario || ''}
                     onChange={(e) => setFormData({ ...formData, proprietario: e.target.value })}
-                    className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none appearance-none"
+                    className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none appearance-none"
                   >
-                    <option value="">Selecione...</option>
+                    <option value="">-</option>
                     <option value="DITE">DITE</option>
                     <option value="FISCAL">FISCAL</option>
                     <option value="CLIENTE">CLIENTE</option>
@@ -398,9 +381,9 @@ export function TasksTemplate() {
                 <div>
                   <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Aplicação</label>
                   <select
-                    value={formData.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}
+                    value={formData.aplicacao}
                     onChange={(e) => setFormData({ ...formData, aplicacao: e.target.value })}
-                    className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none appearance-none"
+                    className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none appearance-none"
                   >
                     <option value="APLICA">APLICA</option>
                     <option value="NÃO APLICA">NÃO APLICA</option>
@@ -412,7 +395,7 @@ export function TasksTemplate() {
                     type="text"
                     value={formData.produtos}
                     onChange={(e) => setFormData({ ...formData, produtos: e.target.value })}
-                    className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
+                    className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
                   />
                 </div>
               </div>
@@ -422,7 +405,7 @@ export function TasksTemplate() {
                 <textarea
                   value={formData.observacoes}
                   onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
                   rows={2}
                 />
               </div>
@@ -431,7 +414,7 @@ export function TasksTemplate() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 px-4 py-2 border border-brand-gray text-brand-text-muted font-bold rounded-lg hover:bg-brand-gray hover:text-white transition-colors"
+                  className="flex-1 px-4 py-2 border border-brand-gray text-brand-text-muted font-bold rounded-lg hover:bg-brand-gray hover:text-brand-text-primary transition-colors"
                 >
                   Cancelar
                 </button>

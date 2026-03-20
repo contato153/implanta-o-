@@ -206,14 +206,18 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({ data, loading, role })
     return Math.max(0, Math.min(100, Number(percentual_conclusao || 0)));
   }, [progress, percentual_conclusao]);
 
-  // Format date YYYY-MM-DD to DD/MM/YYYY
+  // Format date YYYY-MM-DD or YYYY-MM-DDTHH:mm to DD/MM/YYYY [HH:mm]
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return '';
     try {
-      // Check if it matches YYYY-MM-DD
-      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-        const [year, month, day] = dateString.split('-');
-        return `${day}/${month}/${year}`;
+      const dateMatch = dateString.match(/^(\d{4})-(\d{2})-(\d{2})(T(\d{2}):(\d{2}))?/);
+      if (dateMatch) {
+        const [_, year, month, day, __, hours, minutes] = dateMatch;
+        let formatted = `${day}/${month}/${year}`;
+        if (hours && minutes) {
+          formatted += ` ${hours}:${minutes}`;
+        }
+        return formatted;
       }
       return dateString;
     } catch (e) {
@@ -263,7 +267,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({ data, loading, role })
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto bg-brand-dark shadow-lg overflow-hidden border border-brand-gray text-sm font-sans relative text-white">
+    <div className="w-full max-w-5xl mx-auto bg-brand-dark shadow-lg overflow-hidden border border-brand-gray text-sm font-sans relative text-brand-text-primary">
       {/* Header / Project Section */}
       <div className="grid grid-cols-12 border-b border-brand-gray">
         <div 
@@ -291,7 +295,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({ data, loading, role })
                 className="w-full h-full max-h-32 object-contain"
               />
               {canEditCompany && (
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white">
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-brand-text-primary">
                   <Upload size={24} className="mb-2 text-brand-accent" />
                   <span className="text-xs font-medium">Alterar Logo</span>
                 </div>
@@ -445,7 +449,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({ data, loading, role })
 
       {/* Clock / Percentage Section */}
       <div className="p-6 flex flex-col items-center justify-center bg-brand-black border-t border-brand-gray">
-        <div className="font-bold mb-2 text-lg text-white">RELÓGIO DE CONCLUSÃO</div>
+        <div className="font-bold mb-2 text-lg text-brand-text-primary">RELÓGIO DE CONCLUSÃO</div>
 
         {/* ✅ Mostra X/Y quando tiver tarefas */}
         {progress.totalValid > 0 && (
@@ -470,7 +474,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({ data, loading, role })
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center flex-col">
-            <span className="text-3xl font-bold text-white">{displayPercent}%</span>
+            <span className="text-3xl font-bold text-brand-text-primary">{displayPercent}%</span>
             <span className="text-xs text-brand-text-muted font-bold mt-1">CONCLUÍDO</span>
           </div>
         </div>

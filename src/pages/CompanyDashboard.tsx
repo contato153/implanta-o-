@@ -49,14 +49,14 @@ export function CompanyDashboard() {
   const isLoading = companyLoading || loadingData;
 
   return (
-    <div className="min-h-screen bg-brand-black p-4 md:p-8 font-sans text-white">
+    <div className="min-h-screen bg-brand-black p-4 md:p-8 font-sans text-brand-text-primary">
       <div className="max-w-5xl mx-auto mb-6">
         <button
           onClick={() => {
             setSelectedClientId('');
             navigate('/empresas');
           }}
-          className="inline-flex items-center text-brand-text-muted hover:text-white transition-colors"
+          className="inline-flex items-center text-brand-text-muted hover:text-brand-text-primary transition-colors"
         >
           <ArrowLeft size={20} className="mr-2" />
           Voltar para Empresas
@@ -64,7 +64,7 @@ export function CompanyDashboard() {
       </div>
 
       <header className="mb-8 text-center relative">
-        <h1 className="text-3xl font-bold text-white mb-2">Painel da Empresa</h1>
+        <h1 className="text-3xl font-bold text-brand-text-primary mb-2">Painel da Empresa</h1>
         <p className="text-brand-text-muted">Visualize o status do projeto da empresa selecionada</p>
         <div className="mt-2 text-xs text-brand-text-muted">
           Acesso: <span className="font-semibold uppercase text-brand-accent">{role}</span>
@@ -114,7 +114,7 @@ export function CompanyDashboard() {
                 </>
               ) : (
                 <div className="bg-brand-dark p-12 rounded-lg shadow-sm border border-brand-gray text-center text-brand-text-muted flex flex-col items-center justify-center">
-                  <p className="text-lg text-white mb-4">Nenhuma empresa selecionada.</p>
+                  <p className="text-lg text-brand-text-primary mb-4">Nenhuma empresa selecionada.</p>
                   <Link 
                     to="/empresas"
                     className="inline-flex items-center px-6 py-3 bg-brand-accent text-brand-black font-bold rounded-lg hover:bg-brand-accent-hover transition-colors shadow-lg shadow-brand-accent/10"

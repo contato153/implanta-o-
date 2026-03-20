@@ -91,7 +91,7 @@ export const CnpjDetailsViewer: React.FC<CnpjDetailsViewerProps> = ({ data }) =>
     : null;
 
   return (
-    <div className="bg-brand-black border border-brand-gray rounded-xl overflow-hidden shadow-lg text-white max-w-5xl mx-auto">
+    <div className="bg-brand-black border border-brand-gray rounded-xl overflow-hidden shadow-lg text-brand-text-primary max-w-5xl mx-auto">
       {/* Header Section */}
       <div className="bg-brand-dark p-6 border-b border-brand-gray relative overflow-hidden">
         <div className="absolute top-0 right-0 p-6 opacity-10">
@@ -277,7 +277,7 @@ export const CnpjDetailsViewer: React.FC<CnpjDetailsViewerProps> = ({ data }) =>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {data.qsa.map((socio, idx) => (
                   <div key={idx} className="bg-brand-black p-4 rounded-lg border border-brand-gray/50">
-                    <p className="font-bold text-white mb-1">{socio.nome_socio}</p>
+                    <p className="font-bold text-brand-text-primary mb-1">{socio.nome_socio}</p>
                     <div className="space-y-1">
                       <p className="text-xs text-brand-accent uppercase">{socio.qualificacao_socio}</p>
                       <p className="text-xs text-gray-400">Entrada: {formatDate(socio.data_entrada_sociedade)}</p>

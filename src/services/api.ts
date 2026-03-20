@@ -1,6 +1,7 @@
 import { getSupabase } from '../lib/supabase';
 import { ClientData, Empresa, Projeto, Socio, Participante, Tarefa, AnexoTarefa, TarefasTemplate } from '../types';
 import { STANDARD_TASKS_TEMPLATE } from '../constants';
+import { registrarHistorico } from './historico';
 
 // Mock data for demonstration when Supabase is not configured
 const MOCK_CLIENTS: Empresa[] = [
@@ -198,9 +199,13 @@ export async function getClientData(clientId: string): Promise<ClientData | null
       .from('empresas')
       .select('*')
       .eq('id', clientId)
-      .single();
+      .maybeSingle();
     
     if (empresaError) throw empresaError;
+
+    if (!empresa) {
+      return null;
+    }
 
     // Fetch Projeto
     // We use limit(1) and order by created_at desc to get the most recent project
@@ -276,7 +281,7 @@ export async function getProjectData(projectId: string): Promise<{ projeto: Proj
       .from('projetos')
       .select('*')
       .eq('id', projectId)
-      .single();
+      .maybeSingle();
 
     if (projetoError) {
       console.error('Error fetching project:', projetoError);
@@ -390,8 +395,9 @@ export async function createTemplateTask(task: Omit<TarefasTemplate, 'id' | 'cre
     .from('tarefas_template')
     .insert(task)
     .select()
-    .single();
+    .maybeSingle();
   if (error) throw error;
+  if (!data) throw new Error('Erro ao criar template de tarefa.');
   return data;
 }
 
@@ -402,8 +408,9 @@ export async function updateTemplateTask(id: string, task: Partial<TarefasTempla
     .update(task)
     .eq('id', id)
     .select()
-    .single();
+    .maybeSingle();
   if (error) throw error;
+  if (!data) throw new Error('Erro ao atualizar template de tarefa.');
   return data;
 }
 
@@ -487,6 +494,13 @@ export async function createCompany(
        console.warn(`Atenção: Foram criadas apenas ${count} tarefas (esperado: 40).`);
     }
 
+    await registrarHistorico({
+      entidade: 'empresa',
+      entidade_id: empresaId,
+      acao: 'CRIADO',
+      descricao: `Empresa criada: ${empresaData.nome_fantasia || empresaData.razao_social}`
+    });
+
     return { empresaId, projetoId };
 
   } catch (error) {
@@ -503,9 +517,10 @@ export async function getCompanyDetails(companyId: string): Promise<{ empresa: E
       .from('empresas')
       .select('*')
       .eq('id', companyId)
-      .single();
+      .maybeSingle();
 
     if (empresaError) throw empresaError;
+    if (!empresa) return null;
 
     const { data: socios, error: sociosError } = await supabase
       .from('socios')
@@ -543,6 +558,9 @@ export async function updateCompany(
   const supabase = getSupabase();
 
   try {
+    // Get old company details before update
+    const oldCompanyDetails = await getCompanyDetails(companyId);
+
     // 1. Update Empresa
     const { error: empresaError } = await supabase
       .from('empresas')
@@ -591,6 +609,20 @@ export async function updateCompany(
 
       if (insertError) throw new Error(`Erro ao inserir novos sócios: ${insertError.message}`);
     }
+
+    // Get new company details after update
+    const newCompanyDetails = await getCompanyDetails(companyId);
+
+    await registrarHistorico({
+      entidade: 'empresa',
+      entidade_id: companyId,
+      acao: 'EDITADO',
+      descricao: `Empresa editada: ${empresaData.nome_fantasia || empresaData.razao_social || 'Dados atualizados'}`,
+      detalhes: {
+        antes: oldCompanyDetails,
+        depois: newCompanyDetails
+      }
+    });
 
   } catch (error) {
     console.error('Falha ao atualizar empresa:', error);
@@ -681,6 +713,13 @@ export async function deleteCompany(companyId: string): Promise<void> {
     }
     console.log('Company deleted successfully.');
 
+    await registrarHistorico({
+      entidade: 'empresa',
+      entidade_id: companyId,
+      acao: 'EXCLUIDO',
+      descricao: `Empresa excluída`
+    });
+
   } catch (error) {
     console.error('Falha crítica ao excluir empresa:', error);
     throw error;
@@ -739,9 +778,10 @@ export async function uploadTaskAttachment(
         uploaded_by: userId
       })
       .select()
-      .single();
+      .maybeSingle();
 
     if (dbError) throw dbError;
+    if (!data) throw new Error('Erro ao salvar anexo no banco de dados.');
 
     return data;
   } catch (error) {

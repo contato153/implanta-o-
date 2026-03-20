@@ -12,6 +12,7 @@ import {
   uploadTaskAttachment, 
   deleteTaskAttachment 
 } from '../services/api';
+import { registrarHistorico } from '../services/historico';
 
 const ObservationCell = ({ text, onClick }: { text: string; onClick: () => void }) => {
   if (!text) return (
@@ -72,7 +73,7 @@ const DeleteAttachmentConfirmationModal: React.FC<DeleteAttachmentConfirmationMo
           <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-900/20 text-red-500 mx-auto mb-6 border border-red-900/30">
             <AlertCircle size={32} />
           </div>
-          <h3 className="text-xl font-black text-white text-center mb-2 uppercase tracking-tighter leading-tight">
+          <h3 className="text-xl font-black text-brand-text-primary text-center mb-2 uppercase tracking-tighter leading-tight">
             TEM CERTEZA QUE DESEJA APAGAR ESTE ANEXO?
           </h3>
           <div className="bg-brand-black/50 rounded-lg p-3 mb-4 border border-brand-gray/30">
@@ -88,7 +89,7 @@ const DeleteAttachmentConfirmationModal: React.FC<DeleteAttachmentConfirmationMo
               type="button"
               onClick={onClose}
               disabled={deleting}
-              className="flex-1 px-6 py-3 border border-brand-gray text-brand-text-muted font-bold rounded-lg bg-brand-black hover:bg-brand-gray hover:text-white transition-all text-xs uppercase tracking-widest disabled:opacity-50"
+              className="flex-1 px-6 py-3 border border-brand-gray text-brand-text-muted font-bold rounded-lg bg-brand-black hover:bg-brand-gray hover:text-brand-text-primary transition-all text-xs uppercase tracking-widest disabled:opacity-50"
             >
               Cancelar
             </button>
@@ -120,12 +121,14 @@ const DeleteAttachmentConfirmationModal: React.FC<DeleteAttachmentConfirmationMo
 interface TaskAttachmentsSectionProps {
   taskId: string;
   projectId: string;
+  companyName?: string;
+  taskName: string;
   role: Role;
   setToast: (toast: { message: string; type: 'success' | 'error' } | null) => void;
   onAttachmentsChange?: () => void;
 }
 
-const TaskAttachmentsSection: React.FC<TaskAttachmentsSectionProps> = ({ taskId, projectId, role, setToast, onAttachmentsChange }) => {
+const TaskAttachmentsSection: React.FC<TaskAttachmentsSectionProps> = ({ taskId, projectId, companyName, taskName, role, setToast, onAttachmentsChange }) => {
   const [attachments, setAttachments] = useState<AnexoTarefa[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -160,6 +163,28 @@ const TaskAttachmentsSection: React.FC<TaskAttachmentsSectionProps> = ({ taskId,
       await loadAttachments();
       if (onAttachmentsChange) onAttachmentsChange();
       setToast({ message: 'Arquivo anexado com sucesso!', type: 'success' });
+
+      await registrarHistorico({
+        entidade: 'tarefa',
+        entidade_id: taskId,
+        acao: 'ANEXO_ADICIONADO',
+        descricao: `Arquivo anexado na tarefa: ${taskName}`,
+        detalhes: {
+          empresa: {
+            id: projectId,
+            nome: companyName || '-'
+          },
+          anexo: {
+            nome: file.name,
+            tipo: file.type,
+            tamanho: file.size
+          },
+          tarefa: {
+            id: taskId,
+            nome: taskName
+          }
+        }
+      });
     } catch (error) {
       console.error('Erro no upload:', error);
       setToast({ message: 'Erro ao anexar arquivo. Verifique se a tabela task_attachments e o bucket task-files existem.', type: 'error' });
@@ -233,13 +258,13 @@ const TaskAttachmentsSection: React.FC<TaskAttachmentsSectionProps> = ({ taskId,
   };
 
   const canDelete = (attachment: AnexoTarefa) => {
-    return role === 'admin' || attachment.uploaded_by === userId;
+    return role === 'admin';
   };
 
   return (
     <div className="mt-6 space-y-4">
       <div className="flex items-center justify-between border-b border-brand-gray pb-2">
-        <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+        <h4 className="text-sm font-bold text-brand-text-primary uppercase tracking-wider flex items-center gap-2">
           <Paperclip className="w-4 h-4 text-brand-accent" />
           Anexos
         </h4>
@@ -278,7 +303,7 @@ const TaskAttachmentsSection: React.FC<TaskAttachmentsSectionProps> = ({ taskId,
                   {getFileIcon(file.file_name)}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm text-white font-medium truncate max-w-[200px] sm:max-w-xs" title={file.file_name}>
+                  <p className="text-sm text-brand-text-primary font-medium truncate max-w-[200px] sm:max-w-xs" title={file.file_name}>
                     {file.file_name}
                   </p>
                   <p className="text-[10px] text-brand-text-muted">
@@ -334,6 +359,7 @@ const TaskAttachmentsSection: React.FC<TaskAttachmentsSectionProps> = ({ taskId,
 
 interface ViewAttachmentsModalProps {
   task: Tarefa;
+  companyName?: string;
   isOpen: boolean;
   onClose: () => void;
   role: Role;
@@ -341,7 +367,7 @@ interface ViewAttachmentsModalProps {
   onAttachmentsChange?: () => void;
 }
 
-const ViewAttachmentsModal: React.FC<ViewAttachmentsModalProps> = ({ task, isOpen, onClose, role, setToast, onAttachmentsChange }) => {
+const ViewAttachmentsModal: React.FC<ViewAttachmentsModalProps> = ({ task, companyName, isOpen, onClose, role, setToast, onAttachmentsChange }) => {
   if (!isOpen) return null;
 
   return (
@@ -354,13 +380,13 @@ const ViewAttachmentsModal: React.FC<ViewAttachmentsModalProps> = ({ task, isOpe
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center p-4 border-b border-brand-gray bg-brand-black">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+          <h3 className="text-lg font-bold text-brand-text-primary flex items-center gap-2">
             <Paperclip className="w-5 h-5 text-brand-accent" />
             Anexos: {task.titulo || task.descricao}
           </h3>
           <button 
             onClick={onClose}
-            className="text-brand-text-muted hover:text-white p-1 rounded-full hover:bg-brand-gray transition-colors"
+            className="text-brand-text-muted hover:text-brand-text-primary p-1 rounded-full hover:bg-brand-gray transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -370,6 +396,8 @@ const ViewAttachmentsModal: React.FC<ViewAttachmentsModalProps> = ({ task, isOpe
             <TaskAttachmentsSection 
               taskId={task.id} 
               projectId={task.projeto_id} 
+              companyName={companyName}
+              taskName={task.titulo || task.descricao}
               role={role} 
               setToast={setToast}
               onAttachmentsChange={onAttachmentsChange}
@@ -379,7 +407,7 @@ const ViewAttachmentsModal: React.FC<ViewAttachmentsModalProps> = ({ task, isOpe
         <div className="p-4 border-t border-brand-gray bg-brand-black flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-brand-gray border border-brand-gray text-white font-medium rounded-lg hover:bg-brand-dark transition-colors shadow-sm text-sm"
+            className="px-4 py-2 bg-brand-gray border border-brand-gray text-brand-text-primary font-medium rounded-lg hover:bg-brand-dark transition-colors shadow-sm text-sm"
           >
             Fechar
           </button>
@@ -391,6 +419,7 @@ const ViewAttachmentsModal: React.FC<ViewAttachmentsModalProps> = ({ task, isOpe
 
 interface EditTaskModalProps {
   task: Tarefa;
+  companyName?: string;
   isOpen: boolean;
   onClose: () => void;
   onSave: (updatedTask: Partial<Tarefa>) => Promise<void>;
@@ -399,7 +428,7 @@ interface EditTaskModalProps {
   onAttachmentsChange?: () => void;
 }
 
-const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, onSave, role, setToast, onAttachmentsChange }) => {
+const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, companyName, isOpen, onClose, onSave, role, setToast, onAttachmentsChange }) => {
   const [formData, setFormData] = useState<Partial<Tarefa>>({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -445,8 +474,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-300">
       <div className="bg-brand-dark rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-brand-gray">
         <div className="flex justify-between items-center p-6 border-b border-brand-gray sticky top-0 bg-brand-dark z-10">
-          <h3 className="text-xl font-bold text-white uppercase tracking-wider">Editar Tarefa</h3>
-          <button onClick={onClose} className="p-2 text-brand-text-muted hover:text-white hover:bg-brand-gray rounded-full transition-all">
+          <h3 className="text-xl font-bold text-brand-text-primary uppercase tracking-wider">Editar Tarefa</h3>
+          <button onClick={onClose} className="p-2 text-brand-text-muted hover:text-brand-text-primary hover:bg-brand-gray rounded-full transition-all">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -467,7 +496,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
                 value={formData.descricao || ''}
                 onChange={(e) => handleChange('descricao', e.target.value)}
                 disabled={!canEditTasks}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none"
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none"
                 placeholder="Descreva a tarefa..."
               />
             </div>
@@ -478,7 +507,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
                 value={formData.prioridade || 'P2'}
                 onChange={(e) => handleChange('prioridade', e.target.value)}
                 disabled={!canEditTasks}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none appearance-none"
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none appearance-none"
               >
                 <option value="P1">P1 - Alta</option>
                 <option value="P2">P2 - Média</option>
@@ -492,7 +521,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
                 value={formData.status || 'NÃO INICIADA'}
                 onChange={(e) => handleChange('status', e.target.value)}
                 disabled={!canEditStatus}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none appearance-none"
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none appearance-none"
               >
                 <option value="NÃO INICIADA">NÃO INICIADA</option>
                 <option value="EM EXECUÇÃO">EM EXECUÇÃO</option>
@@ -506,7 +535,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
                 value={formData.proprietario || ''}
                 onChange={(e) => handleChange('proprietario', e.target.value)}
                 disabled={!canEditTasks}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none appearance-none"
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none appearance-none"
               >
                 <option value="">-</option>
                 <option value="DITE">DITE</option>
@@ -523,68 +552,32 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
                 value={formData.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}
                 onChange={(e) => handleChange('aplicacao', e.target.value)}
                 disabled={!canEditTasks}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none appearance-none"
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none appearance-none"
               >
                 <option value="APLICA">APLICA</option>
                 <option value="NÃO APLICA">NÃO APLICA</option>
               </select>
             </div>
 
-            <div className="col-span-2">
-              <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Checklist</label>
-              <div className="flex gap-2 mb-2">
-                <input
-                  type="text"
-                  placeholder="Novo item..."
-                  className="flex-1 px-4 py-2 bg-brand-black border border-brand-gray text-white rounded-lg outline-none"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      const val = (e.target as HTMLInputElement).value;
-                      if (val) {
-                        handleChange('checklist', [...(formData.checklist || []), val]);
-                        (e.target as HTMLInputElement).value = '';
-                      }
-                    }
-                  }}
-                />
-              </div>
-              <div className="space-y-1">
-                {(formData.checklist || []).map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-white bg-brand-black p-2 rounded">
-                    <input type="checkbox" className="accent-brand-accent" />
-                    <span>{item}</span>
-                    <button 
-                      type="button"
-                      className="ml-auto text-red-500"
-                      onClick={() => handleChange('checklist', formData.checklist?.filter((_, i) => i !== idx))}
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             <div>
               <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Data Início</label>
               <input
-                type="date"
+                type="datetime-local"
                 value={formData.data_tarefa || ''}
                 onChange={(e) => handleChange('data_tarefa', e.target.value)}
                 disabled={!canEditTasks}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none"
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none"
               />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Data Término</label>
               <input
-                type="date"
+                type="datetime-local"
                 value={formData.data_termino || ''}
                 onChange={(e) => handleChange('data_termino', e.target.value)}
                 disabled={!canEditTasks}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none"
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none"
               />
             </div>
 
@@ -595,7 +588,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
                 value={formData.produtos || ''}
                 onChange={(e) => handleChange('produtos', e.target.value)}
                 disabled={!canEditTasks}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none"
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none"
               />
             </div>
 
@@ -606,7 +599,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
                 value={formData.observacoes || ''}
                 onChange={(e) => handleChange('observacoes', e.target.value)}
                 disabled={!canEditTasks}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none resize-none"
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none resize-none"
               />
             </div>
           </div>
@@ -614,6 +607,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
           <TaskAttachmentsSection 
             taskId={task.id} 
             projectId={task.projeto_id} 
+            companyName={companyName}
+            taskName={task.titulo || task.descricao}
             role={role} 
             setToast={setToast}
             onAttachmentsChange={onAttachmentsChange}
@@ -623,7 +618,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2.5 bg-brand-black border border-brand-gray text-brand-text-muted font-bold rounded-lg hover:bg-brand-gray hover:text-white transition-all disabled:opacity-50"
+              className="px-6 py-2.5 bg-brand-black border border-brand-gray text-brand-text-muted font-bold rounded-lg hover:bg-brand-gray hover:text-brand-text-primary transition-all disabled:opacity-50"
               disabled={saving}
             >
               Cancelar
@@ -680,7 +675,7 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({ task,
           <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-900/20 text-red-500 mx-auto mb-6 border border-red-900/30">
             <AlertCircle size={32} />
           </div>
-          <h3 className="text-xl font-black text-white text-center mb-2 uppercase tracking-tighter leading-tight">
+          <h3 className="text-xl font-black text-brand-text-primary text-center mb-2 uppercase tracking-tighter leading-tight">
             TEM CERTEZA QUE DESEJA APAGAR ESTA TAREFA?
           </h3>
           <div className="bg-brand-black/50 rounded-lg p-3 mb-4 border border-brand-gray/30">
@@ -696,7 +691,7 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({ task,
               type="button"
               onClick={onClose}
               disabled={deleting}
-              className="flex-1 px-6 py-3 border border-brand-gray text-brand-text-muted font-bold rounded-lg bg-brand-black hover:bg-brand-gray hover:text-white transition-all text-xs uppercase tracking-widest disabled:opacity-50"
+              className="flex-1 px-6 py-3 border border-brand-gray text-brand-text-muted font-bold rounded-lg bg-brand-black hover:bg-brand-gray hover:text-brand-text-primary transition-all text-xs uppercase tracking-widest disabled:opacity-50"
             >
               Cancelar
             </button>
@@ -738,7 +733,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
     prioridade: 'P2',
     proprietario: '',
     status: 'NÃO INICIADA',
-    data_tarefa: new Date().toISOString().split('T')[0],
+    data_tarefa: getLocalISOString(),
     data_termino: '',
     aplicacao: 'APLICA',
     produtos: '',
@@ -770,7 +765,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
         prioridade: 'P2',
         proprietario: '',
         status: 'NÃO INICIADA',
-        data_tarefa: new Date().toISOString().split('T')[0],
+        data_tarefa: getLocalISOString(),
         data_termino: '',
         aplicacao: 'APLICA',
         produtos: '',
@@ -788,8 +783,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-300">
       <div className="bg-brand-dark rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-brand-gray">
         <div className="flex justify-between items-center p-6 border-b border-brand-gray sticky top-0 bg-brand-dark z-10">
-          <h3 className="text-xl font-bold text-white uppercase tracking-wider">Nova Tarefa</h3>
-          <button onClick={onClose} className="p-2 text-brand-text-muted hover:text-white hover:bg-brand-gray rounded-full transition-all">
+          <h3 className="text-xl font-bold text-brand-text-primary uppercase tracking-wider">Nova Tarefa</h3>
+          <button onClick={onClose} className="p-2 text-brand-text-muted hover:text-brand-text-primary hover:bg-brand-gray rounded-full transition-all">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -809,7 +804,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
                 type="text"
                 value={formData.titulo}
                 onChange={(e) => handleChange('titulo', e.target.value)}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
                 placeholder="Título da tarefa"
               />
             </div>
@@ -819,7 +814,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
               <select
                 value={formData.prioridade}
                 onChange={(e) => handleChange('prioridade', e.target.value)}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none appearance-none"
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none appearance-none"
               >
                 <option value="P1">P1 - Alta</option>
                 <option value="P2">P2 - Média</option>
@@ -832,7 +827,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
               <select
                 value={formData.status}
                 onChange={(e) => handleChange('status', e.target.value)}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none appearance-none"
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none appearance-none"
               >
                 <option value="NÃO INICIADA">NÃO INICIADA</option>
                 <option value="EM EXECUÇÃO">EM EXECUÇÃO</option>
@@ -845,7 +840,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
               <select
                 value={formData.proprietario || ''}
                 onChange={(e) => handleChange('proprietario', e.target.value)}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none appearance-none"
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none appearance-none"
               >
                 <option value="">-</option>
                 <option value="DITE">DITE</option>
@@ -861,7 +856,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
               <select
                 value={formData.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}
                 onChange={(e) => handleChange('aplicacao', e.target.value)}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none appearance-none"
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none appearance-none"
               >
                 <option value="APLICA">APLICA</option>
                 <option value="NÃO APLICA">NÃO APLICA</option>
@@ -871,20 +866,20 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
             <div>
               <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Data Início</label>
               <input
-                type="date"
+                type="datetime-local"
                 value={formData.data_tarefa}
                 onChange={(e) => handleChange('data_tarefa', e.target.value)}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
               />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Data Término</label>
               <input
-                type="date"
+                type="datetime-local"
                 value={formData.data_termino}
                 onChange={(e) => handleChange('data_termino', e.target.value)}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
               />
             </div>
 
@@ -894,7 +889,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
                 type="text"
                 value={formData.produtos}
                 onChange={(e) => handleChange('produtos', e.target.value)}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
               />
             </div>
 
@@ -904,7 +899,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
                 rows={4}
                 value={formData.observacoes}
                 onChange={(e) => handleChange('observacoes', e.target.value)}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-white rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none resize-none"
+                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none resize-none"
               />
             </div>
           </div>
@@ -913,7 +908,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2.5 bg-brand-black border border-brand-gray text-brand-text-muted font-bold rounded-lg hover:bg-brand-gray hover:text-white transition-all disabled:opacity-50"
+              className="px-6 py-2.5 bg-brand-black border border-brand-gray text-brand-text-muted font-bold rounded-lg hover:bg-brand-gray hover:text-brand-text-primary transition-all disabled:opacity-50"
               disabled={saving}
             >
               Cancelar
@@ -945,12 +940,14 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
 interface TasksTableProps {
   tasks: Tarefa[];
   projectId: string;
+  companyName?: string;
   role: Role;
   onUpdate: () => void;
   onTaskUpdate?: (task: Tarefa) => void;
   onTaskAdd?: (task: Tarefa) => void;
   onTaskDelete?: (taskId: string) => void;
   onImport?: () => void;
+  highlightedTaskId?: string;
 }
 
 /**
@@ -978,16 +975,35 @@ const getDeadlineStatus = (task: Tarefa): DeadlineStatus => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const parts = task.data_termino.split('-');
-  if (parts.length !== 3) return 'NO_DATE';
+  const taskDate = new Date(task.data_termino);
+  if (isNaN(taskDate.getTime())) return 'NO_DATE';
+  
+  const taskDateOnly = new Date(taskDate);
+  taskDateOnly.setHours(0, 0, 0, 0);
 
-  const [year, month, day] = parts.map(Number);
-  const taskDate = new Date(year, month - 1, day);
-  taskDate.setHours(0, 0, 0, 0);
-
-  if (taskDate < today) return 'OVERDUE';
-  if (taskDate.getTime() === today.getTime()) return 'TODAY';
+  if (taskDateOnly < today) return 'OVERDUE';
+  if (taskDateOnly.getTime() === today.getTime()) return 'TODAY';
   return 'FUTURE';
+};
+
+const formatDateTime = (dateStr?: string) => {
+  if (!dateStr) return '-';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
+};
+
+const getLocalISOString = () => {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000;
+  return new Date(now.getTime() - offset).toISOString().slice(0, 16);
 };
 
 const getPriorityColor = (p: string) => {
@@ -1020,7 +1036,7 @@ const DeadlineIndicator: React.FC<{ status: DeadlineStatus }> = ({ status }) => 
     return (
       <div className="group relative inline-flex items-center ml-1">
         <span className="text-red-500 cursor-help text-xs">🔴</span>
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block w-max px-2 py-1 bg-brand-black text-white text-[10px] font-bold rounded shadow-lg border border-brand-gray z-50">
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block w-max px-2 py-1 bg-brand-black text-brand-text-primary text-[10px] font-bold rounded shadow-lg border border-brand-gray z-50">
           Atrasada
         </div>
       </div>
@@ -1030,7 +1046,7 @@ const DeadlineIndicator: React.FC<{ status: DeadlineStatus }> = ({ status }) => 
     return (
       <div className="group relative inline-flex items-center ml-1">
         <span className="text-yellow-500 cursor-help text-xs">🟡</span>
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block w-max px-2 py-1 bg-brand-black text-white text-[10px] font-bold rounded shadow-lg border border-brand-gray z-50">
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block w-max px-2 py-1 bg-brand-black text-brand-text-primary text-[10px] font-bold rounded shadow-lg border border-brand-gray z-50">
           Vence hoje
         </div>
       </div>
@@ -1040,7 +1056,7 @@ const DeadlineIndicator: React.FC<{ status: DeadlineStatus }> = ({ status }) => 
     return (
       <div className="group relative inline-flex items-center ml-1">
         <span className="text-green-500 cursor-help text-xs">🟢</span>
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block w-max px-2 py-1 bg-brand-black text-white text-[10px] font-bold rounded shadow-lg border border-brand-gray z-50">
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block w-max px-2 py-1 bg-brand-black text-brand-text-primary text-[10px] font-bold rounded shadow-lg border border-brand-gray z-50">
           Dentro do prazo
         </div>
       </div>
@@ -1094,7 +1110,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
               {task.status}
             </span>
           </div>
-          <h4 className="text-white font-bold text-sm leading-tight">{task.descricao}</h4>
+          <h4 className="text-brand-text-primary font-bold text-sm leading-tight">{task.descricao}</h4>
         </div>
         {!isViewer && (
           <div className="flex items-center gap-1">
@@ -1121,26 +1137,26 @@ const TaskCard: React.FC<TaskCardProps> = ({
       <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-2 border-t border-brand-gray/50">
         <div>
           <span className="block text-[10px] font-bold text-brand-text-muted uppercase tracking-wider mb-0.5">Departamento</span>
-          <span className="text-xs text-white">{task.proprietario || '-'}</span>
+          <span className="text-xs text-brand-text-primary">{task.proprietario || '-'}</span>
         </div>
         <div>
           <span className="block text-[10px] font-bold text-brand-text-muted uppercase tracking-wider mb-0.5">Aplicação</span>
-          <span className="text-xs text-white">{task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}</span>
+          <span className="text-xs text-brand-text-primary">{task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}</span>
         </div>
         <div>
           <span className="block text-[10px] font-bold text-brand-text-muted uppercase tracking-wider mb-0.5">Início</span>
-          <span className="text-xs text-white">{task.data_tarefa || '-'}</span>
+          <span className="text-xs text-brand-text-primary">{task.data_tarefa || '-'}</span>
         </div>
         <div>
           <span className="block text-[10px] font-bold text-brand-text-muted uppercase tracking-wider mb-0.5">Término</span>
-          <span className="text-xs text-white flex items-center gap-1">
+          <span className="text-xs text-brand-text-primary flex items-center gap-1">
             {task.data_termino || '-'}
             {task.data_termino && <DeadlineIndicator status={deadlineStatus} />}
           </span>
         </div>
         <div className="col-span-2">
           <span className="block text-[10px] font-bold text-brand-text-muted uppercase tracking-wider mb-0.5">Produtos</span>
-          <span className="text-xs text-white">{task.produtos || '-'}</span>
+          <span className="text-xs text-brand-text-primary">{task.produtos || '-'}</span>
         </div>
         {task.observacoes && (
           <div className="col-span-2">
@@ -1181,12 +1197,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
 export const TasksTable: React.FC<TasksTableProps> = ({
   tasks,
   projectId,
+  companyName,
   role,
   onUpdate,
   onTaskUpdate,
   onTaskAdd,
   onTaskDelete,
-  onImport
+  onImport,
+  highlightedTaskId
 }) => {
   const [editingTask, setEditingTask] = useState<Tarefa | null>(null);
   const [deletingTask, setDeletingTask] = useState<Tarefa | null>(null);
@@ -1198,10 +1216,19 @@ export const TasksTable: React.FC<TasksTableProps> = ({
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [attachmentCounts, setAttachmentCounts] = useState<Record<string, number>>({});
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
+  const highlightedRowRef = useRef<HTMLTableRowElement>(null);
+
+  useEffect(() => {
+    if (highlightedTaskId && highlightedRowRef.current) {
+      setTimeout(() => {
+        highlightedRowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 500);
+    }
+  }, [highlightedTaskId, tasks]);
 
   const canEditAll = role === 'admin';
-  const canCreateTasks = role === 'admin' || role === 'manager';
-  const canImportStandard = role === 'admin' || role === 'manager';
+  const canCreateTasks = role === 'admin';
+  const canImportStandard = role === 'admin';
   const isViewer = role === 'viewer';
 
   const [viewingObservation, setViewingObservation] = useState<string | null>(null);
@@ -1298,17 +1325,6 @@ export const TasksTable: React.FC<TasksTableProps> = ({
     }
   };
 
-  const handleInlineUpdate = async (taskId: string, field: 'proprietario' | 'aplicacao', value: string) => {
-    if (isViewer) return;
-    const supabase = getSupabase();
-    const { error } = await supabase.from('tarefas').update({ [field]: value }).eq('id', taskId);
-    if (error) {
-      setToast({ message: `Erro ao atualizar ${field}.`, type: 'error' });
-    } else {
-      setToast({ message: 'Tarefa atualizada com sucesso!', type: 'success' });
-      if (onUpdate) onUpdate();
-    }
-  };
 
   useEffect(() => {
     fetchAttachmentCounts();
@@ -1341,14 +1357,76 @@ export const TasksTable: React.FC<TasksTableProps> = ({
       aplicacao: updatedTask.aplicacao,
       produtos: updatedTask.produtos,
       observacoes: updatedTask.observacoes,
-      checklist: updatedTask.checklist,
       // ✅ concluida coerente com status (normalizado)
       concluida: normalizeStatus(updatedTask.status) === 'CONCLUIDA'
     };
 
-    const { data, error } = await supabase.from('tarefas').update(payload).eq('id', editingTask.id).select().single();
+    const { data, error } = await supabase.from('tarefas').update(payload).eq('id', editingTask.id).select().maybeSingle();
 
     if (error) throw error;
+    if (!data) throw new Error('Tarefa não encontrada ou sem permissão para atualizar.');
+
+    const tarefaAntes: Record<string, any> = {
+      descricao: editingTask.descricao,
+      prioridade: editingTask.prioridade,
+      status: editingTask.status,
+      departamento: editingTask.proprietario,
+      aplicacao: editingTask.aplicacao,
+      data_inicio: editingTask.data_tarefa,
+      data_termino: editingTask.data_termino,
+      produtos: editingTask.produtos,
+      observacoes: editingTask.observacoes
+    };
+
+    const updatedData = { ...editingTask, ...updatedTask, ...(data || {}) };
+    const tarefaDepois: Record<string, any> = {
+      descricao: updatedData.descricao,
+      prioridade: updatedData.prioridade,
+      status: updatedData.status,
+      departamento: updatedData.proprietario,
+      aplicacao: updatedData.aplicacao,
+      data_inicio: updatedData.data_tarefa,
+      data_termino: updatedData.data_termino,
+      produtos: updatedData.produtos,
+      observacoes: updatedData.observacoes
+    };
+
+    const getAlteracoes = (antes: Record<string, any>, depois: Record<string, any>) => {
+      const alteracoes: Record<string, any> = {};
+      Object.keys(depois).forEach((campo) => {
+        const valorAntes = antes[campo] ?? null;
+        const valorDepois = depois[campo] ?? null;
+        if (JSON.stringify(valorAntes) !== JSON.stringify(valorDepois)) {
+          alteracoes[campo] = {
+            antes: valorAntes,
+            depois: valorDepois
+          };
+        }
+      });
+      return alteracoes;
+    };
+
+    const alteracoes = getAlteracoes(tarefaAntes, tarefaDepois);
+
+    await registrarHistorico({
+      entidade: 'tarefa',
+      entidade_id: editingTask.id,
+      acao: editingTask.status !== updatedTask.status ? 'STATUS_ALTERADO' : 'EDITADO',
+      descricao: editingTask.status !== updatedTask.status 
+        ? `Status alterado para ${updatedTask.status}`
+        : `Tarefa editada: ${updatedTask.descricao}`,
+      detalhes: {
+        empresa: {
+          id: projectId,
+          nome: companyName || '-'
+        },
+        tarefa: {
+          id: editingTask.id,
+          nome: updatedTask.descricao || editingTask.descricao
+        },
+        alteracoes: alteracoes
+      }
+    });
 
     setToast({ message: 'Tarefa salva com sucesso!', type: 'success' });
 
@@ -1379,8 +1457,26 @@ export const TasksTable: React.FC<TasksTableProps> = ({
         concluida: normalizeStatus(formData.status) === 'CONCLUIDA'
       };
 
-      const { data, error } = await supabase.from('tarefas').insert(payload).select().single();
+      const { data, error } = await supabase.from('tarefas').insert(payload).select().maybeSingle();
       if (error) throw error;
+      if (!data) throw new Error('Erro ao criar tarefa. Sem permissão ou dados inválidos.');
+
+      await registrarHistorico({
+        entidade: 'tarefa',
+        entidade_id: data.id,
+        acao: 'CRIADO',
+        descricao: `Tarefa criada: ${data.descricao}`,
+        detalhes: {
+          empresa: {
+            id: projectId,
+            nome: companyName || '-'
+          },
+          tarefa: {
+            id: data.id,
+            nome: data.descricao
+          }
+        }
+      });
 
       setToast({ message: 'Tarefa criada com sucesso!', type: 'success' });
 
@@ -1407,6 +1503,23 @@ export const TasksTable: React.FC<TasksTableProps> = ({
       const { error } = await supabase.from('tarefas').delete().eq('id', deletingTask.id);
 
       if (error) throw error;
+
+      await registrarHistorico({
+        entidade: 'tarefa',
+        entidade_id: deletingTask.id,
+        acao: 'EXCLUIDO',
+        descricao: `Tarefa excluída: ${deletingTask.descricao}`,
+        detalhes: {
+          empresa: {
+            id: projectId,
+            nome: companyName || '-'
+          },
+          tarefa: {
+            id: deletingTask.id,
+            nome: deletingTask.descricao
+          }
+        }
+      });
 
       setToast({ message: 'Tarefa excluída com sucesso!', type: 'success' });
 
@@ -1439,7 +1552,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
       {/* ✅ Indicadores corrigidos */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
         <div className="bg-brand-dark p-4 rounded-lg shadow-sm border border-brand-gray text-center">
-          <span className="block text-2xl font-bold text-white">{totalValid}</span>
+          <span className="block text-2xl font-bold text-brand-text-primary">{totalValid}</span>
           <span className="text-xs text-brand-text-muted font-bold uppercase">Total (Válidas)</span>
         </div>
 
@@ -1465,14 +1578,14 @@ export const TasksTable: React.FC<TasksTableProps> = ({
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-        <h3 className="text-lg font-bold text-white uppercase">Lista de Tarefas</h3>
+        <h3 className="text-lg font-bold text-brand-text-primary uppercase">Lista de Tarefas</h3>
         <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-bold text-brand-text-muted uppercase tracking-widest">Prioridade:</span>
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="bg-brand-black border border-brand-gray text-white text-xs font-medium rounded px-2 py-1.5 focus:ring-1 focus:ring-brand-accent outline-none transition-all"
+              className="bg-brand-black border border-brand-gray text-brand-text-primary text-xs font-medium rounded px-2 py-1.5 focus:ring-1 focus:ring-brand-accent outline-none transition-all"
             >
               <option value="ALL">Todas</option>
               <option value="P1">P1</option>
@@ -1485,7 +1598,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
             <select
               value={deadlineFilter}
               onChange={(e) => setDeadlineFilter(e.target.value)}
-              className="bg-brand-black border border-brand-gray text-white text-xs font-medium rounded px-2 py-1.5 focus:ring-1 focus:ring-brand-accent outline-none transition-all"
+              className="bg-brand-black border border-brand-gray text-brand-text-primary text-xs font-medium rounded px-2 py-1.5 focus:ring-1 focus:ring-brand-accent outline-none transition-all"
             >
               <option value="ALL">Todos</option>
               <option value="OVERDUE">Atrasada</option>
@@ -1498,7 +1611,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
             <select
               value={departmentFilter}
               onChange={(e) => setDepartmentFilter(e.target.value)}
-              className="bg-brand-black border border-brand-gray text-white text-xs font-medium rounded px-2 py-1.5 focus:ring-1 focus:ring-brand-accent outline-none transition-all"
+              className="bg-brand-black border border-brand-gray text-brand-text-primary text-xs font-medium rounded px-2 py-1.5 focus:ring-1 focus:ring-brand-accent outline-none transition-all"
             >
               <option value="ALL">Todos</option>
               <option value="DITE">DITE</option>
@@ -1526,7 +1639,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
           {filteredTasks.length === 0 ? (
             <div className="px-4 py-12 text-center text-brand-text-muted">
               <div className="flex flex-col items-center justify-center">
-                <p className="text-lg font-medium mb-2 text-white">
+                <p className="text-lg font-medium mb-2 text-brand-text-primary">
                   {priorityFilter === 'ALL' ? 'Nenhuma tarefa cadastrada' : 'Nenhuma tarefa encontrada'}
                 </p>
                 <p className="text-sm mb-4 text-gray-500">
@@ -1562,7 +1675,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
 
         {selectedTasks.length > 0 && (
           <div className="flex flex-wrap items-center gap-4 p-4 bg-brand-gray rounded-lg mb-4 border border-brand-accent/20">
-            <span className="text-white font-bold">{selectedTasks.length} tarefas selecionadas</span>
+            <span className="text-brand-text-primary font-bold">{selectedTasks.length} tarefas selecionadas</span>
             
             <div className="flex items-center gap-2 border-l border-brand-gray/50 pl-4">
               <span className="text-xs text-brand-text-muted uppercase font-bold">Aplicação:</span>
@@ -1585,7 +1698,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
               <select
                 onChange={(e) => handleBulkUpdate('proprietario', e.target.value)}
                 value=""
-                className="px-3 py-1.5 bg-brand-black text-white font-bold rounded hover:bg-brand-gray transition-all text-[10px] uppercase tracking-widest border border-brand-gray/50 cursor-pointer outline-none"
+                className="px-3 py-1.5 bg-brand-black text-brand-text-primary font-bold rounded hover:bg-brand-gray transition-all text-[10px] uppercase tracking-widest border border-brand-gray/50 cursor-pointer outline-none"
               >
                 <option value="" disabled>Alterar para...</option>
                 <option value="">-</option>
@@ -1603,8 +1716,8 @@ export const TasksTable: React.FC<TasksTableProps> = ({
           <table className="min-w-full divide-y divide-brand-gray text-sm relative border-collapse">
             <thead className="bg-brand-black sticky top-0 z-30 shadow-sm">
               <tr>
-                <th className="px-3 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider w-[60px] bg-brand-black sticky left-0 z-40 border-r border-brand-gray/30">Prior.</th>
-                <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider w-[25%] max-w-[300px] min-w-[200px] bg-brand-black sticky left-[60px] z-40 border-r border-brand-gray/30">Tarefa</th>
+                <th className="px-0 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[30px] min-w-[30px] max-w-[30px] bg-brand-black sticky left-0 z-40">Prior.</th>
+                <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider w-[25%] max-w-[300px] min-w-[200px] bg-brand-black sticky left-[29px] z-40 border-r border-brand-gray/30">Tarefa</th>
                 <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider min-w-[100px]">Departamento</th>
                 <th className="px-4 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[120px]">Status</th>
                 <th className="px-4 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[90px]">Início</th>
@@ -1633,7 +1746,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                 <tr>
                   <td colSpan={role === 'viewer' ? 9 : 10} className="px-4 py-12 text-center text-brand-text-muted">
                     <div className="flex flex-col items-center justify-center">
-                      <p className="text-lg font-medium mb-2 text-white">
+                      <p className="text-lg font-medium mb-2 text-brand-text-primary">
                         {priorityFilter === 'ALL' ? 'Nenhuma tarefa cadastrada' : 'Nenhuma tarefa encontrada'}
                       </p>
                       <p className="text-sm mb-4 text-gray-500">
@@ -1650,13 +1763,24 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                 const deadlineStatus = getDeadlineStatus(task);
 
                 return (
-                  <tr key={task.id} className={`${rowClass} hover:bg-brand-gray/50 transition-colors group`}>
-                  <td className={`px-3 py-3 whitespace-nowrap sticky left-0 z-20 border-r border-brand-gray/10 ${rowClass} group-hover:bg-brand-gray transition-colors`}>
+                  <tr 
+                    key={task.id} 
+                    ref={task.id === highlightedTaskId ? highlightedRowRef : null}
+                    onClick={() => {
+                      if (selectedTasks.includes(task.id)) {
+                        setSelectedTasks(selectedTasks.filter(id => id !== task.id));
+                      } else {
+                        setSelectedTasks([...selectedTasks, task.id]);
+                      }
+                    }}
+                    className={`${rowClass} hover:bg-brand-gray/50 transition-colors group cursor-pointer ${task.id === highlightedTaskId ? 'animate-highlight-task highlighted-task-row' : ''} ${selectedTasks.includes(task.id) ? 'bg-brand-accent/10' : ''}`}
+                  >
+                  <td className={`px-0 py-3 whitespace-nowrap sticky left-0 z-20 ${rowClass} group-hover:bg-brand-gray/50 transition-colors w-[30px] min-w-[30px] max-w-[30px] text-center`}>
                     <span className={`px-2 py-1 rounded text-[10px] font-bold border ${getPriorityColor(task.prioridade)}`}>
                       {task.prioridade}
                     </span>
                   </td>
-                  <td className={`px-4 py-3 text-white font-bold sticky left-[60px] z-20 border-r border-brand-gray/10 ${rowClass} group-hover:bg-brand-gray transition-colors w-[25%] max-w-[300px] min-w-[200px]`}>
+                  <td className={`px-4 py-3 text-brand-text-primary font-bold sticky left-[29px] z-20 border-r border-brand-gray/10 ${rowClass} group-hover:bg-brand-gray/50 transition-colors w-[25%] max-w-[300px] min-w-[200px]`}>
                       <div className="flex items-center gap-2">
                         <span className="whitespace-normal break-words leading-[1.4]" title={task.descricao}>{task.descricao}</span>
                         {attachmentCounts[task.id] > 0 && (
@@ -1675,62 +1799,41 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                       </div>
                     </td>
                     <td className="px-4 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.proprietario || ''}>
-                      {isViewer ? (
-                        task.proprietario || '-'
-                      ) : (
-                        <select
-                          value={task.proprietario || ''}
-                          onChange={(e) => handleInlineUpdate(task.id, 'proprietario', e.target.value)}
-                          className="w-full bg-transparent border-none outline-none text-brand-text-muted focus:text-white cursor-pointer appearance-none"
-                        >
-                          <option value="">-</option>
-                          <option value="DITE">DITE</option>
-                          <option value="FISCAL">FISCAL</option>
-                          <option value="CLIENTE">CLIENTE</option>
-                          <option value="PESSOAL">PESSOAL</option>
-                          <option value="CONTÁBIL">CONTÁBIL</option>
-                        </select>
-                      )}
+                      {task.proprietario || '-'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-center">
                       <span className={`px-2 py-1 rounded-full text-[10px] font-semibold border ${getStatusColor(task.status)}`}>
                         {task.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-brand-text-muted text-xs text-center whitespace-nowrap">{task.data_tarefa || '-'}</td>
+                    <td className="px-4 py-3 text-brand-text-muted text-xs text-center whitespace-nowrap">{formatDateTime(task.data_tarefa)}</td>
                     <td className="px-4 py-3 text-brand-text-muted text-xs text-center whitespace-nowrap">
                       <div className="flex items-center justify-center gap-1">
-                        {task.data_termino || '-'}
+                        {formatDateTime(task.data_termino)}
                         {task.data_termino && <DeadlineIndicator status={deadlineStatus} />}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}>
-                      {isViewer ? (
-                        task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'
-                      ) : (
-                        <select
-                          value={task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}
-                          onChange={(e) => handleInlineUpdate(task.id, 'aplicacao', e.target.value)}
-                          className="w-full bg-transparent border-none outline-none text-brand-text-muted focus:text-white cursor-pointer appearance-none"
-                        >
-                          <option value="APLICA">APLICA</option>
-                          <option value="NÃO APLICA">NÃO APLICA</option>
-                        </select>
-                      )}
+                      {task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}
                     </td>
                     <td className={`px-3 py-3 text-center ${rowClass} group-hover:bg-brand-gray transition-colors`}>
-                    <input
-                      type="checkbox"
-                      checked={selectedTasks.includes(task.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedTasks([...selectedTasks, task.id]);
-                        } else {
-                          setSelectedTasks(selectedTasks.filter(id => id !== task.id));
-                        }
-                      }}
-                    />
-                  </td>
+                      <input
+                        type="checkbox"
+                        checked={selectedTasks.includes(task.id)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          if (e.target.checked) {
+                            if (!selectedTasks.includes(task.id)) {
+                              setSelectedTasks([...selectedTasks, task.id]);
+                            }
+                          } else {
+                            setSelectedTasks(selectedTasks.filter(id => id !== task.id));
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="cursor-pointer accent-brand-accent"
+                      />
+                    </td>
                     <td className="px-4 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.produtos || ''}>{task.produtos || '-'}</td>
                     <td className="px-4 py-3 text-brand-text-muted text-xs max-w-[250px]">
                       <ObservationCell 
@@ -1779,13 +1882,13 @@ export const TasksTable: React.FC<TasksTableProps> = ({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center p-4 border-b border-brand-gray">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <h3 className="text-lg font-bold text-brand-text-primary flex items-center gap-2">
                 <Eye className="w-5 h-5 text-brand-accent" />
                 Observações Completas
               </h3>
               <button
                 onClick={() => setViewingObservation(null)}
-                className="text-brand-text-muted hover:text-white p-1 rounded-full hover:bg-brand-gray transition-colors"
+                className="text-brand-text-muted hover:text-brand-text-primary p-1 rounded-full hover:bg-brand-gray transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1796,7 +1899,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
             <div className="p-4 border-t border-brand-gray bg-brand-black rounded-b-xl flex justify-end">
               <button
                 onClick={() => setViewingObservation(null)}
-                className="px-4 py-2 bg-brand-gray border border-brand-gray text-white font-medium rounded-lg hover:bg-brand-dark transition-colors shadow-sm"
+                className="px-4 py-2 bg-brand-gray border border-brand-gray text-brand-text-primary font-medium rounded-lg hover:bg-brand-dark transition-colors shadow-sm"
               >
                 Fechar
               </button>
@@ -1808,6 +1911,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
       {editingTask && (
         <EditTaskModal 
           task={editingTask} 
+          companyName={companyName}
           isOpen={!!editingTask} 
           onClose={() => setEditingTask(null)} 
           onSave={handleSaveTask} 
@@ -1826,6 +1930,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
       {viewingAttachmentsTask && (
         <ViewAttachmentsModal 
           task={viewingAttachmentsTask} 
+          companyName={companyName}
           isOpen={!!viewingAttachmentsTask} 
           onClose={() => setViewingAttachmentsTask(null)} 
           role={role} 

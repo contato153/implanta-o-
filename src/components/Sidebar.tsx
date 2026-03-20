@@ -4,14 +4,14 @@ import { LayoutDashboard, BarChart2, CheckSquare, Users, LogOut, Search, Buildin
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
 import { getClientData } from '../services/api';
+import { ThemeToggle } from './ThemeToggle';
 
 export function Sidebar() {
   const { signOut, role } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { selectedClientId, clients } = useCompany();
+  const { selectedClientId, clients, isSidebarMinimized, setIsSidebarMinimized } = useCompany();
   const [isNavigatingTasks, setIsNavigatingTasks] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
 
   const selectedCompany = clients.find(c => c.id === selectedClientId);
 
@@ -46,11 +46,11 @@ export function Sidebar() {
   const isTasksActive = location.pathname.includes('/tasks');
 
   return (
-    <aside className={`sticky top-0 min-h-screen ${isMinimized ? 'w-[80px]' : 'w-[260px]'} flex-shrink-0 bg-brand-dark border-r border-brand-gray flex flex-col shadow-xl z-50 transition-all duration-300`}>
+    <aside className={`sidebar fixed top-0 left-0 h-screen ${isSidebarMinimized ? 'w-[80px]' : 'w-[260px]'} flex-shrink-0 bg-[#161616] border-r border-[#1E1E1E] flex flex-col shadow-xl z-50 transition-all duration-300`}>
       <div className="p-6 relative">
         <button
-          onClick={() => setIsMinimized(!isMinimized)}
-          className="absolute -right-3 top-6 bg-brand-accent text-brand-black rounded-full p-1 shadow-md hover:bg-brand-accent-hover transition-all"
+          onClick={() => setIsSidebarMinimized(!isSidebarMinimized)}
+          className="absolute -right-3 top-6 bg-[#F4C400] text-[#0B0B0B] rounded-full p-1 shadow-md hover:bg-[#FFD84D] transition-all"
         >
           <Menu size={16} />
         </button>
@@ -58,7 +58,7 @@ export function Sidebar() {
           <img 
             src="https://i.imgur.com/8SuQt5R.png" 
             alt="L&M Logo" 
-            className={`object-contain transition-all duration-300 ${isMinimized ? 'h-8 w-8' : 'h-14 w-auto'}`}
+            className={`object-contain transition-all duration-300 ${isSidebarMinimized ? 'h-8 w-8' : 'h-14 w-auto'}`}
             referrerPolicy="no-referrer"
           />
         </div>
@@ -70,14 +70,14 @@ export function Sidebar() {
           className={({ isActive }) =>
             `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
               isActive
-                ? 'text-brand-accent bg-brand-gray shadow-md'
-                : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
+                ? 'text-[#F4C400] bg-[#1E1E1E] shadow-md'
+                : 'text-[#BDBDBD] hover:bg-[#1E1E1E] hover:text-white'
             }`
           }
-          title={isMinimized ? "Dashboard Geral" : ""}
+          title={isSidebarMinimized ? "Dashboard Geral" : ""}
         >
           <BarChart2 size={20} />
-          {!isMinimized && <span className="font-medium">Dashboard Geral</span>}
+          {!isSidebarMinimized && <span className="font-medium">Dashboard Geral</span>}
         </NavLink>
 
         <div className="flex flex-col">
@@ -86,20 +86,20 @@ export function Sidebar() {
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 (isActive || location.pathname.includes('/empresa/')) && !isTasksActive
-                  ? 'text-brand-accent bg-brand-gray shadow-md'
-                  : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
+                  ? 'text-[#F4C400] bg-[#1E1E1E] shadow-md'
+                  : 'text-[#BDBDBD] hover:bg-[#1E1E1E] hover:text-white'
               }`
             }
-            title={isMinimized ? "Empresas" : ""}
+            title={isSidebarMinimized ? "Empresas" : ""}
           >
             <Building2 size={20} />
-            {!isMinimized && <span className="font-medium">Empresas</span>}
+            {!isSidebarMinimized && <span className="font-medium">Empresas</span>}
           </NavLink>
-          {selectedCompany && !isMinimized && (
-            <div className="flex flex-col mt-1 ml-6 border-l-2 border-brand-gray/30 pl-2 gap-1">
-              <div className="px-3 py-1.5 rounded-md bg-brand-gray/20 border border-brand-gray/30 flex flex-col gap-0.5">
-                <span className="text-[10px] text-brand-text-muted uppercase tracking-wider font-semibold">Empresa Selecionada</span>
-                <span className="text-xs text-brand-accent font-mono font-bold truncate" title={selectedCompany.nome_fantasia || selectedCompany.razao_social}>
+          {selectedCompany && !isSidebarMinimized && (
+            <div className="flex flex-col mt-1 ml-6 border-l-2 border-[#1E1E1E]/30 pl-2 gap-1">
+              <div className="px-3 py-1.5 rounded-md bg-[#1E1E1E]/20 border border-[#1E1E1E]/30 flex flex-col gap-0.5">
+                <span className="text-[10px] text-[#BDBDBD] uppercase tracking-wider font-semibold">Empresa Selecionada</span>
+                <span className="text-xs text-[#F4C400] font-mono font-bold truncate" title={selectedCompany.nome_fantasia || selectedCompany.razao_social}>
                   {selectedCompany.codigo_interno ? `${selectedCompany.codigo_interno} - ` : ''}
                   {selectedCompany.nome_fantasia || selectedCompany.razao_social}
                 </span>
@@ -109,8 +109,8 @@ export function Sidebar() {
                 disabled={isNavigatingTasks}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${
                   isTasksActive
-                    ? 'text-brand-accent bg-brand-gray shadow-md'
-                    : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
+                    ? 'text-[#F4C400] bg-[#1E1E1E] shadow-md'
+                    : 'text-[#BDBDBD] hover:bg-[#1E1E1E] hover:text-white'
                 } ${isNavigatingTasks ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <CheckSquare size={18} />
@@ -128,14 +128,14 @@ export function Sidebar() {
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 isActive
-                  ? 'text-brand-accent bg-brand-gray shadow-md'
-                  : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
+                  ? 'text-[#F4C400] bg-[#1E1E1E] shadow-md'
+                  : 'text-[#BDBDBD] hover:bg-[#1E1E1E] hover:text-white'
               }`
             }
-            title={isMinimized ? "Tarefas Padrão" : ""}
+            title={isSidebarMinimized ? "Tarefas Padrão" : ""}
           >
             <ClipboardList size={20} />
-            {!isMinimized && <span className="font-medium">Tarefas Padrão</span>}
+            {!isSidebarMinimized && <span className="font-medium">Tarefas Padrão</span>}
           </NavLink>
         )}
 
@@ -144,14 +144,14 @@ export function Sidebar() {
           className={({ isActive }) =>
             `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
               isActive
-                ? 'text-brand-accent bg-brand-gray shadow-md'
-                : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
+                ? 'text-[#F4C400] bg-[#1E1E1E] shadow-md'
+                : 'text-[#BDBDBD] hover:bg-[#1E1E1E] hover:text-white'
             }`
           }
-          title={isMinimized ? "Consultar CNPJ" : ""}
+          title={isSidebarMinimized ? "Consultar CNPJ" : ""}
         >
           <Search size={20} />
-          {!isMinimized && <span className="font-medium">Consultar CNPJ</span>}
+          {!isSidebarMinimized && <span className="font-medium">Consultar CNPJ</span>}
         </NavLink>
 
         {role === 'admin' && (
@@ -160,25 +160,43 @@ export function Sidebar() {
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 isActive
-                  ? 'text-brand-accent bg-brand-gray shadow-md'
-                  : 'text-brand-text-muted hover:bg-brand-gray hover:text-white'
+                  ? 'text-[#F4C400] bg-[#1E1E1E] shadow-md'
+                  : 'text-[#BDBDBD] hover:bg-[#1E1E1E] hover:text-white'
               }`
             }
-            title={isMinimized ? "Usuários" : ""}
+            title={isSidebarMinimized ? "Usuários" : ""}
           >
             <Users size={20} />
-            {!isMinimized && <span className="font-medium">Usuários</span>}
+            {!isSidebarMinimized && <span className="font-medium">Usuários</span>}
+          </NavLink>
+        )}
+
+        {(role === 'admin' || role === 'manager') && (
+          <NavLink
+            to="/historico"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                isActive
+                  ? 'text-[#F4C400] bg-[#1E1E1E] shadow-md'
+                  : 'text-[#BDBDBD] hover:bg-[#1E1E1E] hover:text-white'
+              }`
+            }
+            title={isSidebarMinimized ? "Histórico" : ""}
+          >
+            <Clock size={20} />
+            {!isSidebarMinimized && <span className="font-medium">Histórico</span>}
           </NavLink>
         )}
       </nav>
-      <div className="p-4 border-t border-brand-gray">
+      <div className="p-4 border-t border-[#1E1E1E] flex flex-col gap-2">
+        <ThemeToggle />
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 w-full rounded-lg transition-all duration-200 text-brand-text-muted hover:bg-red-900/20 hover:text-red-400"
-          title={isMinimized ? "Sair" : ""}
+          className="flex items-center gap-3 px-4 py-3 w-full rounded-lg transition-all duration-200 text-[#BDBDBD] hover:bg-red-900/20 hover:text-red-400"
+          title={isSidebarMinimized ? "Sair" : ""}
         >
           <LogOut size={20} />
-          {!isMinimized && <span className="font-medium">Sair</span>}
+          {!isSidebarMinimized && <span className="font-medium">Sair</span>}
         </button>
       </div>
     </aside>

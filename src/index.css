@@ -7,12 +7,218 @@
   --color-brand-accent: #F4C400;
   --color-brand-accent-hover: #FFD84D;
   --color-brand-text-muted: #BDBDBD;
+  --color-brand-text-primary: #FFFFFF;
 }
 
 html, body {
   overflow-x: hidden;
   background-color: var(--color-brand-black);
+  color: var(--color-brand-text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+body.light-theme {
+  --color-brand-black: #F8FAFC;       /* Slate 50 - Fundo principal */
+  --color-brand-dark: #FFFFFF;        /* Branco - Cards e superfícies */
+  --color-brand-gray: #E2E8F0;        /* Slate 200 - Bordas e divisores */
+  --color-brand-text-primary: #0F172A; /* Slate 900 - Texto principal */
+  --color-brand-text-muted: #64748B;   /* Slate 500 - Texto secundário */
+}
+
+/* Sidebar should remain dark */
+.sidebar {
+  background-color: #161616;
   color: #FFFFFF;
+}
+
+/* Light Theme Component Overrides */
+body.light-theme .bg-brand-dark { background-color: var(--color-brand-dark); }
+body.light-theme .bg-brand-black { background-color: var(--color-brand-black); }
+body.light-theme .border-brand-gray { border-color: var(--color-brand-gray); }
+
+body.light-theme table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+body.light-theme thead th {
+  background-color: #F1F5F9; /* Slate 100 */
+  color: #475569; /* Slate 600 */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.7rem;
+  border-bottom: 1px solid var(--color-brand-gray);
+}
+
+body.light-theme tr:hover td {
+  background-color: #F1F5F9 !important;
+}
+
+body.light-theme input, 
+body.light-theme select, 
+body.light-theme textarea {
+  border: 1px solid var(--color-brand-gray);
+  background-color: #FFFFFF;
+  color: var(--color-brand-text-primary);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+body.light-theme input:focus, 
+body.light-theme select:focus, 
+body.light-theme textarea:focus {
+  border-color: var(--color-brand-accent);
+  ring: 2px solid var(--color-brand-accent);
+  outline: none;
+}
+
+body.light-theme .badge,
+body.light-theme [class*="bg-"][class*="-100"] {
+  /* Refining Tailwind's default -100 backgrounds for a softer look */
+  background-opacity: 0.8;
+  border-width: 1px;
+}
+
+/* Specific Badge Refinements for Light Mode */
+body.light-theme .bg-red-100 { background-color: #FEE2E2; color: #991B1B; border-color: #FECACA; }
+body.light-theme .bg-yellow-100 { background-color: #FEF3C7; color: #92400E; border-color: #FDE68A; }
+body.light-theme .bg-green-100 { background-color: #DCFCE7; color: #166534; border-color: #BBF7D0; }
+body.light-theme .bg-blue-100 { background-color: #DBEAFE; color: #1E40AF; border-color: #BFDBFE; }
+body.light-theme .bg-gray-100 { background-color: #F3F4F6; color: #374151; border-color: #E5E7EB; }
+
+/* Ensure text on accent background stays dark for contrast in light mode */
+body.light-theme .text-brand-black {
+  color: #0F172A; /* Slate 900 */
+}
+
+/* Shadow and Depth for Light Mode */
+body.light-theme .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+body.light-theme .shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+body.light-theme .rounded-xl { 
+  border: 1px solid var(--color-brand-gray); 
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Modal and Overlay Refinements for Light Mode */
+body.light-theme .fixed.inset-0.bg-black\/90 {
+  background-color: rgba(248, 250, 252, 0.8) !important; /* Light backdrop */
+  backdrop-blur: 8px;
+}
+
+body.light-theme .bg-brand-dark.rounded-xl.shadow-2xl {
+  background-color: #FFFFFF;
+  border: 1px solid var(--color-brand-gray);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Error and Alert Refinements for Light Mode */
+body.light-theme .bg-red-900\/20 {
+  background-color: #FEE2E2 !important; /* Red 100 */
+}
+
+body.light-theme .text-red-400,
+body.light-theme .text-red-500 {
+  color: #B91C1C !important; /* Red 700 */
+}
+
+body.light-theme .border-red-900\/30,
+body.light-theme .border-red-900\/50 {
+  border-color: #FECACA !important; /* Red 200 */
+}
+
+/* Markdown Styles */
+.markdown-body {
+  font-size: inherit;
+  line-height: 1.5;
+}
+.markdown-body p {
+  margin-bottom: 0.5rem;
+}
+.markdown-body p:last-child {
+  margin-bottom: 0;
+}
+.markdown-body ul, .markdown-body ol {
+  padding-left: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+.markdown-body ul {
+  list-style-type: disc;
+}
+.markdown-body ol {
+  list-style-type: decimal;
+}
+.markdown-body strong {
+  font-weight: 600;
+}
+.markdown-body em {
+  font-style: italic;
+}
+
+/* Dashboard Specific Classes */
+.dashboard-container {
+  background-color: #0a0a0a;
+  transition: background-color 0.3s ease;
+}
+
+.dashboard-card {
+  background: linear-gradient(180deg, #161616 0%, #0f0f0f 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.dashboard-filter-bar {
+  background-color: rgba(22, 22, 22, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dashboard-card-divider {
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.theme-hover:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.theme-bg-soft {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.theme-border-soft {
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Light Theme Overrides for Dashboard */
+body.light-theme .dashboard-container {
+  background-color: #f8fafc;
+}
+
+body.light-theme .dashboard-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .dashboard-filter-bar {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+body.light-theme .dashboard-card-divider {
+  border-color: #e2e8f0;
+}
+
+body.light-theme .theme-hover:hover {
+  background-color: #f1f5f9;
+}
+
+body.light-theme .theme-bg-soft {
+  background-color: #f8fafc;
+}
+
+body.light-theme .theme-border-soft {
+  border-color: #e2e8f0;
 }
 
 /* Custom Scrollbar for a premium look */
@@ -29,4 +235,25 @@ html, body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-brand-text-muted);
+}
+
+@keyframes highlight-task {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: rgba(244, 196, 0, 0.15); }
+}
+
+.animate-highlight-task {
+  animation: highlight-task 1.5s ease-in-out infinite;
+}
+
+.highlighted-task-row td {
+  box-shadow: inset 0 2px 0 0 var(--color-brand-accent), inset 0 -2px 0 0 var(--color-brand-accent) !important;
+}
+
+.highlighted-task-row td:first-child {
+  box-shadow: inset 2px 0 0 0 var(--color-brand-accent), inset 0 2px 0 0 var(--color-brand-accent), inset 0 -2px 0 0 var(--color-brand-accent) !important;
+}
+
+.highlighted-task-row td:last-child {
+  box-shadow: inset -2px 0 0 0 var(--color-brand-accent), inset 0 2px 0 0 var(--color-brand-accent), inset 0 -2px 0 0 var(--color-brand-accent) !important;
 }
