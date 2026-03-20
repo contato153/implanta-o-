@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSupabase } from '../lib/supabase';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Filter, LayoutDashboard, AlertTriangle, Building2, ClipboardList, Clock, User } from 'lucide-react';
+import { Filter, LayoutDashboard, AlertTriangle, Building2, ClipboardList, Clock, User, X } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 interface Task {
@@ -48,6 +48,7 @@ export function ProductivityDashboard() {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('Todos');
   const [companies, setCompanies] = useState<Company[]>([]);
   const [activeTab, setActiveTab] = useState<'geral' | 'atrasados'>('geral');
+  const [showDelayedProjectsModal, setShowDelayedProjectsModal] = useState(false);
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -388,8 +389,11 @@ export function ProductivityDashboard() {
     const todoList: typeof list = [];
     const doingList: typeof list = [];
     const doneList: typeof list = [];
+    const delayedList: typeof list = [];
 
     list.forEach(p => {
+      if (p.delayed > 0) delayedList.push(p);
+      
       p.todo = Math.max(0, p.total - p.done - p.doing);
       const percentCompleted = p.total > 0 ? (p.done / p.total) * 100 : 0;
 
@@ -402,6 +406,7 @@ export function ProductivityDashboard() {
       todo: todoList.sort((a, b) => b.total - a.total),
       doing: doingList.sort((a, b) => b.total - a.total),
       done: doneList.sort((a, b) => b.total - a.total),
+      delayed: delayedList.sort((a, b) => b.delayed - a.delayed),
     };
   }, [filteredTasks]);
 
@@ -847,9 +852,12 @@ export function ProductivityDashboard() {
                   <div className="flex flex-col items-center">
                     <p className="text-7xl font-light text-brand-text-primary tracking-tight">{metrics.countDelayedTasks}</p>
                     <span className="text-xs text-brand-text-muted uppercase tracking-[0.3em] mt-2">Tarefas em Atraso</span>
-                    <div className="mt-6 text-xs font-bold text-red-500 bg-red-500/10 px-4 py-1.5 rounded-full border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+                    <button 
+                      onClick={() => setShowDelayedProjectsModal(true)}
+                      className="mt-6 text-xs font-bold text-red-500 bg-red-500/10 px-4 py-1.5 rounded-full border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)] hover:bg-red-500/20 transition-all cursor-pointer"
+                    >
                       {metrics.countDelayedProjects} PROJETOS AFETADOS
-                    </div>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -925,6 +933,77 @@ export function ProductivityDashboard() {
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delayed Projects Modal */}
+      {showDelayedProjectsModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-brand-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="dashboard-card w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl border theme-border-soft animate-in zoom-in-95 duration-300">
+            <div className="p-6 border-b dashboard-card-divider flex items-center justify-between bg-brand-accent/5">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-red-500" />
+                <h3 className="text-lg font-bold text-brand-text-primary tracking-tight">Projetos com Atrasos</h3>
+              </div>
+              <button 
+                onClick={() => setShowDelayedProjectsModal(false)}
+                className="p-2 rounded-xl hover:bg-brand-black/20 text-brand-text-muted hover:text-brand-text-primary transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar space-y-4">
+              {projectsByStatus.delayed.length > 0 ? (
+                projectsByStatus.delayed.map((p, idx) => (
+                  <button 
+                    key={idx}
+                    onClick={() => {
+                      setShowDelayedProjectsModal(false);
+                      navigate(`/project/${p.id}/tasks`);
+                    }}
+                    className="w-full text-left p-4 rounded-2xl theme-bg-soft border theme-border-soft hover:border-red-500/30 hover:shadow-[0_4px_20px_rgba(239,68,68,0.05)] transition-all duration-300 group flex items-center justify-between gap-4"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[9px] font-bold text-red-500 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20 uppercase tracking-widest">
+                          {p.code || 'N/A'}
+                        </span>
+                        <span className="text-[10px] font-medium text-brand-text-muted truncate">
+                          {p.company}
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-bold text-brand-text-primary group-hover:text-red-500 transition-colors truncate">
+                        {p.project}
+                      </h4>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="flex items-center gap-1.5 text-red-500">
+                        <AlertTriangle className="w-3 h-3" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">{p.delayed} Atrasadas</span>
+                      </div>
+                      <div className="text-[10px] text-brand-text-muted font-medium">
+                        {p.done} / {p.total} Concluídas
+                      </div>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="py-12 text-center text-brand-text-muted">
+                  <p className="text-sm font-medium">Nenhum projeto com atrasos encontrado.</p>
+                </div>
+              )}
+            </div>
+            
+            <div className="p-6 border-t dashboard-card-divider bg-brand-accent/5 flex justify-end">
+              <button 
+                onClick={() => setShowDelayedProjectsModal(false)}
+                className="px-6 py-2.5 rounded-xl bg-brand-black/20 text-brand-text-primary text-sm font-bold hover:bg-brand-black/40 transition-all"
+              >
+                Fechar
+              </button>
             </div>
           </div>
         </div>
