@@ -16,7 +16,7 @@ export function Login() {
 
   // Logo URLs
   const darkLogo = "https://i.imgur.com/8SuQt5R.png";
-  const lightLogo = "https://imgur.com/xjIoTJO";
+  const lightLogo = "https://i.imgur.com/xjIoTJO.png";
   const currentLogo = theme === 'dark' ? darkLogo : lightLogo;
 
   const handleLogin = async (e: React.FormEvent) => {
