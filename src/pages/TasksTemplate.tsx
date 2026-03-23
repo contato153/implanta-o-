@@ -26,7 +26,6 @@ export function TasksTemplate() {
     prioridade: 'P1' as 'P1' | 'P2' | 'P3',
     proprietario: '',
     aplicacao: 'APLICA',
-    produtos: '',
     observacoes: ''
   });
 
@@ -59,7 +58,6 @@ export function TasksTemplate() {
         prioridade: task.prioridade,
         proprietario: task.proprietario || '',
         aplicacao: task.aplicacao || 'APLICA',
-        produtos: task.produtos || '',
         observacoes: task.observacoes || ''
       });
     } else {
@@ -69,7 +67,6 @@ export function TasksTemplate() {
         prioridade: 'P1',
         proprietario: '',
         aplicacao: 'APLICA',
-        produtos: '',
         observacoes: ''
       });
     }
@@ -219,7 +216,6 @@ export function TasksTemplate() {
                   <th className="p-4 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Descrição</th>
                   <th className="p-4 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Departamento</th>
                   <th className="p-4 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Aplicação</th>
-                  <th className="p-4 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Produtos</th>
                   <th className="p-4 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Observações</th>
                   <th className="p-4 text-xs font-bold text-brand-text-muted uppercase tracking-wider text-center">Ações</th>
                 </tr>
@@ -259,7 +255,6 @@ export function TasksTemplate() {
                       <td className="p-4 text-sm text-brand-text-muted">
                         {task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}
                       </td>
-                      <td className="p-4 text-sm text-brand-text-muted">{task.produtos || '-'}</td>
                       <td className="p-4 text-sm text-brand-text-muted max-w-xs truncate" title={task.observacoes}>
                         {task.observacoes || '-'}
                       </td>
@@ -388,15 +383,6 @@ export function TasksTemplate() {
                     <option value="APLICA">APLICA</option>
                     <option value="NÃO APLICA">NÃO APLICA</option>
                   </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Produtos</label>
-                  <input
-                    type="text"
-                    value={formData.produtos}
-                    onChange={(e) => setFormData({ ...formData, produtos: e.target.value })}
-                    className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
-                  />
                 </div>
               </div>
 

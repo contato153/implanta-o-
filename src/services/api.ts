@@ -122,7 +122,6 @@ const MOCK_DATA: Record<string, ClientData> = {
         data_tarefa: '2023-03-05',
         data_termino: '2023-03-10',
         aplicacao: 'Excel',
-        produtos: 'Planilha Base',
         observacoes: ''
       },
     ],
@@ -346,21 +345,22 @@ export async function importStandardTasks(projectId: string): Promise<boolean> {
 
     if (templateTasks && templateTasks.length > 0) {
       // Prepare tasks for insertion from database template
-      tasksToInsert = templateTasks.map(task => ({
+      tasksToInsert = templateTasks.map((task, index) => ({
         projeto_id: projectId,
+        titulo: task.descricao,
         descricao: task.descricao,
         prioridade: task.prioridade,
         proprietario: task.proprietario,
         aplicacao: task.aplicacao,
-        produtos: task.produtos,
         observacoes: task.observacoes,
         status: 'NÃO INICIADA',
         concluida: false
       }));
     } else {
       // Fallback to hardcoded template if table is empty
-      tasksToInsert = STANDARD_TASKS_TEMPLATE.map(task => ({
+      tasksToInsert = STANDARD_TASKS_TEMPLATE.map((task, index) => ({
         ...task,
+        titulo: task.descricao,
         projeto_id: projectId,
         status: 'NÃO INICIADA',
         concluida: false
@@ -487,8 +487,8 @@ export async function createCompany(
       console.warn('Trigger não criou tarefas. Tentando importar manualmente...');
       try {
         await importStandardTasks(projetoId);
-      } catch (manualError) {
-        throw new Error('O projeto foi criado, mas as tarefas padrão não puderam ser geradas. Verifique a automação.');
+      } catch (manualError: any) {
+        throw new Error(`O projeto foi criado, mas as tarefas padrão não puderam ser geradas. Erro: ${manualError.message || JSON.stringify(manualError)}`);
       }
     } else if (count < 40) {
        console.warn(`Atenção: Foram criadas apenas ${count} tarefas (esperado: 40).`);

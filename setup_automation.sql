@@ -25,7 +25,6 @@ INSERT INTO public.tarefas (
     data_tarefa,
     data_termino,
     aplicacao,
-    produtos,
     observacoes,
     created_at
 )
@@ -42,7 +41,6 @@ SELECT
     NULL,
     NULL,
     aplicacao,
-    produtos,
     observacoes,
     now()
 

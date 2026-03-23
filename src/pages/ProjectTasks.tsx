@@ -192,7 +192,7 @@ export function ProjectTasks() {
       doc.text(`Gerado em: ${new Date().toLocaleDateString()}`, 14, 28);
 
       // Table columns
-      const tableColumn = ["ID", "Descrição", "Prioridade", "Departamento", "Aplicação", "Produtos"];
+      const tableColumn = ["ID", "Descrição", "Prioridade", "Departamento", "Aplicação"];
       
       // Table rows
       const tableRows = STANDARD_TASKS_TEMPLATE.map((task, index) => [
@@ -200,8 +200,7 @@ export function ProjectTasks() {
         task.descricao,
         task.prioridade,
         task.proprietario,
-        task.aplicacao,
-        task.produtos
+        task.aplicacao
       ]);
 
       // Generate table
@@ -217,8 +216,7 @@ export function ProjectTasks() {
           1: { cellWidth: 'auto' },
           2: { cellWidth: 20 },
           3: { cellWidth: 25 },
-          4: { cellWidth: 25 },
-          5: { cellWidth: 25 }
+          4: { cellWidth: 25 }
         }
       });
 

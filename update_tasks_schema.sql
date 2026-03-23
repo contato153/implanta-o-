@@ -10,7 +10,6 @@ ADD COLUMN IF NOT EXISTS status TEXT CHECK (status IN ('NÃO INICIADA', 'EM EXEC
 ADD COLUMN IF NOT EXISTS data_tarefa DATE,
 ADD COLUMN IF NOT EXISTS data_termino DATE,
 ADD COLUMN IF NOT EXISTS aplicacao TEXT,
-ADD COLUMN IF NOT EXISTS produtos TEXT,
 ADD COLUMN IF NOT EXISTS observacoes TEXT;
 
 -- Remove colunas antigas se necessário (opcional, manteremos por segurança)

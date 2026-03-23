@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google" content="notranslate" />
     <title>Gestão de Projetos L&M</title>
+    <script>
+      // Prevent "Cannot set property fetch of #<Window> which has only a getter"
+      if (typeof window !== 'undefined' && window.fetch) {
+        Object.defineProperty(window, 'fetch', {
+          value: window.fetch,
+          writable: true,
+          configurable: true
+        });
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

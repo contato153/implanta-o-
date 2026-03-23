@@ -14,7 +14,6 @@ const nomesCampos: Record<string, string> = {
   aplicacao: "Aplicação",
   data_inicio: "Data Início",
   data_termino: "Data Término",
-  produtos: "Produtos",
   observacoes: "Observações"
 };
 

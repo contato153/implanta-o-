@@ -582,17 +582,6 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, companyName, isOpen
             </div>
 
             <div className="col-span-2">
-              <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Produtos</label>
-              <input
-                type="text"
-                value={formData.produtos || ''}
-                onChange={(e) => handleChange('produtos', e.target.value)}
-                disabled={!canEditTasks}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none"
-              />
-            </div>
-
-            <div className="col-span-2">
               <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Observações</label>
               <textarea
                 rows={4}
@@ -736,7 +725,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
     data_tarefa: getLocalISOString(),
     data_termino: '',
     aplicacao: 'APLICA',
-    produtos: '',
     observacoes: ''
   });
   const [saving, setSaving] = useState(false);
@@ -768,7 +756,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
         data_tarefa: getLocalISOString(),
         data_termino: '',
         aplicacao: 'APLICA',
-        produtos: '',
         observacoes: ''
       });
     } catch (err: any) {
@@ -879,16 +866,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
                 type="datetime-local"
                 value={formData.data_termino}
                 onChange={(e) => handleChange('data_termino', e.target.value)}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
-              />
-            </div>
-
-            <div className="col-span-2">
-              <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Produtos</label>
-              <input
-                type="text"
-                value={formData.produtos}
-                onChange={(e) => handleChange('produtos', e.target.value)}
                 className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
               />
             </div>
@@ -1154,10 +1131,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
             {task.data_termino && <DeadlineIndicator status={deadlineStatus} />}
           </span>
         </div>
-        <div className="col-span-2">
-          <span className="block text-[10px] font-bold text-brand-text-muted uppercase tracking-wider mb-0.5">Produtos</span>
-          <span className="text-xs text-brand-text-primary">{task.produtos || '-'}</span>
-        </div>
         {task.observacoes && (
           <div className="col-span-2">
             <span className="block text-[10px] font-bold text-brand-text-muted uppercase tracking-wider mb-0.5">Observações</span>
@@ -1355,7 +1328,6 @@ export const TasksTable: React.FC<TasksTableProps> = ({
       data_tarefa: updatedTask.data_tarefa,
       data_termino: updatedTask.data_termino,
       aplicacao: updatedTask.aplicacao,
-      produtos: updatedTask.produtos,
       observacoes: updatedTask.observacoes,
       // ✅ concluida coerente com status (normalizado)
       concluida: normalizeStatus(updatedTask.status) === 'CONCLUIDA'
@@ -1374,7 +1346,6 @@ export const TasksTable: React.FC<TasksTableProps> = ({
       aplicacao: editingTask.aplicacao,
       data_inicio: editingTask.data_tarefa,
       data_termino: editingTask.data_termino,
-      produtos: editingTask.produtos,
       observacoes: editingTask.observacoes
     };
 
@@ -1387,7 +1358,6 @@ export const TasksTable: React.FC<TasksTableProps> = ({
       aplicacao: updatedData.aplicacao,
       data_inicio: updatedData.data_tarefa,
       data_termino: updatedData.data_termino,
-      produtos: updatedData.produtos,
       observacoes: updatedData.observacoes
     };
 
@@ -1452,7 +1422,6 @@ export const TasksTable: React.FC<TasksTableProps> = ({
         data_tarefa: formData.data_tarefa,
         data_termino: formData.data_termino,
         aplicacao: formData.aplicacao,
-        produtos: formData.produtos,
         observacoes: formData.observacoes,
         concluida: normalizeStatus(formData.status) === 'CONCLUIDA'
       };
@@ -1736,7 +1705,6 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                     }}
                   />
                 </th>
-                <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider min-w-[100px]">Produtos</th>
                 <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider min-w-[180px]">Observações</th>
                 {!isViewer && <th className="px-4 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[80px] bg-brand-black sticky right-0 z-40 border-l border-brand-gray/30">Ações</th>}
               </tr>
@@ -1834,7 +1802,6 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                         className="cursor-pointer accent-brand-accent"
                       />
                     </td>
-                    <td className="px-4 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.produtos || ''}>{task.produtos || '-'}</td>
                     <td className="px-4 py-3 text-brand-text-muted text-xs max-w-[250px]">
                       <ObservationCell 
                         text={task.observacoes || ''} 

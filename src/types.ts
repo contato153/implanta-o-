@@ -65,7 +65,6 @@ export interface Tarefa {
   data_tarefa?: string;
   data_termino?: string;
   aplicacao?: string;
-  produtos?: string;
   observacoes?: string;
   created_at?: string;
   ordem?: number;
@@ -88,7 +87,6 @@ export interface TarefasTemplate {
   prioridade: 'P1' | 'P2' | 'P3';
   proprietario: 'DITE' | 'FISCAL' | 'CLIENTE' | 'PESSOAL' | 'CONTÁBIL' | string;
   aplicacao?: string;
-  produtos?: string;
   observacoes?: string;
   created_at?: string;
 }
