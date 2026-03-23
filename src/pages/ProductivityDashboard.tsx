@@ -4,6 +4,7 @@ import { getSupabase } from '../lib/supabase';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Filter, LayoutDashboard, AlertTriangle, Building2, ClipboardList, Clock, User, X } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 interface Task {
   id: string;
@@ -44,12 +45,13 @@ export function ProductivityDashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [year, setYear] = useState<string>(new Date().getFullYear().toString());
-  const [month, setMonth] = useState<string>((new Date().getMonth() + 1).toString());
+  const [month, setMonth] = useState<string>('Todos');
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('Todos');
   const [companies, setCompanies] = useState<Company[]>([]);
   const [activeTab, setActiveTab] = useState<'geral' | 'atrasados'>('geral');
   const [showDelayedProjectsModal, setShowDelayedProjectsModal] = useState(false);
   const { theme } = useTheme();
+  const { profile } = useAuth();
 
   useEffect(() => {
     carregarDados();
@@ -473,7 +475,9 @@ export function ProductivityDashboard() {
         <div className="flex items-center gap-4">
           <div className="w-1 h-10 bg-brand-accent rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)]"></div>
           <div className="flex flex-col">
-            <h2 className="text-4xl text-brand-text-primary font-extrabold tracking-tight">Dashboard de Produtividade</h2>
+            <h2 className="text-4xl text-brand-text-primary font-extrabold tracking-tight">
+              Olá, {profile?.full_name?.split(' ')[0] || profile?.email?.split('@')[0] || 'Usuário'}!
+            </h2>
             <p className="text-sm text-brand-text-muted font-medium tracking-wide mt-1">Visão geral e acompanhamento de projetos</p>
           </div>
         </div>

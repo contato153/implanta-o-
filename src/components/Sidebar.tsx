@@ -7,7 +7,7 @@ import { getClientData } from '../services/api';
 import { ThemeToggle } from './ThemeToggle';
 
 export function Sidebar() {
-  const { signOut, role } = useAuth();
+  const { signOut, role, profile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedClientId, clients, isSidebarMinimized, setIsSidebarMinimized } = useCompany();
@@ -189,6 +189,25 @@ export function Sidebar() {
         )}
       </nav>
       <div className="p-4 border-t border-[#1E1E1E] flex flex-col gap-2">
+        {profile && (
+          <div className={`flex items-center gap-3 px-4 py-3 mb-2 rounded-lg bg-[#1E1E1E]/50 border border-[#1E1E1E] ${isSidebarMinimized ? 'justify-center' : ''}`}>
+            <div className="w-8 h-8 rounded-full bg-[#F4C400]/20 flex items-center justify-center flex-shrink-0">
+              <span className="text-[#F4C400] font-bold text-sm">
+                {(profile.full_name || profile.email || '?').charAt(0).toUpperCase()}
+              </span>
+            </div>
+            {!isSidebarMinimized && (
+              <div className="flex flex-col overflow-hidden">
+                <span className="text-sm font-medium text-white truncate">
+                  {profile.full_name || profile.email?.split('@')[0]}
+                </span>
+                <span className="text-[10px] text-[#BDBDBD] uppercase tracking-wider">
+                  {role === 'admin' ? 'Administrador' : role === 'manager' ? 'Gerente' : 'Visualizador'}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
         <ThemeToggle />
         <button
           onClick={handleLogout}

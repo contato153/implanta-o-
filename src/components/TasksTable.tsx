@@ -506,7 +506,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, companyName, isOpen
               <select
                 value={formData.prioridade || 'P2'}
                 onChange={(e) => handleChange('prioridade', e.target.value)}
-                disabled={!canEditTasks}
+                disabled={role !== 'admin'}
                 className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none appearance-none"
               >
                 <option value="P1">P1 - Alta</option>
@@ -1322,7 +1322,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
 
     const payload = {
       descricao: updatedTask.descricao,
-      prioridade: updatedTask.prioridade,
+      prioridade: role === 'admin' ? updatedTask.prioridade : editingTask.prioridade,
       status: updatedTask.status,
       proprietario: updatedTask.proprietario,
       data_tarefa: updatedTask.data_tarefa,
