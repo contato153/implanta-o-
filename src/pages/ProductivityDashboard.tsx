@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSupabase } from '../lib/supabase';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Filter, LayoutDashboard, AlertTriangle, Building2, ClipboardList, Clock, User, X } from 'lucide-react';
+import { Filter, LayoutDashboard, AlertTriangle, Building2, ClipboardList, Clock, User, X, PlayCircle, CheckCircle2, Calendar } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -50,6 +50,11 @@ export function ProductivityDashboard() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [activeTab, setActiveTab] = useState<'geral' | 'atrasados'>('geral');
   const [showDelayedProjectsModal, setShowDelayedProjectsModal] = useState(false);
+  const [selectedStatusModal, setSelectedStatusModal] = useState<'todo' | 'doing' | 'done' | null>(null);
+  const [selectedProjectTasks, setSelectedProjectTasks] = useState<{
+    project: any;
+    status: 'todo' | 'doing' | 'done' | 'delayed' | 'all' | 'nao_aplica';
+  } | null>(null);
   const { theme } = useTheme();
   const { profile } = useAuth();
 
@@ -562,7 +567,10 @@ export function ProductivityDashboard() {
           {/* Row 1: Main Indicators */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             {/* A Fazer */}
-            <div className="dashboard-card rounded-3xl p-8 flex flex-col items-center relative overflow-hidden group hover:border-red-500/30 hover:shadow-[0_0_30px_rgba(239,68,68,0.1)] transition-all duration-500">
+            <div 
+              onClick={() => setSelectedStatusModal('todo')}
+              className="dashboard-card rounded-3xl p-8 flex flex-col items-center relative overflow-hidden group hover:border-red-500/30 hover:shadow-[0_0_30px_rgba(239,68,68,0.1)] transition-all duration-500 cursor-pointer"
+            >
               <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-red-500/50 to-transparent opacity-50 group-hover:opacity-100 transition-opacity"></div>
               <div className="absolute -top-24 -right-24 w-48 h-48 bg-red-500/5 rounded-full blur-3xl group-hover:bg-red-500/10 transition-colors"></div>
               
@@ -602,7 +610,10 @@ export function ProductivityDashboard() {
             </div>
 
             {/* Fazendo */}
-            <div className="dashboard-card rounded-3xl p-8 flex flex-col items-center relative overflow-hidden group hover:border-yellow-500/30 hover:shadow-[0_0_30px_rgba(245,158,11,0.1)] transition-all duration-500">
+            <div 
+              onClick={() => setSelectedStatusModal('doing')}
+              className="dashboard-card rounded-3xl p-8 flex flex-col items-center relative overflow-hidden group hover:border-yellow-500/30 hover:shadow-[0_0_30px_rgba(245,158,11,0.1)] transition-all duration-500 cursor-pointer"
+            >
               <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent opacity-50 group-hover:opacity-100 transition-opacity"></div>
               <div className="absolute -top-24 -right-24 w-48 h-48 bg-yellow-500/5 rounded-full blur-3xl group-hover:bg-yellow-500/10 transition-colors"></div>
               
@@ -642,7 +653,10 @@ export function ProductivityDashboard() {
             </div>
 
             {/* Feito */}
-            <div className="dashboard-card rounded-3xl p-8 flex flex-col items-center relative overflow-hidden group hover:border-green-500/30 hover:shadow-[0_0_30px_rgba(16,185,129,0.1)] transition-all duration-500">
+            <div 
+              onClick={() => setSelectedStatusModal('done')}
+              className="dashboard-card rounded-3xl p-8 flex flex-col items-center relative overflow-hidden group hover:border-green-500/30 hover:shadow-[0_0_30px_rgba(16,185,129,0.1)] transition-all duration-500 cursor-pointer"
+            >
               <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-green-500/50 to-transparent opacity-50 group-hover:opacity-100 transition-opacity"></div>
               <div className="absolute -top-24 -right-24 w-48 h-48 bg-green-500/5 rounded-full blur-3xl group-hover:bg-green-500/10 transition-colors"></div>
               
@@ -788,7 +802,7 @@ export function ProductivityDashboard() {
               </div>
               <div className="p-6 space-y-4">
                 {projectsByStatus.todo.map((p, idx) => (
-                  <ProjectCard key={idx} project={p} statusColor="red" />
+                  <ProjectCard key={idx} project={p} statusColor="red" onTaskClick={(status: any) => setSelectedProjectTasks({ project: p, status })} />
                 ))}
                 {projectsByStatus.todo.length === 0 && (
                   <div className="py-20 text-center">
@@ -809,7 +823,7 @@ export function ProductivityDashboard() {
               </div>
               <div className="p-6 space-y-4">
                 {projectsByStatus.doing.map((p, idx) => (
-                  <ProjectCard key={idx} project={p} statusColor="yellow" />
+                  <ProjectCard key={idx} project={p} statusColor="yellow" onTaskClick={(status: any) => setSelectedProjectTasks({ project: p, status })} />
                 ))}
                 {projectsByStatus.doing.length === 0 && (
                   <div className="py-20 text-center">
@@ -830,7 +844,7 @@ export function ProductivityDashboard() {
               </div>
               <div className="p-6 space-y-4">
                 {projectsByStatus.done.map((p, idx) => (
-                  <ProjectCard key={idx} project={p} statusColor="green" />
+                  <ProjectCard key={idx} project={p} statusColor="green" onTaskClick={(status: any) => setSelectedProjectTasks({ project: p, status })} />
                 ))}
                 {projectsByStatus.done.length === 0 && (
                   <div className="py-20 text-center">
@@ -966,7 +980,7 @@ export function ProductivityDashboard() {
                     key={idx}
                     onClick={() => {
                       setShowDelayedProjectsModal(false);
-                      navigate(`/project/${p.id}/tasks`);
+                      setSelectedProjectTasks({ project: p, status: 'delayed' });
                     }}
                     className="w-full text-left p-4 rounded-2xl theme-bg-soft border theme-border-soft hover:border-red-500/30 hover:shadow-[0_4px_20px_rgba(239,68,68,0.05)] transition-all duration-300 group flex items-center justify-between gap-4"
                   >
@@ -1012,12 +1026,202 @@ export function ProductivityDashboard() {
           </div>
         </div>
       )}
+
+      {/* Status Projects Modal */}
+      {selectedStatusModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-brand-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="dashboard-card w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl border theme-border-soft animate-in zoom-in-95 duration-300">
+            <div className="p-6 border-b dashboard-card-divider flex items-center justify-between bg-brand-accent/5">
+              <div className="flex items-center gap-3">
+                {selectedStatusModal === 'todo' && <Clock className="w-5 h-5 text-red-500" />}
+                {selectedStatusModal === 'doing' && <PlayCircle className="w-5 h-5 text-yellow-500" />}
+                {selectedStatusModal === 'done' && <CheckCircle2 className="w-5 h-5 text-green-500" />}
+                <h3 className="text-lg font-bold text-brand-text-primary tracking-tight">
+                  {selectedStatusModal === 'todo' && 'Projetos A Fazer'}
+                  {selectedStatusModal === 'doing' && 'Projetos Em Andamento'}
+                  {selectedStatusModal === 'done' && 'Projetos Concluídos'}
+                </h3>
+              </div>
+              <button 
+                onClick={() => setSelectedStatusModal(null)}
+                className="p-2 rounded-xl hover:bg-brand-black/20 text-brand-text-muted hover:text-brand-text-primary transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar space-y-4">
+              {projectsByStatus[selectedStatusModal].length > 0 ? (
+                projectsByStatus[selectedStatusModal].map((p, idx) => (
+                  <button 
+                    key={idx}
+                    onClick={() => {
+                      setSelectedStatusModal(null);
+                      setSelectedProjectTasks({ 
+                        project: p, 
+                        status: selectedStatusModal === 'todo' ? 'todo' : selectedStatusModal === 'doing' ? 'doing' : 'done' 
+                      });
+                    }}
+                    className={`w-full text-left p-4 rounded-2xl theme-bg-soft border theme-border-soft transition-all duration-300 group flex items-center justify-between gap-4 ${
+                      selectedStatusModal === 'todo' ? 'hover:border-red-500/30 hover:shadow-[0_4px_20px_rgba(239,68,68,0.05)]' :
+                      selectedStatusModal === 'doing' ? 'hover:border-yellow-500/30 hover:shadow-[0_4px_20px_rgba(245,158,11,0.05)]' :
+                      'hover:border-green-500/30 hover:shadow-[0_4px_20px_rgba(16,185,129,0.05)]'
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-widest ${
+                          selectedStatusModal === 'todo' ? 'text-red-500 bg-red-500/10 border-red-500/20' :
+                          selectedStatusModal === 'doing' ? 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20' :
+                          'text-green-500 bg-green-500/10 border-green-500/20'
+                        }`}>
+                          {p.code || 'N/A'}
+                        </span>
+                        <span className="text-[10px] font-medium text-brand-text-muted truncate">
+                          {p.company}
+                        </span>
+                      </div>
+                      <h4 className={`text-sm font-bold text-brand-text-primary transition-colors truncate ${
+                        selectedStatusModal === 'todo' ? 'group-hover:text-red-500' :
+                        selectedStatusModal === 'doing' ? 'group-hover:text-yellow-500' :
+                        'group-hover:text-green-500'
+                      }`}>
+                        {p.project}
+                      </h4>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <div className={`flex items-center gap-1.5 ${
+                        selectedStatusModal === 'todo' ? 'text-red-500' :
+                        selectedStatusModal === 'doing' ? 'text-yellow-500' :
+                        'text-green-500'
+                      }`}>
+                        {selectedStatusModal === 'todo' && <Clock className="w-3 h-3" />}
+                        {selectedStatusModal === 'doing' && <PlayCircle className="w-3 h-3" />}
+                        {selectedStatusModal === 'done' && <CheckCircle2 className="w-3 h-3" />}
+                        <span className="text-[10px] font-bold uppercase tracking-widest">
+                          {selectedStatusModal === 'todo' && `${p.todo} A Fazer`}
+                          {selectedStatusModal === 'doing' && `${p.doing} Fazendo`}
+                          {selectedStatusModal === 'done' && `${p.done} Concluídas`}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-brand-text-muted font-medium">
+                        {p.done} / {p.total} Concluídas
+                      </div>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="py-12 text-center text-brand-text-muted">
+                  <p className="text-sm font-medium">Nenhum projeto encontrado.</p>
+                </div>
+              )}
+            </div>
+            
+            <div className="p-6 border-t dashboard-card-divider bg-brand-accent/5 flex justify-end">
+              <button 
+                onClick={() => setSelectedStatusModal(null)}
+                className="px-6 py-2.5 rounded-xl bg-brand-black/20 text-brand-text-primary text-sm font-bold hover:bg-brand-black/40 transition-all"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Project Tasks Modal */}
+      {selectedProjectTasks && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-brand-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="dashboard-card w-full max-w-3xl rounded-3xl overflow-hidden shadow-2xl border theme-border-soft animate-in zoom-in-95 duration-300">
+            <div className="p-6 border-b dashboard-card-divider flex items-center justify-between bg-brand-accent/5">
+              <div className="flex items-center gap-3">
+                {selectedProjectTasks.status === 'todo' && <Clock className="w-5 h-5 text-red-500" />}
+                {selectedProjectTasks.status === 'doing' && <PlayCircle className="w-5 h-5 text-yellow-500" />}
+                {selectedProjectTasks.status === 'done' && <CheckCircle2 className="w-5 h-5 text-green-500" />}
+                {selectedProjectTasks.status === 'delayed' && <AlertTriangle className="w-5 h-5 text-red-500" />}
+                {selectedProjectTasks.status === 'all' && <LayoutDashboard className="w-5 h-5 text-brand-accent" />}
+                {selectedProjectTasks.status === 'nao_aplica' && <Filter className="w-5 h-5 text-brand-text-muted" />}
+                <h3 className="text-lg font-bold text-brand-text-primary tracking-tight">
+                  {selectedProjectTasks.status === 'todo' && 'Tarefas A Fazer'}
+                  {selectedProjectTasks.status === 'doing' && 'Tarefas Em Execução'}
+                  {selectedProjectTasks.status === 'done' && 'Tarefas Concluídas'}
+                  {selectedProjectTasks.status === 'delayed' && 'Tarefas Atrasadas'}
+                  {selectedProjectTasks.status === 'all' && 'Todas as Tarefas'}
+                  {selectedProjectTasks.status === 'nao_aplica' && 'Tarefas Não Aplicáveis'}
+                  <span className="text-sm font-normal text-brand-text-muted ml-2">- {selectedProjectTasks.project.project}</span>
+                </h3>
+              </div>
+              <button 
+                onClick={() => setSelectedProjectTasks(null)}
+                className="p-2 rounded-xl hover:bg-brand-black/20 text-brand-text-muted hover:text-brand-text-primary transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar space-y-4">
+              {(() => {
+                const projectTasks = tasks.filter(t => t.projeto_id === selectedProjectTasks.project.id);
+                const today = new Date().toISOString().split('T')[0];
+                const filtered = projectTasks.filter(t => {
+                  const status = normalizeStatus(t.status);
+                  if (selectedProjectTasks.status === 'todo') return status === 'NAO INICIADA';
+                  if (selectedProjectTasks.status === 'doing') return status === 'EM EXECUCAO';
+                  if (selectedProjectTasks.status === 'done') return status === 'CONCLUIDA';
+                  if (selectedProjectTasks.status === 'nao_aplica') return normalizeStatus(t.aplicacao) === 'NAO APLICA';
+                  if (selectedProjectTasks.status === 'delayed') return status !== 'CONCLUIDA' && t.data_termino && t.data_termino < today;
+                  return true;
+                });
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="py-12 text-center text-brand-text-muted">
+                      <p className="text-sm font-medium">Nenhuma tarefa encontrada para este status.</p>
+                    </div>
+                  );
+                }
+
+                return filtered.map((task, idx) => (
+                  <div key={idx} className="p-4 rounded-2xl theme-bg-soft border theme-border-soft flex flex-col gap-2 hover:border-brand-accent/30 transition-colors cursor-pointer" onClick={() => navigate(`/project/${task.projeto_id}/tasks`, { state: { highlightTaskId: task.id } })}>
+                    <div className="flex justify-between items-start">
+                      <h4 className="text-sm font-bold text-brand-text-primary">{task.titulo || task.descricao}</h4>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-widest ${
+                        normalizeStatus(task.status) === 'CONCLUIDA' ? 'text-green-500 bg-green-500/10' :
+                        normalizeStatus(task.status) === 'EM EXECUCAO' ? 'text-yellow-500 bg-yellow-500/10' :
+                        'text-brand-text-muted bg-brand-black/20'
+                      }`}>
+                        {task.status}
+                      </span>
+                    </div>
+                    {task.descricao && task.descricao !== task.titulo && (
+                      <p className="text-xs text-brand-text-muted line-clamp-2">{task.descricao}</p>
+                    )}
+                    <div className="flex items-center gap-4 mt-2 text-[10px] font-medium text-brand-text-muted">
+                      {task.data_termino && (
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          <span>Prazo: {new Date(task.data_termino).toLocaleDateString('pt-BR')}</span>
+                        </div>
+                      )}
+                      {task.proprietario && (
+                        <div className="flex items-center gap-1">
+                          <User className="w-3 h-3" />
+                          <span>{task.proprietario}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 // ✅ Card de Projeto Modernizado
-const ProjectCard = ({ project, statusColor }: any) => {
+const ProjectCard = ({ project, statusColor, onTaskClick }: any) => {
   const percent = project.total > 0 ? Math.round((project.done / project.total) * 100) : 0;
   const { theme } = useTheme();
   const navigate = useNavigate();
@@ -1041,61 +1245,83 @@ const ProjectCard = ({ project, statusColor }: any) => {
   };
 
   return (
-    <button 
-      onClick={() => navigate(`/project/${project.id}/tasks`)}
-      className={`w-full text-left dashboard-card p-5 rounded-2xl border-l-4 ${borderColors[statusColor as keyof typeof borderColors]} transition-all duration-300 group ${glowColors[statusColor as keyof typeof glowColors]} hover:-translate-y-0.5 cursor-pointer`}
+    <div 
+      className={`w-full text-left dashboard-card p-5 rounded-2xl border-l-4 ${borderColors[statusColor as keyof typeof borderColors]} transition-all duration-300 group ${glowColors[statusColor as keyof typeof glowColors]} hover:-translate-y-0.5`}
     >
-      <div className="flex justify-between items-start mb-5">
-        <div className="flex-1 pr-4">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-[9px] font-semibold text-brand-text-muted theme-bg-soft px-2.5 py-1 rounded-md border theme-border-soft uppercase tracking-wider">
-              {project.code || 'SEM COD'}
-            </span>
+      <div 
+        className="cursor-pointer"
+        onClick={() => onTaskClick ? onTaskClick('all') : navigate(`/project/${project.id}/tasks`)}
+      >
+        <div className="flex justify-between items-start mb-5">
+          <div className="flex-1 pr-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[9px] font-semibold text-brand-text-muted theme-bg-soft px-2.5 py-1 rounded-md border theme-border-soft uppercase tracking-wider">
+                {project.code || 'SEM COD'}
+              </span>
+            </div>
+            <h4 className="text-[15px] font-semibold text-brand-text-primary leading-tight tracking-wide transition-colors group-hover:text-brand-accent">{project.company}</h4>
+            <p className="text-[11px] text-brand-text-muted/70 mt-1.5 font-medium tracking-wide line-clamp-1">{project.project}</p>
           </div>
-          <h4 className="text-[15px] font-semibold text-brand-text-primary leading-tight tracking-wide transition-colors group-hover:text-brand-accent">{project.company}</h4>
-          <p className="text-[11px] text-brand-text-muted/70 mt-1.5 font-medium tracking-wide line-clamp-1">{project.project}</p>
+          <div className="text-right flex flex-col items-end justify-start">
+            <span className="text-2xl font-light text-brand-text-primary tracking-tight">{percent}<span className="text-xs ml-0.5 text-brand-text-muted/50 font-normal">%</span></span>
+          </div>
         </div>
-        <div className="text-right flex flex-col items-end justify-start">
-          <span className="text-2xl font-light text-brand-text-primary tracking-tight">{percent}<span className="text-xs ml-0.5 text-brand-text-muted/50 font-normal">%</span></span>
-        </div>
-      </div>
 
-      <div className="w-full bg-brand-black/20 rounded-full h-1.5 mb-5 overflow-hidden border theme-border-soft">
-        <div
-          className={`h-full rounded-full transition-all duration-1000 ease-out ${progressColors[statusColor as keyof typeof progressColors]}`}
-          style={{ width: `${percent}%` }}
-        ></div>
+        <div className="w-full bg-brand-black/20 rounded-full h-1.5 mb-5 overflow-hidden border theme-border-soft">
+          <div
+            className={`h-full rounded-full transition-all duration-1000 ease-out ${progressColors[statusColor as keyof typeof progressColors]}`}
+            style={{ width: `${percent}%` }}
+          ></div>
+        </div>
       </div>
 
       <div className="grid grid-cols-5 gap-2 text-center theme-bg-soft p-3 rounded-xl border theme-border-soft">
-        <div className="flex flex-col gap-1">
+        <button 
+          onClick={(e) => { e.stopPropagation(); onTaskClick ? onTaskClick('all') : navigate(`/project/${project.id}/tasks`, { state: { statusFilter: 'ALL' } }); }}
+          className="flex flex-col items-center justify-center gap-1 hover:bg-brand-black/10 dark:hover:bg-white/5 rounded p-1 transition-colors cursor-pointer"
+        >
           <span className="text-[13px] font-medium text-brand-text-primary">{project.total}</span>
           <span className="text-[9px] font-medium text-brand-text-muted/60 uppercase tracking-wider">Total</span>
-        </div>
-        <div className="flex flex-col gap-1">
+        </button>
+        <button 
+          onClick={(e) => { e.stopPropagation(); onTaskClick ? onTaskClick('done') : navigate(`/project/${project.id}/tasks`, { state: { statusFilter: 'CONCLUIDA' } }); }}
+          className="flex flex-col items-center justify-center gap-1 hover:bg-brand-black/10 dark:hover:bg-white/5 rounded p-1 transition-colors cursor-pointer"
+        >
           <span className="text-[13px] font-medium text-green-500/90">{project.done}</span>
           <span className="text-[9px] font-medium text-brand-text-muted/60 uppercase tracking-wider">Conc.</span>
-        </div>
-        <div className="flex flex-col gap-1">
+        </button>
+        <button 
+          onClick={(e) => { e.stopPropagation(); onTaskClick ? onTaskClick('doing') : navigate(`/project/${project.id}/tasks`, { state: { statusFilter: 'FAZENDO' } }); }}
+          className="flex flex-col items-center justify-center gap-1 hover:bg-brand-black/10 dark:hover:bg-white/5 rounded p-1 transition-colors cursor-pointer"
+        >
           <span className="text-[13px] font-medium text-yellow-500/90">{project.doing}</span>
           <span className="text-[9px] font-medium text-brand-text-muted/60 uppercase tracking-wider">Exec.</span>
-        </div>
-        <div className="flex flex-col gap-1">
+        </button>
+        <button 
+          onClick={(e) => { e.stopPropagation(); onTaskClick ? onTaskClick('todo') : navigate(`/project/${project.id}/tasks`, { state: { statusFilter: 'A_FAZER' } }); }}
+          className="flex flex-col items-center justify-center gap-1 hover:bg-brand-black/10 dark:hover:bg-white/5 rounded p-1 transition-colors cursor-pointer"
+        >
           <span className="text-[13px] font-medium text-brand-text-muted">{project.todo}</span>
           <span className="text-[9px] font-medium text-brand-text-muted/60 uppercase tracking-wider">Fazer</span>
-        </div>
-        <div className="flex flex-col gap-1">
+        </button>
+        <button 
+          onClick={(e) => { e.stopPropagation(); onTaskClick ? onTaskClick('nao_aplica') : navigate(`/project/${project.id}/tasks`, { state: { statusFilter: 'NAO_APLICA' } }); }}
+          className="flex flex-col items-center justify-center gap-1 hover:bg-brand-black/10 dark:hover:bg-white/5 rounded p-1 transition-colors cursor-pointer"
+        >
           <span className="text-[13px] font-medium text-brand-text-muted/50">{project.notApplicable}</span>
           <span className="text-[9px] font-medium text-brand-text-muted/40 uppercase tracking-wider">N/A</span>
-        </div>
+        </button>
       </div>
 
       {project.delayed > 0 && (
-        <div className="mt-4 flex items-center justify-center gap-2 bg-red-500/5 py-2.5 rounded-xl border border-red-500/10">
+        <button 
+          onClick={(e) => { e.stopPropagation(); onTaskClick ? onTaskClick('delayed') : navigate(`/project/${project.id}/tasks`, { state: { deadlineFilter: 'OVERDUE' } }); }}
+          className="w-full mt-4 flex items-center justify-center gap-2 bg-red-500/5 py-2.5 rounded-xl border border-red-500/10 cursor-pointer hover:bg-red-500/10 transition-colors"
+        >
           <span className="w-1.5 h-1.5 rounded-full bg-red-500/80 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span>
           <span className="text-[10px] font-semibold text-red-500/90 uppercase tracking-wider">{project.delayed} Tarefas Atrasadas</span>
-        </div>
+        </button>
       )}
-    </button>
+    </div>
   );
 };

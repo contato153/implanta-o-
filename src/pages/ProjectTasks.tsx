@@ -399,6 +399,8 @@ export function ProjectTasks() {
           onTaskDelete={handleTaskDelete}
           onImport={handleDownloadStandardPdf}
           highlightedTaskId={highlightTaskId}
+          initialStatusFilter={location.state?.statusFilter || "ALL"}
+          initialDeadlineFilter={location.state?.deadlineFilter || "ALL"}
         />
       </main>
 

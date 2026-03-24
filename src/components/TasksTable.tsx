@@ -925,6 +925,8 @@ interface TasksTableProps {
   onTaskDelete?: (taskId: string) => void;
   onImport?: () => void;
   highlightedTaskId?: string;
+  initialStatusFilter?: string;
+  initialDeadlineFilter?: string;
 }
 
 /**
@@ -1177,15 +1179,18 @@ export const TasksTable: React.FC<TasksTableProps> = ({
   onTaskAdd,
   onTaskDelete,
   onImport,
-  highlightedTaskId
+  highlightedTaskId,
+  initialStatusFilter = "ALL",
+  initialDeadlineFilter = "ALL"
 }) => {
   const [editingTask, setEditingTask] = useState<Tarefa | null>(null);
   const [deletingTask, setDeletingTask] = useState<Tarefa | null>(null);
   const [viewingAttachmentsTask, setViewingAttachmentsTask] = useState<Tarefa | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [priorityFilter, setPriorityFilter] = useState("ALL");
-  const [deadlineFilter, setDeadlineFilter] = useState("ALL");
+  const [deadlineFilter, setDeadlineFilter] = useState(initialDeadlineFilter);
   const [departmentFilter, setDepartmentFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [attachmentCounts, setAttachmentCounts] = useState<Record<string, number>>({});
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
@@ -1223,8 +1228,16 @@ export const TasksTable: React.FC<TasksTableProps> = ({
         }
         
         const departmentMatch = departmentFilter === "ALL" || task.proprietario === departmentFilter;
+
+        let statusMatch = true;
+        if (statusFilter !== "ALL") {
+          if (statusFilter === "CONCLUIDA") statusMatch = isDone(task) && !isNotApplicable(task);
+          else if (statusFilter === "FAZENDO") statusMatch = isDoing(task) && !isNotApplicable(task);
+          else if (statusFilter === "A_FAZER") statusMatch = isNotStarted(task) && !isNotApplicable(task);
+          else if (statusFilter === "NAO_APLICA") statusMatch = isNotApplicable(task);
+        }
         
-        return priorityMatch && deadlineMatch && departmentMatch;
+        return priorityMatch && deadlineMatch && departmentMatch && statusMatch;
       })
       .sort((a, b) => {
         const orderA = priorityOrder[a.prioridade as keyof typeof priorityOrder] || 99;
@@ -1239,7 +1252,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
         
         return deadlineOrder[statusA] - deadlineOrder[statusB];
       });
-  }, [tasks, priorityFilter, deadlineFilter, departmentFilter]);
+  }, [tasks, priorityFilter, deadlineFilter, departmentFilter, statusFilter]);
 
   // ✅ Contadores corrigidos (exclui "NÃO APLICA" e normaliza)
   const { totalValid, completed, inProgress, notStarted, notApplicable, percentCompleted } = useMemo(() => {
@@ -1520,35 +1533,64 @@ export const TasksTable: React.FC<TasksTableProps> = ({
 
       {/* ✅ Indicadores corrigidos */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
-        <div className="bg-brand-dark p-4 rounded-lg shadow-sm border border-brand-gray text-center">
+        <button 
+          onClick={() => setStatusFilter('ALL')}
+          className={`bg-brand-dark p-4 rounded-lg shadow-sm border text-center cursor-pointer transition-colors ${statusFilter === 'ALL' ? 'border-brand-accent bg-brand-black/40' : 'border-brand-gray hover:bg-brand-black/20'}`}
+        >
           <span className="block text-2xl font-bold text-brand-text-primary">{totalValid}</span>
           <span className="text-xs text-brand-text-muted font-bold uppercase">Total (Válidas)</span>
-        </div>
+        </button>
 
-        <div className="bg-brand-dark p-4 rounded-lg shadow-sm border border-green-900/50 text-center">
+        <button 
+          onClick={() => setStatusFilter('CONCLUIDA')}
+          className={`bg-brand-dark p-4 rounded-lg shadow-sm border text-center cursor-pointer transition-colors ${statusFilter === 'CONCLUIDA' ? 'border-green-500 bg-green-900/20' : 'border-green-900/50 hover:bg-green-900/10'}`}
+        >
           <span className="block text-2xl font-bold text-green-500">{completed}</span>
           <span className="text-xs text-green-500 font-bold uppercase">Concluídas</span>
-        </div>
+        </button>
 
-        <div className="bg-brand-dark p-4 rounded-lg shadow-sm border border-blue-900/50 text-center">
+        <button 
+          onClick={() => setStatusFilter('FAZENDO')}
+          className={`bg-brand-dark p-4 rounded-lg shadow-sm border text-center cursor-pointer transition-colors ${statusFilter === 'FAZENDO' ? 'border-blue-500 bg-blue-900/20' : 'border-blue-900/50 hover:bg-blue-900/10'}`}
+        >
           <span className="block text-2xl font-bold text-blue-500">{inProgress}</span>
           <span className="text-xs text-blue-500 font-bold uppercase">Em Execução</span>
-        </div>
+        </button>
 
-        <div className="bg-brand-dark p-4 rounded-lg shadow-sm border border-brand-gray text-center">
+        <button 
+          onClick={() => setStatusFilter('A_FAZER')}
+          className={`bg-brand-dark p-4 rounded-lg shadow-sm border text-center cursor-pointer transition-colors ${statusFilter === 'A_FAZER' ? 'border-brand-text-muted bg-brand-black/40' : 'border-brand-gray hover:bg-brand-black/20'}`}
+        >
           <span className="block text-2xl font-bold text-brand-text-muted">{notStarted}</span>
           <span className="text-xs text-gray-500 font-bold uppercase">Não Iniciadas</span>
-        </div>
+        </button>
 
-        <div className="bg-brand-dark p-4 rounded-lg shadow-sm border border-brand-gray text-center">
+        <button 
+          onClick={() => setStatusFilter('NAO_APLICA')}
+          className={`bg-brand-dark p-4 rounded-lg shadow-sm border text-center cursor-pointer transition-colors ${statusFilter === 'NAO_APLICA' ? 'border-gray-500 bg-brand-black/40' : 'border-brand-gray hover:bg-brand-black/20'}`}
+        >
           <span className="block text-2xl font-bold text-gray-500">{notApplicable}</span>
           <span className="text-xs text-gray-600 font-bold uppercase">Não Aplica</span>
-        </div>
+        </button>
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
         <h3 className="text-lg font-bold text-brand-text-primary uppercase">Lista de Tarefas</h3>
         <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-brand-text-muted uppercase tracking-widest">Status:</span>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="bg-brand-black border border-brand-gray text-brand-text-primary text-xs font-medium rounded px-2 py-1.5 focus:ring-1 focus:ring-brand-accent outline-none transition-all"
+            >
+              <option value="ALL">Todos</option>
+              <option value="CONCLUIDA">Concluída</option>
+              <option value="FAZENDO">Fazendo</option>
+              <option value="A_FAZER">A Fazer</option>
+              <option value="NAO_APLICA">N/A</option>
+            </select>
+          </div>
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-bold text-brand-text-muted uppercase tracking-widest">Prioridade:</span>
             <select
