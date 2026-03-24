@@ -237,6 +237,15 @@ body.light-theme .theme-border-soft {
   background: var(--color-brand-text-muted);
 }
 
+/* Hide scrollbar for specific elements */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 @keyframes highlight-task {
   0%, 100% { background-color: transparent; }
   50% { background-color: rgba(244, 196, 0, 0.15); }

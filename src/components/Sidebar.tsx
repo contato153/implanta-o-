@@ -47,24 +47,24 @@ export function Sidebar() {
 
   return (
     <aside className={`sidebar fixed top-0 left-0 h-screen ${isSidebarMinimized ? 'w-[80px]' : 'w-[260px]'} flex-shrink-0 bg-[#161616] border-r border-[#1E1E1E] flex flex-col shadow-xl z-50 transition-all duration-300`}>
-      <div className="p-6 relative">
+      <div className="p-4 relative flex-shrink-0">
         <button
           onClick={() => setIsSidebarMinimized(!isSidebarMinimized)}
-          className="absolute -right-3 top-6 bg-[#F4C400] text-[#0B0B0B] rounded-full p-1 shadow-md hover:bg-[#FFD84D] transition-all"
+          className="absolute -right-3 top-6 bg-[#F4C400] text-[#0B0B0B] rounded-full p-1 shadow-md hover:bg-[#FFD84D] transition-all z-10"
         >
           <Menu size={16} />
         </button>
-        <div className="flex justify-center items-center mb-8 py-6">
+        <div className="flex justify-center items-center mb-4 py-2">
           <img 
             src="https://i.imgur.com/8SuQt5R.png" 
             alt="L&M Logo" 
-            className={`object-contain transition-all duration-300 ${isSidebarMinimized ? 'h-8 w-8' : 'h-14 w-auto'}`}
+            className={`object-contain transition-all duration-300 ${isSidebarMinimized ? 'h-8 w-8' : 'h-12 w-auto'}`}
             referrerPolicy="no-referrer"
           />
         </div>
       </div>
 
-      <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
+      <nav className="flex-1 px-4 space-y-2 overflow-y-auto no-scrollbar min-h-0 pb-4">
         <NavLink
           to="/dashboard"
           className={({ isActive }) =>
@@ -188,7 +188,7 @@ export function Sidebar() {
           </NavLink>
         )}
       </nav>
-      <div className="p-4 border-t border-[#1E1E1E] flex flex-col gap-2">
+      <div className="p-4 border-t border-[#1E1E1E] flex flex-col gap-2 flex-shrink-0">
         {profile && (
           <div className={`flex items-center gap-3 px-4 py-3 mb-2 rounded-lg bg-[#1E1E1E]/50 border border-[#1E1E1E] ${isSidebarMinimized ? 'justify-center' : ''}`}>
             <div className="w-8 h-8 rounded-full bg-[#F4C400]/20 flex items-center justify-center flex-shrink-0">
