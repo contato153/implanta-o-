@@ -60,16 +60,29 @@ export const getHistorico = async (filtros?: {
   usuario_id?: string;
   data_inicio?: string;
   data_fim?: string;
+  limit?: number;
+  offset?: number;
 }) => {
   try {
     const supabase = getSupabase();
     let query = supabase
       .from('historico')
-      .select('*')
-      .order('data', { ascending: false })
-      .limit(50);
+      .select('*', { count: 'exact' })
+      .order('data', { ascending: false });
 
     if (filtros) {
+      if (filtros.limit) {
+        query = query.limit(filtros.limit);
+      } else {
+        query = query.limit(50);
+      }
+
+      if (filtros.offset) {
+        query = query.range(filtros.offset, filtros.offset + (filtros.limit || 50) - 1);
+      } else {
+        query = query.range(0, (filtros.limit || 50) - 1);
+      }
+
       if (filtros.entidade && filtros.entidade !== 'todas') {
         query = query.eq('entidade', filtros.entidade);
       }
@@ -82,14 +95,16 @@ export const getHistorico = async (filtros?: {
       if (filtros.data_fim) {
         query = query.lte('data', filtros.data_fim + 'T23:59:59.999Z');
       }
+    } else {
+      query = query.limit(50).range(0, 49);
     }
 
-    const { data, error } = await query;
+    const { data, error, count } = await query;
 
     if (error) throw error;
-    return data || [];
+    return { data: data || [], count: count || 0 };
   } catch (err) {
     console.error('Erro ao buscar histórico:', err);
-    return [];
+    return { data: [], count: 0 };
   }
 };

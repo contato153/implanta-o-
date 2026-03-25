@@ -417,7 +417,11 @@ const HistoricoItem = ({ item, getActionColor, formatDate }: any) => {
 export function Historico() {
   const [historico, setHistorico] = useState<(RegistroHistorico & { id: string; data: string })[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const LIMIT = 50;
   const { role } = useAuth();
 
   // Filtros
@@ -430,19 +434,38 @@ export function Historico() {
   const [usuariosUnicos, setUsuariosUnicos] = useState<{ id: string; nome: string }[]>([]);
 
   useEffect(() => {
-    fetchHistorico();
+    fetchHistorico(true);
   }, [entidadeFiltro, usuarioFiltro, dataInicio, dataFim]);
 
-  const fetchHistorico = async () => {
+  const fetchHistorico = async (reset = false) => {
     try {
-      setLoading(true);
-      const data = await getHistorico({
+      if (reset) {
+        setLoading(true);
+        setOffset(0);
+      } else {
+        setLoadingMore(true);
+      }
+      
+      const currentOffset = reset ? 0 : offset;
+      
+      const { data, count } = await getHistorico({
         entidade: entidadeFiltro,
         usuario_id: usuarioFiltro,
         data_inicio: dataInicio,
         data_fim: dataFim,
+        limit: LIMIT,
+        offset: currentOffset,
       });
-      setHistorico(data as any);
+
+      if (reset) {
+        setHistorico(data as any);
+        setOffset(data.length);
+      } else {
+        setHistorico(prev => [...prev, ...(data as any)]);
+        setOffset(prev => prev + data.length);
+      }
+
+      setHasMore(currentOffset + data.length < count);
 
       // Extrair usuários únicos se ainda não tivermos
       if (usuariosUnicos.length === 0 && data.length > 0) {
@@ -453,6 +476,7 @@ export function Historico() {
       setError('Erro ao carregar histórico: ' + err.message);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -586,6 +610,25 @@ export function Historico() {
                 formatDate={formatDate} 
               />
             ))}
+
+            {hasMore && (
+              <div className="flex justify-center pt-4">
+                <button
+                  onClick={() => fetchHistorico(false)}
+                  disabled={loadingMore}
+                  className="px-6 py-2 bg-brand-dark border border-brand-gray text-brand-accent rounded-lg hover:bg-brand-gray transition-all disabled:opacity-50 flex items-center gap-2"
+                >
+                  {loadingMore ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-accent"></div>
+                      Carregando...
+                    </>
+                  ) : (
+                    <>Carregar Mais</>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
