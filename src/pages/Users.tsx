@@ -20,6 +20,7 @@ export function Users() {
   const [newPassword, setNewPassword] = useState('123456');
   const [newRole, setNewRole] = useState<Role>('viewer');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditingDefaultPassword, setIsEditingDefaultPassword] = useState(false);
 
   // Password Modal State
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -144,6 +145,15 @@ export function Users() {
     }
   };
 
+  const closeAddUserModal = () => {
+    setIsModalOpen(false);
+    setNewEmail('');
+    setNewName('');
+    setNewPassword('123456');
+    setNewRole('viewer');
+    setIsEditingDefaultPassword(false);
+  };
+
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
@@ -210,11 +220,7 @@ export function Users() {
         }
       }
 
-      setIsModalOpen(false);
-      setNewEmail('');
-      setNewName('');
-      setNewPassword('');
-      setNewRole('viewer');
+      closeAddUserModal();
       
       fetchProfiles(); // Recarrega a lista
     } catch (err: any) {
@@ -367,7 +373,7 @@ export function Users() {
             <div className="flex justify-between items-center p-6 border-b border-brand-gray">
               <h2 className="text-xl font-bold text-brand-text-primary">Adicionar Usuário</h2>
               <button 
-                onClick={() => setIsModalOpen(false)}
+                onClick={closeAddUserModal}
                 className="text-[#BDBDBD] hover:text-brand-text-primary transition-colors"
               >
                 <X size={24} />
@@ -406,22 +412,6 @@ export function Users() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-[#BDBDBD] mb-1">
-                  Senha Temporária (Padrão: 123456)
-                </label>
-                <input
-                  type="text"
-                  id="password"
-                  required
-                  minLength={6}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-[#F4C400] focus:border-[#F4C400] outline-none transition-all"
-                  placeholder="Mínimo 6 caracteres"
-                />
-              </div>
-              
-              <div>
                 <label htmlFor="role" className="block text-sm font-medium text-[#BDBDBD] mb-1">
                   Permissão
                 </label>
@@ -436,11 +426,48 @@ export function Users() {
                   <option value="admin">Admin</option>
                 </select>
               </div>
+
+              <div className="p-3 bg-brand-gray/30 border border-brand-gray rounded-lg flex items-center gap-2 group">
+                <button 
+                  type="button"
+                  onClick={() => setIsEditingDefaultPassword(!isEditingDefaultPassword)}
+                  className="p-1 hover:bg-brand-gray rounded transition-colors"
+                  title="Clique para editar a senha padrão"
+                >
+                  <Lock className="w-4 h-4 text-[#F4C400]" />
+                </button>
+                <div className="flex-1 flex items-center gap-2">
+                  <span className="text-sm text-[#BDBDBD]">Senha padrão:</span>
+                  {isEditingDefaultPassword ? (
+                    <input
+                      type="text"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      onBlur={() => setIsEditingDefaultPassword(false)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          setIsEditingDefaultPassword(false);
+                        }
+                      }}
+                      autoFocus
+                      className="flex-1 bg-transparent border-b border-[#F4C400] text-sm text-brand-text-primary outline-none px-1"
+                    />
+                  ) : (
+                    <span 
+                      className="text-sm text-brand-text-primary font-bold cursor-pointer hover:text-[#F4C400] transition-colors"
+                      onClick={() => setIsEditingDefaultPassword(true)}
+                    >
+                      {newPassword}
+                    </span>
+                  )}
+                </div>
+              </div>
               
               <div className="pt-4 flex gap-3">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={closeAddUserModal}
                   className="flex-1 px-4 py-2 border border-brand-gray text-[#BDBDBD] font-medium rounded-lg hover:bg-brand-gray hover:text-brand-text-primary transition-colors"
                 >
                   Cancelar
