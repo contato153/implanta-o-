@@ -67,8 +67,9 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
     regime_novo: '',
     comp_inicial: '',
     aprovado_reuniao: '',
-    objetivo: '',
+    objetivo_empresa: '',
     passar_bastao_link: '',
+    observacoes_gerais: '',
     data_inicio_prevista: '',
     data_fim_prevista: '',
     socios: [
@@ -113,6 +114,17 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
       }
     }
   }, [isOpen, companyId]);
+
+  const splitDateTime = (dateTimeStr: string) => {
+    if (!dateTimeStr) return { date: '', time: '' };
+    const [date, time] = dateTimeStr.split('T');
+    return { date: date || '', time: time ? time.slice(0, 5) : '' };
+  };
+
+  const joinDateTime = (date: string, time: string) => {
+    if (!date) return '';
+    return `${date}T${time || '00:00'}`;
+  };
 
   const loadCompanyData = async (id: string) => {
     setLoading(true);
@@ -361,6 +373,7 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
         comp_inicial: compInicialFormatada,
         aprovado_reuniao: formData.aprovado_reuniao,
         objetivo_empresa: formData.objetivo_empresa,
+        passar_bastao_link: formData.passar_bastao_link,
         observacoes_gerais: formData.observacoes_gerais
       };
 
@@ -544,24 +557,50 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Data Início Prevista</label>
-                <input
-                  type="datetime-local"
-                  name="data_inicio_prevista"
-                  value={formData.data_inicio_prevista}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all [color-scheme:dark]"
-                />
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Data Início</label>
+                <div className="flex gap-2">
+                  <input
+                    type="date"
+                    value={splitDateTime(formData.data_inicio_prevista).date}
+                    onChange={(e) => {
+                      const { time } = splitDateTime(formData.data_inicio_prevista);
+                      setFormData(prev => ({ ...prev, data_inicio_prevista: joinDateTime(e.target.value, time) }));
+                    }}
+                    className="flex-1 px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all [color-scheme:dark]"
+                  />
+                  <input
+                    type="time"
+                    value={splitDateTime(formData.data_inicio_prevista).time}
+                    onChange={(e) => {
+                      const { date } = splitDateTime(formData.data_inicio_prevista);
+                      setFormData(prev => ({ ...prev, data_inicio_prevista: joinDateTime(date, e.target.value) }));
+                    }}
+                    className="w-32 px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all [color-scheme:dark]"
+                  />
+                </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Data Fim Prevista</label>
-                <input
-                  type="datetime-local"
-                  name="data_fim_prevista"
-                  value={formData.data_fim_prevista}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all [color-scheme:dark]"
-                />
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Data Término</label>
+                <div className="flex gap-2">
+                  <input
+                    type="date"
+                    value={splitDateTime(formData.data_fim_prevista).date}
+                    onChange={(e) => {
+                      const { time } = splitDateTime(formData.data_fim_prevista);
+                      setFormData(prev => ({ ...prev, data_fim_prevista: joinDateTime(e.target.value, time) }));
+                    }}
+                    className="flex-1 px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all [color-scheme:dark]"
+                  />
+                  <input
+                    type="time"
+                    value={splitDateTime(formData.data_fim_prevista).time}
+                    onChange={(e) => {
+                      const { date } = splitDateTime(formData.data_fim_prevista);
+                      setFormData(prev => ({ ...prev, data_fim_prevista: joinDateTime(date, e.target.value) }));
+                    }}
+                    className="w-32 px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all [color-scheme:dark]"
+                  />
+                </div>
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">PASSAR BASTÃO (LINK)</label>

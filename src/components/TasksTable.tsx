@@ -763,7 +763,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
     data_tarefa: getLocalISOString(),
     data_termino: '',
     aplicacao: 'APLICA',
-    observacoes: ''
+    observacoes: '',
+    data_conclusao: ''
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -798,7 +799,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
         data_tarefa: getLocalISOString(),
         data_termino: '',
         aplicacao: 'APLICA',
-        observacoes: ''
+        observacoes: '',
+        data_conclusao: ''
       });
     } catch (err: any) {
       console.error('Erro ao criar tarefa:', err);

@@ -16,6 +16,8 @@ interface Task {
   data_termino: string;
   proprietario: string;
   projeto_id: string;
+  created_at?: string;
+  data_conclusao?: string;
   projetos: {
     id: string;
     nome: string;
