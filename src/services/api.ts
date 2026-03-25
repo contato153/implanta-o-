@@ -636,6 +636,17 @@ export async function deleteCompany(companyId: string): Promise<void> {
   try {
     console.log(`Starting deletion for company: ${companyId}`);
 
+    // Fetch company details to log the name before deleting
+    let companyName = 'Empresa';
+    try {
+      const companyDetails = await getCompanyDetails(companyId);
+      if (companyDetails && companyDetails.empresa) {
+        companyName = `Empresa: ${companyDetails.empresa.nome_fantasia || companyDetails.empresa.razao_social || 'Sem nome'}`;
+      }
+    } catch (e) {
+      console.warn('Could not fetch company details for history log', e);
+    }
+
     // 1. Get project IDs for this company
     const { data: projects, error: projectsError } = await supabase
       .from('projetos')
@@ -717,7 +728,7 @@ export async function deleteCompany(companyId: string): Promise<void> {
       entidade: 'empresa',
       entidade_id: companyId,
       acao: 'EXCLUIDO',
-      descricao: `Empresa excluída`
+      descricao: companyName
     });
 
   } catch (error) {

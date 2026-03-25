@@ -26,6 +26,7 @@ export interface Empresa {
   objetivo_empresa?: string;
   passar_bastao_link?: string;
   logo_url?: string;
+  observacoes_gerais?: string;
 }
 
 export interface Socio {
@@ -70,6 +71,7 @@ export interface Tarefa {
   ordem?: number;
   titulo?: string;
   concluida?: boolean;
+  data_conclusao?: string;
 }
 
 export interface AnexoTarefa {

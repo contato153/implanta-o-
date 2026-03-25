@@ -370,7 +370,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({ data, loading, role })
       <div className="grid grid-cols-12 border-b border-brand-gray">
         <div className={`col-span-12 p-2 ${canEditCompany ? 'cursor-pointer hover:bg-brand-gray' : ''}`}>
           <span className="font-bold block text-xs text-brand-text-muted">OBJETIVO DA EMPRESA</span>
-          {val(empresa?.objetivo)}
+          {val(empresa?.objetivo_empresa)}
         </div>
       </div>
 
@@ -426,6 +426,14 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({ data, loading, role })
           </div>
         );
       })}
+
+      {/* Observações Gerais Section */}
+      <div className="grid grid-cols-12 border-b border-brand-gray">
+        <div className={`col-span-12 p-2 ${canEditCompany ? 'cursor-pointer hover:bg-brand-gray' : ''}`}>
+          <span className="font-bold block text-xs text-brand-text-muted">OBSERVAÇÕES GERAIS</span>
+          <div className="whitespace-pre-wrap">{val(empresa?.observacoes_gerais) || <span className="text-brand-text-muted italic">Não informado</span>}</div>
+        </div>
+      </div>
 
       {/* Other Fields Section */}
       <div className="grid grid-cols-12 border-b border-brand-gray">

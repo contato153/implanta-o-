@@ -354,8 +354,14 @@ export function ProjectTasks() {
 
             <div>
               <span className="block text-brand-text-muted mb-1">Fase Atual</span>
-              <span className="inline-block px-2 py-1 rounded-full text-xs font-semibold bg-brand-gray text-brand-accent border border-brand-gray">
-                {project.fase}
+              <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold border ${
+                percentual === 100 
+                  ? 'bg-green-900/20 text-green-400 border-green-900/50' 
+                  : concluidasValidas > 0 
+                  ? 'bg-yellow-900/20 text-yellow-400 border-yellow-900/50'
+                  : 'bg-brand-gray text-brand-accent border-brand-gray'
+              }`}>
+                {percentual === 100 ? 'FEITO' : concluidasValidas > 0 ? 'FAZENDO' : 'A FAZER'}
               </span>
             </div>
 

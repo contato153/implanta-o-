@@ -456,7 +456,11 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, companyName, isOpen
     setSaving(true);
     setError(null);
     try {
-      await onSave(formData);
+      const dataToSave = { ...formData };
+      if (dataToSave.status === 'CONCLUÍDA' && !dataToSave.data_conclusao) {
+        dataToSave.data_conclusao = new Date().toISOString();
+      }
+      await onSave(dataToSave);
       onClose();
     } catch (err: any) {
       console.error('Erro ao salvar:', err);
@@ -534,7 +538,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, companyName, isOpen
               <select
                 value={formData.proprietario || ''}
                 onChange={(e) => handleChange('proprietario', e.target.value)}
-                disabled={!canEditTasks}
+                disabled={!canEditAll}
                 className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none appearance-none"
               >
                 <option value="">-</option>
@@ -561,24 +565,58 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, companyName, isOpen
 
             <div>
               <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Data Início</label>
-              <input
-                type="datetime-local"
-                value={formData.data_tarefa || ''}
-                onChange={(e) => handleChange('data_tarefa', e.target.value)}
-                disabled={!canEditTasks}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={formData.data_tarefa ? formData.data_tarefa.split('T')[0] : ''}
+                  onChange={(e) => {
+                    const date = e.target.value;
+                    const time = formData.data_tarefa?.includes('T') ? formData.data_tarefa.split('T')[1] : '';
+                    handleChange('data_tarefa', date ? (time ? `${date}T${time}` : date) : '');
+                  }}
+                  disabled={!canEditTasks}
+                  className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none"
+                />
+                <input
+                  type="time"
+                  value={formData.data_tarefa?.includes('T') ? formData.data_tarefa.split('T')[1] : ''}
+                  onChange={(e) => {
+                    const time = e.target.value;
+                    const date = formData.data_tarefa ? formData.data_tarefa.split('T')[0] : getLocalISOString();
+                    handleChange('data_tarefa', time ? `${date}T${time}` : date);
+                  }}
+                  disabled={!canEditTasks}
+                  className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none"
+                />
+              </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Data Término</label>
-              <input
-                type="datetime-local"
-                value={formData.data_termino || ''}
-                onChange={(e) => handleChange('data_termino', e.target.value)}
-                disabled={!canEditTasks}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={formData.data_termino ? formData.data_termino.split('T')[0] : ''}
+                  onChange={(e) => {
+                    const date = e.target.value;
+                    const time = formData.data_termino?.includes('T') ? formData.data_termino.split('T')[1] : '';
+                    handleChange('data_termino', date ? (time ? `${date}T${time}` : date) : '');
+                  }}
+                  disabled={!canEditTasks}
+                  className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none"
+                />
+                <input
+                  type="time"
+                  value={formData.data_termino?.includes('T') ? formData.data_termino.split('T')[1] : ''}
+                  onChange={(e) => {
+                    const time = e.target.value;
+                    const date = formData.data_termino ? formData.data_termino.split('T')[0] : getLocalISOString();
+                    handleChange('data_termino', time ? `${date}T${time}` : date);
+                  }}
+                  disabled={!canEditTasks}
+                  className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent disabled:bg-brand-gray/50 disabled:text-brand-text-muted transition-all outline-none"
+                />
+              </div>
             </div>
 
             <div className="col-span-2">
@@ -746,7 +784,11 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
     setSaving(true);
     setError(null);
     try {
-      await onSave(formData);
+      const dataToSave = { ...formData };
+      if (dataToSave.status === 'CONCLUÍDA' && !dataToSave.data_conclusao) {
+        dataToSave.data_conclusao = new Date().toISOString();
+      }
+      await onSave(dataToSave);
       onClose();
       setFormData({
         titulo: '',
@@ -852,22 +894,54 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
 
             <div>
               <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Data Início</label>
-              <input
-                type="datetime-local"
-                value={formData.data_tarefa}
-                onChange={(e) => handleChange('data_tarefa', e.target.value)}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={formData.data_tarefa ? formData.data_tarefa.split('T')[0] : ''}
+                  onChange={(e) => {
+                    const date = e.target.value;
+                    const time = formData.data_tarefa?.includes('T') ? formData.data_tarefa.split('T')[1] : '';
+                    handleChange('data_tarefa', date ? (time ? `${date}T${time}` : date) : '');
+                  }}
+                  className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
+                />
+                <input
+                  type="time"
+                  value={formData.data_tarefa?.includes('T') ? formData.data_tarefa.split('T')[1] : ''}
+                  onChange={(e) => {
+                    const time = e.target.value;
+                    const date = formData.data_tarefa ? formData.data_tarefa.split('T')[0] : getLocalISOString();
+                    handleChange('data_tarefa', time ? `${date}T${time}` : date);
+                  }}
+                  className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
+                />
+              </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Data Término</label>
-              <input
-                type="datetime-local"
-                value={formData.data_termino}
-                onChange={(e) => handleChange('data_termino', e.target.value)}
-                className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={formData.data_termino ? formData.data_termino.split('T')[0] : ''}
+                  onChange={(e) => {
+                    const date = e.target.value;
+                    const time = formData.data_termino?.includes('T') ? formData.data_termino.split('T')[1] : '';
+                    handleChange('data_termino', date ? (time ? `${date}T${time}` : date) : '');
+                  }}
+                  className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
+                />
+                <input
+                  type="time"
+                  value={formData.data_termino?.includes('T') ? formData.data_termino.split('T')[1] : ''}
+                  onChange={(e) => {
+                    const time = e.target.value;
+                    const date = formData.data_termino ? formData.data_termino.split('T')[0] : getLocalISOString();
+                    handleChange('data_termino', time ? `${date}T${time}` : date);
+                  }}
+                  className="w-full px-4 py-3 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all outline-none"
+                />
+              </div>
             </div>
 
             <div className="col-span-2">
@@ -967,6 +1041,14 @@ const getDeadlineStatus = (task: Tarefa): DeadlineStatus => {
 
 const formatDateTime = (dateStr?: string) => {
   if (!dateStr) return '-';
+  
+  if (!dateStr.includes('T')) {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+  }
+
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return dateStr;
   
@@ -979,10 +1061,22 @@ const formatDateTime = (dateStr?: string) => {
   return `${day}/${month}/${year} ${hours}:${minutes}`;
 };
 
+const formatDateOnly = (dateStr?: string) => {
+  if (!dateStr) return '-';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  
+  return `${day}/${month}/${year}`;
+};
+
 const getLocalISOString = () => {
   const now = new Date();
   const offset = now.getTimezoneOffset() * 60000;
-  return new Date(now.getTime() - offset).toISOString().slice(0, 16);
+  return new Date(now.getTime() - offset).toISOString().slice(0, 10);
 };
 
 const getPriorityColor = (p: string) => {
@@ -1243,14 +1337,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
         const orderA = priorityOrder[a.prioridade as keyof typeof priorityOrder] || 99;
         const orderB = priorityOrder[b.prioridade as keyof typeof priorityOrder] || 99;
         
-        if (orderA !== orderB) {
-          return orderA - orderB;
-        }
-
-        const statusA = getDeadlineStatus(a);
-        const statusB = getDeadlineStatus(b);
-        
-        return deadlineOrder[statusA] - deadlineOrder[statusB];
+        return orderA - orderB;
       });
   }, [tasks, priorityFilter, deadlineFilter, departmentFilter, statusFilter]);
 
@@ -1300,6 +1387,10 @@ export const TasksTable: React.FC<TasksTableProps> = ({
   }, [tasks]);
 
   const handleBulkUpdate = async (field: 'proprietario' | 'aplicacao', novoValor: string) => {
+    if (field === 'proprietario' && role !== 'admin') {
+      setToast({ message: 'Apenas administradores podem alterar o departamento.', type: 'error' });
+      return;
+    }
     const supabase = getSupabase();
     const { error } = await supabase.from('tarefas').update({ [field]: novoValor }).in('id', selectedTasks);
     if (error) {
@@ -1342,6 +1433,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
       data_termino: updatedTask.data_termino,
       aplicacao: updatedTask.aplicacao,
       observacoes: updatedTask.observacoes,
+      data_conclusao: updatedTask.data_conclusao,
       // ✅ concluida coerente com status (normalizado)
       concluida: normalizeStatus(updatedTask.status) === 'CONCLUIDA'
     };
@@ -1436,6 +1528,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
         data_termino: formData.data_termino,
         aplicacao: formData.aplicacao,
         observacoes: formData.observacoes,
+        data_conclusao: formData.data_conclusao,
         concluida: normalizeStatus(formData.status) === 'CONCLUIDA'
       };
 
@@ -1704,22 +1797,24 @@ export const TasksTable: React.FC<TasksTableProps> = ({
               </button>
             </div>
 
-            <div className="flex items-center gap-2 border-l border-brand-gray/50 pl-4">
-              <span className="text-xs text-brand-text-muted uppercase font-bold">Departamento:</span>
-              <select
-                onChange={(e) => handleBulkUpdate('proprietario', e.target.value)}
-                value=""
-                className="px-3 py-1.5 bg-brand-black text-brand-text-primary font-bold rounded hover:bg-brand-gray transition-all text-[10px] uppercase tracking-widest border border-brand-gray/50 cursor-pointer outline-none"
-              >
-                <option value="" disabled>Alterar para...</option>
-                <option value="">-</option>
-                <option value="DITE">DITE</option>
-                <option value="FISCAL">FISCAL</option>
-                <option value="CLIENTE">CLIENTE</option>
-                <option value="PESSOAL">PESSOAL</option>
-                <option value="CONTÁBIL">CONTÁBIL</option>
-              </select>
-            </div>
+            {role === 'admin' && (
+              <div className="flex items-center gap-2 border-l border-brand-gray/50 pl-4">
+                <span className="text-xs text-brand-text-muted uppercase font-bold">Departamento:</span>
+                <select
+                  onChange={(e) => handleBulkUpdate('proprietario', e.target.value)}
+                  value=""
+                  className="px-3 py-1.5 bg-brand-black text-brand-text-primary font-bold rounded hover:bg-brand-gray transition-all text-[10px] uppercase tracking-widest border border-brand-gray/50 cursor-pointer outline-none"
+                >
+                  <option value="" disabled>Alterar para...</option>
+                  <option value="">-</option>
+                  <option value="DITE">DITE</option>
+                  <option value="FISCAL">FISCAL</option>
+                  <option value="CLIENTE">CLIENTE</option>
+                  <option value="PESSOAL">PESSOAL</option>
+                  <option value="CONTÁBIL">CONTÁBIL</option>
+                </select>
+              </div>
+            )}
           </div>
         )}
         {/* Desktop View: Table */}
@@ -1728,12 +1823,12 @@ export const TasksTable: React.FC<TasksTableProps> = ({
             <thead className="bg-brand-black sticky top-0 z-30 shadow-sm">
               <tr>
                 <th className="px-0 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[30px] min-w-[30px] max-w-[30px] bg-brand-black sticky left-0 z-40">Prior.</th>
-                <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider w-[25%] max-w-[300px] min-w-[200px] bg-brand-black sticky left-[29px] z-40 border-r border-brand-gray/30">Tarefa</th>
-                <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider min-w-[100px]">Departamento</th>
-                <th className="px-4 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[120px]">Status</th>
-                <th className="px-4 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[90px]">Início</th>
-                <th className="px-4 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[90px]">Término</th>
-                <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider min-w-[100px]">Aplicação</th>
+                <th className="px-6 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider w-[25%] max-w-[300px] min-w-[200px] bg-brand-black sticky left-[29px] z-40 border-r border-brand-gray/30">Tarefa</th>
+                <th className="px-6 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider min-w-[100px]">Departamento</th>
+                <th className="px-6 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[120px]">Status</th>
+                <th className="px-6 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[90px]">Início</th>
+                <th className="px-6 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[90px]">Término</th>
+                <th className="px-6 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider min-w-[100px]">Aplicação</th>
                 <th className="px-3 py-4 text-center w-[40px] bg-brand-black border-r border-brand-gray/30">
                   <input
                     type="checkbox"
@@ -1747,8 +1842,8 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                     }}
                   />
                 </th>
-                <th className="px-4 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider min-w-[180px]">Observações</th>
-                {!isViewer && <th className="px-4 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[80px] bg-brand-black sticky right-0 z-40 border-l border-brand-gray/30">Ações</th>}
+                <th className="px-6 py-4 text-left font-bold text-brand-text-muted uppercase tracking-wider min-w-[180px]">Observações</th>
+                {!isViewer && <th className="px-6 py-4 text-center font-bold text-brand-text-muted uppercase tracking-wider w-[80px] bg-brand-black sticky right-0 z-40 border-l border-brand-gray/30">Ações</th>}
               </tr>
             </thead>
             <tbody className="bg-brand-dark divide-y divide-brand-gray">
@@ -1776,21 +1871,14 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                   <tr 
                     key={task.id} 
                     ref={task.id === highlightedTaskId ? highlightedRowRef : null}
-                    onClick={() => {
-                      if (selectedTasks.includes(task.id)) {
-                        setSelectedTasks(selectedTasks.filter(id => id !== task.id));
-                      } else {
-                        setSelectedTasks([...selectedTasks, task.id]);
-                      }
-                    }}
-                    className={`${rowClass} hover:bg-brand-gray/50 transition-colors group cursor-pointer ${task.id === highlightedTaskId ? 'animate-highlight-task highlighted-task-row' : ''} ${selectedTasks.includes(task.id) ? 'bg-brand-accent/10' : ''}`}
+                    className={`${rowClass} hover:bg-brand-gray/50 transition-colors group ${task.id === highlightedTaskId ? 'animate-highlight-task highlighted-task-row' : ''} ${selectedTasks.includes(task.id) ? 'bg-brand-accent/10' : ''}`}
                   >
                   <td className={`px-0 py-3 whitespace-nowrap sticky left-0 z-20 ${rowClass} group-hover:bg-brand-gray/50 transition-colors w-[30px] min-w-[30px] max-w-[30px] text-center`}>
                     <span className={`px-2 py-1 rounded text-[10px] font-bold border ${getPriorityColor(task.prioridade)}`}>
                       {task.prioridade}
                     </span>
                   </td>
-                  <td className={`px-4 py-3 text-brand-text-primary font-bold sticky left-[29px] z-20 border-r border-brand-gray/10 ${rowClass} group-hover:bg-brand-gray/50 transition-colors w-[25%] max-w-[300px] min-w-[200px]`}>
+                  <td className={`px-6 py-3 text-brand-text-primary font-bold sticky left-[29px] z-20 border-r border-brand-gray/10 ${rowClass} group-hover:bg-brand-gray/50 transition-colors w-[25%] max-w-[300px] min-w-[200px]`}>
                       <div className="flex items-center gap-2">
                         <span className="whitespace-normal break-words leading-[1.4]" title={task.descricao}>{task.descricao}</span>
                         {attachmentCounts[task.id] > 0 && (
@@ -1808,22 +1896,31 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.proprietario || ''}>
+                    <td className="px-6 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.proprietario || ''}>
                       {task.proprietario || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-center">
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-semibold border ${getStatusColor(task.status)}`}>
-                        {task.status}
-                      </span>
+                    <td className="px-6 py-3 whitespace-nowrap text-center">
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span 
+                          className={`px-2 py-1 rounded-full text-[10px] font-semibold border ${getStatusColor(task.status)} cursor-default`}
+                        >
+                          {task.status}
+                        </span>
+                        {normalizeStatus(task.status) === 'CONCLUIDA' && task.data_conclusao && (
+                          <span className="text-xs text-brand-text-muted font-medium">
+                            {formatDateOnly(task.data_conclusao)}
+                          </span>
+                        )}
+                      </div>
                     </td>
-                    <td className="px-4 py-3 text-brand-text-muted text-xs text-center whitespace-nowrap">{formatDateTime(task.data_tarefa)}</td>
-                    <td className="px-4 py-3 text-brand-text-muted text-xs text-center whitespace-nowrap">
+                    <td className="px-6 py-3 text-brand-text-muted text-xs text-center whitespace-nowrap">{formatDateTime(task.data_tarefa)}</td>
+                    <td className="px-6 py-3 text-brand-text-muted text-xs text-center whitespace-nowrap">
                       <div className="flex items-center justify-center gap-1">
                         {formatDateTime(task.data_termino)}
                         {task.data_termino && <DeadlineIndicator status={deadlineStatus} />}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}>
+                    <td className="px-6 py-3 text-brand-text-muted text-xs truncate max-w-[120px]" title={task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}>
                       {task.aplicacao === 'NÃO APLICA' ? 'NÃO APLICA' : 'APLICA'}
                     </td>
                     <td className={`px-3 py-3 text-center ${rowClass} group-hover:bg-brand-gray transition-colors`}>
@@ -1844,14 +1941,14 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                         className="cursor-pointer accent-brand-accent"
                       />
                     </td>
-                    <td className="px-4 py-3 text-brand-text-muted text-xs max-w-[250px]">
+                    <td className="px-6 py-3 text-brand-text-muted text-xs max-w-[250px]">
                       <ObservationCell 
                         text={task.observacoes || ''} 
                         onClick={() => setViewingObservation(task.observacoes || '')}
                       />
                     </td>
                     {!isViewer && (
-                      <td className={`px-4 py-3 text-center whitespace-nowrap sticky right-0 z-20 border-l border-brand-gray/10 ${rowClass} group-hover:bg-brand-gray transition-colors`}>
+                      <td className={`px-6 py-3 text-center whitespace-nowrap sticky right-0 z-20 border-l border-brand-gray/10 ${rowClass} group-hover:bg-brand-gray transition-colors`}>
                         <div className="flex items-center justify-center gap-1">
                           <button
                             onClick={() => handleEditClick(task)}

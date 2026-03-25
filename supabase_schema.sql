@@ -15,6 +15,7 @@ CREATE TABLE empresas (
     ponto_focal_email TEXT,
     regime_atual TEXT,
     regime_novo TEXT,
+    observacoes_gerais TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -55,7 +56,15 @@ CREATE TABLE participantes (
 CREATE TABLE tarefas (
     id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
     projeto_id TEXT REFERENCES projetos(id) ON DELETE CASCADE,
-    titulo TEXT NOT NULL,
+    descricao TEXT NOT NULL,
+    prioridade TEXT DEFAULT 'P2',
+    proprietario TEXT,
+    status TEXT DEFAULT 'NÃO INICIADA',
+    data_tarefa TIMESTAMP WITH TIME ZONE,
+    data_termino TIMESTAMP WITH TIME ZONE,
+    data_conclusao TIMESTAMP WITH TIME ZONE,
+    aplicacao TEXT,
+    observacoes TEXT,
     concluida BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

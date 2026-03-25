@@ -28,6 +28,7 @@ interface Task {
       codigo_interno?: string;
       razao_social?: string;
       cnpj?: string;
+      comp_inicial?: string;
     };
   };
 }
@@ -111,7 +112,8 @@ export function ProductivityDashboard() {
             nome_fantasia,
             razao_social,
             cnpj,
-            codigo_interno
+            codigo_interno,
+            comp_inicial
           )
         )
       `);
@@ -160,9 +162,11 @@ export function ProductivityDashboard() {
       .toUpperCase();
   };
 
-  // ✅ Compute available years based on projects
+  // ✅ Compute available years based on projects AND comp_inicial
   const availableYears = useMemo(() => {
     const years = new Set<string>();
+    
+    // 1. From tasks/projects
     tasks.forEach(task => {
       const dateStr = task.projetos?.data_inicio_prevista || task.projetos?.data_fim_prevista || task.data_termino || task.data_tarefa;
       if (dateStr) {
@@ -171,7 +175,17 @@ export function ProductivityDashboard() {
           years.add(year);
         }
       }
+      
+      // 2. From comp_inicial (YYYY-MM-DD)
+      const compInicial = task.projetos?.empresas?.comp_inicial;
+      if (compInicial) {
+        const year = compInicial.split('-')[0];
+        if (year && year.length === 4) {
+          years.add(year);
+        }
+      }
     });
+    
     const currentYear = new Date().getFullYear().toString();
     years.add(currentYear); // Always include current year as fallback
     return Array.from(years).sort((a, b) => b.localeCompare(a)); // Descending
@@ -180,14 +194,22 @@ export function ProductivityDashboard() {
   // ✅ Filter tasks by year/month/company
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
-      const projectDateStr = task.projetos?.data_inicio_prevista || task.projetos?.data_fim_prevista || task.data_termino || task.data_tarefa;
-      const projectDate = new Date(projectDateStr);
-      const projectYear = projectDate.getFullYear().toString();
-      const projectMonth = (projectDate.getMonth() + 1).toString();
+      // Data de referência para o filtro: comp_inicial da empresa
+      const compInicialStr = task.projetos?.empresas?.comp_inicial; // "MM/YYYY"
+      
+      // Se não houver comp_inicial, deve aparecer se o filtro for "Todos"
+      if (!compInicialStr) {
+        return (year === 'Todos' || year === '') && 
+               (month === 'Todos' || month === '') && 
+               (selectedCompanyId === 'Todos' || selectedCompanyId === '' || task.projetos?.empresa_id === selectedCompanyId);
+      }
 
-      const yearMatch = year === 'Todos' || projectYear === year;
-      const monthMatch = month === 'Todos' || projectMonth === month;
-      const companyMatch = selectedCompanyId === 'Todos' || task.projetos?.empresa_id === selectedCompanyId;
+      // comp_inicial está no formato YYYY-MM-DD
+      const [compYear, compMonth] = compInicialStr.split('-');
+      
+      const yearMatch = year === 'Todos' || year === '' || compYear === year;
+      const monthMatch = month === 'Todos' || month === '' || parseInt(compMonth, 10).toString() === month;
+      const companyMatch = selectedCompanyId === 'Todos' || selectedCompanyId === '' || task.projetos?.empresa_id === selectedCompanyId;
 
       return yearMatch && monthMatch && companyMatch;
     });
@@ -404,8 +426,11 @@ export function ProductivityDashboard() {
       p.todo = Math.max(0, p.total - p.done - p.doing);
       const percentCompleted = p.total > 0 ? (p.done / p.total) * 100 : 0;
 
-      if (percentCompleted === 100) doneList.push(p);
-      else if (percentCompleted >= 10 || p.doing > 0) doingList.push(p);
+      // Se todas as tarefas estiverem concluídas, considera "Feito"
+      if (p.total > 0 && p.done === p.total) doneList.push(p);
+      // Se tiver pelo menos uma tarefa feita ou em execução, considera "Fazendo"
+      else if (p.done > 0 || p.doing > 0 || percentCompleted >= 10) doingList.push(p);
+      // Caso contrário, "A Fazer"
       else todoList.push(p);
     });
 
@@ -1200,6 +1225,12 @@ export function ProductivityDashboard() {
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
                           <span>Prazo: {new Date(task.data_termino).toLocaleDateString('pt-BR')}</span>
+                        </div>
+                      )}
+                      {normalizeStatus(task.status) === 'CONCLUIDA' && task.data_conclusao && (
+                        <div className="flex items-center gap-1 text-green-500/80">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>Concluída em: {new Date(task.data_conclusao).toLocaleDateString('pt-BR')}</span>
                         </div>
                       )}
                       {task.proprietario && (

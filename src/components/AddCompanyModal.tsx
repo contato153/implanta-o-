@@ -99,8 +99,9 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
           regime_novo: '',
           comp_inicial: '',
           aprovado_reuniao: '',
-          objetivo: '',
+          objetivo_empresa: '',
           passar_bastao_link: '',
+          observacoes_gerais: '',
           data_inicio_prevista: '',
           data_fim_prevista: '',
           socios: [
@@ -153,8 +154,9 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
           regime_novo: empresa.regime_novo || '',
           comp_inicial: formatMesAno(empresa.comp_inicial || ''),
           aprovado_reuniao: empresa.aprovado_reuniao || '',
-          objetivo: empresa.objetivo || '',
+          objetivo_empresa: empresa.objetivo_empresa || '',
           passar_bastao_link: empresa.passar_bastao_link || '',
+          observacoes_gerais: empresa.observacoes_gerais || '',
           data_inicio_prevista: projeto?.data_inicio_prevista || '',
           data_fim_prevista: projeto?.data_fim_prevista || '',
           socios: loadedSocios
@@ -357,7 +359,9 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
         regime_atual: formData.regime_atual,
         regime_novo: formData.regime_novo,
         comp_inicial: compInicialFormatada,
-        aprovado_reuniao: formData.aprovado_reuniao
+        aprovado_reuniao: formData.aprovado_reuniao,
+        objetivo_empresa: formData.objetivo_empresa,
+        observacoes_gerais: formData.observacoes_gerais
       };
 
       const sociosData: Omit<Socio, 'id' | 'empresa_id'>[] = formData.socios
@@ -598,8 +602,8 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
               <div className="md:col-span-2">
                 <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">OBJETIVO DA EMPRESA</label>
                 <textarea
-                  name="objetivo"
-                  value={formData.objetivo}
+                  name="objetivo_empresa"
+                  value={formData.objetivo_empresa}
                   onChange={handleChange}
                   placeholder="Descreva o objetivo da empresa ou o propósito do projeto"
                   rows={4}
@@ -687,6 +691,18 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="space-y-6">
+            <h3 className="text-lg font-bold text-brand-accent border-b border-brand-gray pb-2 uppercase tracking-wider">Observações Gerais</h3>
+            <textarea
+              name="observacoes_gerais"
+              value={formData.observacoes_gerais}
+              onChange={handleChange}
+              placeholder="Adicione observações gerais sobre a empresa"
+              rows={4}
+              className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+            />
           </div>
 
           <div className="flex justify-end gap-3 pt-6 border-t border-brand-gray sticky bottom-0 bg-brand-dark pb-6">

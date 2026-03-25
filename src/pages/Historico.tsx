@@ -273,7 +273,7 @@ const HistoricoItem = ({ item, getActionColor, formatDate }: any) => {
                         navigate(`/project/${detalhes.empresa.id}/tasks`);
                       }
                     }}
-                    className={`font-medium ${detalhes?.empresa?.id && isProjetoOuEmpresaAtiva(detalhes.empresa.id) ? 'text-blue-300 cursor-pointer hover:underline' : 'text-gray-500 cursor-not-allowed'}`}
+                    className={`font-medium ${detalhes?.empresa?.id && isProjetoOuEmpresaAtiva(detalhes.empresa.id) ? 'text-blue-300 cursor-pointer hover:underline' : 'text-red-500 cursor-not-allowed'}`}
                     title={detalhes?.empresa?.id && !isProjetoOuEmpresaAtiva(detalhes.empresa.id) ? 'Empresa excluída' : ''}
                   >
                     {detalhes?.empresa?.nome || "-"}
@@ -302,7 +302,11 @@ const HistoricoItem = ({ item, getActionColor, formatDate }: any) => {
               {item.acao === 'STATUS_ALTERADO' && 'Alterou status'}
               {item.acao === 'ANEXO_ADICIONADO' && 'Adicionou um anexo'}
             </span>
-            {item.acao !== 'ANEXO_ADICIONADO' && item.descricao}
+            {item.acao === 'EXCLUIDO' && item.entidade === 'empresa'
+              ? (detalhes?.nome_fantasia || detalhes?.razao_social 
+                  ? `Empresa: ${detalhes.nome_fantasia || detalhes.razao_social}` 
+                  : item.descricao.replace('Empresa excluída', 'Empresa'))
+              : (item.acao !== 'ANEXO_ADICIONADO' && item.descricao)}
             
             {detalhes?.anexo && (
               <div className="mt-2 text-sm">
