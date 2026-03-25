@@ -139,21 +139,6 @@ export function Sidebar() {
           </NavLink>
         )}
 
-        <NavLink
-          to="/consultar-cnpj"
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-              isActive
-                ? 'text-[#F4C400] bg-[#1E1E1E] shadow-md'
-                : 'text-[#BDBDBD] hover:bg-[#1E1E1E] hover:text-white'
-            }`
-          }
-          title={isSidebarMinimized ? "Consultar CNPJ" : ""}
-        >
-          <Search size={20} />
-          {!isSidebarMinimized && <span className="font-medium">Consultar CNPJ</span>}
-        </NavLink>
-
         {role === 'admin' && (
           <NavLink
             to="/users"

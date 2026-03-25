@@ -7,7 +7,6 @@ import { Users } from './pages/Users';
 import { ProjectTasks } from './pages/ProjectTasks';
 import { ProductivityDashboard } from './pages/ProductivityDashboard';
 import { TasksTemplate } from './pages/TasksTemplate';
-import { CnpjConsultation } from './pages/CnpjConsultation';
 import { Historico } from './pages/Historico';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ProtectedLayout } from './components/ProtectedLayout';
@@ -28,7 +27,6 @@ function AppContent() {
               <Route path="/empresas" element={<Empresas />} />
               <Route path="/empresa/:id" element={<CompanyDashboard />} />
               <Route path="/dashboard" element={<ProductivityDashboard />} />
-              <Route path="/consultar-cnpj" element={<CnpjConsultation />} />
               <Route path="/project/:projectId/tasks" element={<ProjectTasks />} />
               <Route path="/" element={<Navigate to="/empresas" replace />} />
             </Route>
