@@ -1337,7 +1337,19 @@ export const TasksTable: React.FC<TasksTableProps> = ({
         const orderA = priorityOrder[a.prioridade as keyof typeof priorityOrder] || 99;
         const orderB = priorityOrder[b.prioridade as keyof typeof priorityOrder] || 99;
         
-        return orderA - orderB;
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
+        
+        // Secondary sort by created_at
+        const dateA = new Date(a.created_at || 0).getTime();
+        const dateB = new Date(b.created_at || 0).getTime();
+        if (dateA !== dateB) {
+          return dateA - dateB;
+        }
+        
+        // Fallback to id to guarantee stable sort
+        return (a.id || '').localeCompare(b.id || '');
       });
   }, [tasks, priorityFilter, deadlineFilter, departmentFilter, statusFilter]);
 

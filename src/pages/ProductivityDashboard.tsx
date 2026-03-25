@@ -1195,6 +1195,11 @@ export function ProductivityDashboard() {
                   if (selectedProjectTasks.status === 'nao_aplica') return normalizeStatus(t.aplicacao) === 'NAO APLICA';
                   if (selectedProjectTasks.status === 'delayed') return status !== 'CONCLUIDA' && t.data_termino && t.data_termino < today;
                   return true;
+                }).sort((a, b) => {
+                  const dateA = new Date(a.created_at || 0).getTime();
+                  const dateB = new Date(b.created_at || 0).getTime();
+                  if (dateA !== dateB) return dateA - dateB;
+                  return (a.id || '').localeCompare(b.id || '');
                 });
 
                 if (filtered.length === 0) {

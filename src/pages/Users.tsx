@@ -17,7 +17,7 @@ export function Users() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [newName, setNewName] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('123456');
   const [newRole, setNewRole] = useState<Role>('viewer');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -182,7 +182,8 @@ export function Users() {
         password: newPassword,
         options: {
           data: {
-            full_name: newName
+            full_name: newName,
+            force_password_change: true
           }
         }
       });
@@ -412,7 +413,7 @@ export function Users() {
 
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-[#BDBDBD] mb-1">
-                  Senha Temporária
+                  Senha Temporária (Padrão: 123456)
                 </label>
                 <input
                   type="text"

@@ -241,7 +241,8 @@ export async function getClientData(clientId: string): Promise<ClientData | null
   .from('tarefas')
   .select('*')
   .eq('projeto_id', projeto.id)
-  .order('created_at', { ascending: true });
+  .order('created_at', { ascending: true })
+  .order('id', { ascending: true });
        if (t) {
          tarefas = t;
          const total = tarefas.filter(task => (task.aplicacao || '').toUpperCase() !== 'NÃO APLICA' && (task.aplicacao || '').toUpperCase() !== 'NAO APLICA').length;
@@ -297,7 +298,8 @@ export async function getProjectData(projectId: string): Promise<{ projeto: Proj
       .from('tarefas')
       .select('*')
       .eq('projeto_id', projectId)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: true })
+      .order('id', { ascending: true });
 
     if (tarefasError) {
       console.error('Error fetching tasks:', tarefasError);
