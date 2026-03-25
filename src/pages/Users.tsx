@@ -4,7 +4,7 @@ import { UserProfile, Role } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { Plus, X, CheckCircle, AlertCircle, Trash2, Lock } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
-import { changeUserPassword } from '../services/api';
+import { changeUserPassword, deleteUser } from '../services/api';
 import { registrarHistorico } from '../services/historico';
 
 export function Users() {
@@ -126,13 +126,7 @@ export function Users() {
     if (!userToDelete || currentUserRole !== 'admin') return;
     
     try {
-      const supabase = getSupabase();
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userToDelete.id);
-
-      if (error) throw error;
+      await deleteUser(userToDelete.id);
       
       setProfiles(profiles.filter(p => p.id !== userToDelete.id));
 

@@ -844,3 +844,15 @@ export async function changeUserPassword(userId: string, newPassword: string): P
     throw new Error(error.message || 'Erro ao alterar senha.');
   }
 }
+
+export async function deleteUser(userId: string): Promise<void> {
+  const supabase = getSupabase();
+
+  const { error } = await supabase.rpc('admin_delete_user', {
+    user_id: userId,
+  });
+
+  if (error) {
+    throw new Error(error.message || 'Erro ao excluir usuário.');
+  }
+}
