@@ -302,11 +302,27 @@ const HistoricoItem = ({ item, getActionColor, formatDate }: any) => {
               {item.acao === 'STATUS_ALTERADO' && 'Alterou status'}
               {item.acao === 'ANEXO_ADICIONADO' && 'Adicionou um anexo'}
             </span>
-            {item.acao === 'EXCLUIDO' && item.entidade === 'empresa'
-              ? (detalhes?.nome_fantasia || detalhes?.razao_social 
-                  ? `Empresa: ${detalhes.nome_fantasia || detalhes.razao_social}` 
-                  : item.descricao.replace('Empresa excluída', 'Empresa'))
-              : (item.acao !== 'ANEXO_ADICIONADO' && item.descricao)}
+            {item.acao === 'EXCLUIDO' ? (
+              <span className="text-red-500 font-bold">
+                {item.entidade === 'empresa' && (detalhes?.nome_fantasia || detalhes?.razao_social)
+                  ? `Empresa: ${detalhes.nome_fantasia || detalhes.razao_social}`
+                  : item.descricao}
+              </span>
+            ) : (
+              item.acao !== 'ANEXO_ADICIONADO' && (
+                (item.entidade === 'empresa' || item.entidade === 'tarefa') && !isClickable() ? (
+                  <>
+                    {item.descricao.includes(': ') ? (
+                      <>
+                        {item.descricao.split(': ')[0]}: <span className="text-red-500 font-bold">{item.descricao.split(': ').slice(1).join(': ')}</span>
+                      </>
+                    ) : (
+                      <span className="text-red-500 font-bold">{item.descricao}</span>
+                    )}
+                  </>
+                ) : item.descricao
+              )
+            )}
             
             {detalhes?.anexo && (
               <div className="mt-2 text-sm">
