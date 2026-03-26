@@ -368,6 +368,7 @@ export function TasksTemplate() {
                     <option value="CLIENTE">CLIENTE</option>
                     <option value="PESSOAL">PESSOAL</option>
                     <option value="CONTÁBIL">CONTÁBIL</option>
+                    <option value="SUCESSO DO CLIENTE">SUCESSO DO CLIENTE</option>
                   </select>
                 </div>
               </div>

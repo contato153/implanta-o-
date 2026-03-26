@@ -61,7 +61,7 @@ export interface Tarefa {
   projeto_id: string;
   descricao: string;
   prioridade: 'P1' | 'P2' | 'P3';
-  proprietario: 'DITE' | 'FISCAL' | 'CLIENTE' | 'PESSOAL' | 'CONTÁBIL' | string;
+  proprietario: 'DITE' | 'FISCAL' | 'CLIENTE' | 'PESSOAL' | 'CONTÁBIL' | 'SUCESSO DO CLIENTE' | string;
   status: string;
   data_tarefa?: string;
   data_termino?: string;
@@ -87,7 +87,7 @@ export interface TarefasTemplate {
   id: string;
   descricao: string;
   prioridade: 'P1' | 'P2' | 'P3';
-  proprietario: 'DITE' | 'FISCAL' | 'CLIENTE' | 'PESSOAL' | 'CONTÁBIL' | string;
+  proprietario: 'DITE' | 'FISCAL' | 'CLIENTE' | 'PESSOAL' | 'CONTÁBIL' | 'SUCESSO DO CLIENTE' | string;
   aplicacao?: string;
   observacoes?: string;
   created_at?: string;

@@ -555,6 +555,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, companyName, isOpen
                 <option value="CLIENTE">CLIENTE</option>
                 <option value="PESSOAL">PESSOAL</option>
                 <option value="CONTÁBIL">CONTÁBIL</option>
+                <option value="SUCESSO DO CLIENTE">SUCESSO DO CLIENTE</option>
               </select>
             </div>
 
@@ -892,6 +893,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
                 <option value="CLIENTE">CLIENTE</option>
                 <option value="PESSOAL">PESSOAL</option>
                 <option value="CONTÁBIL">CONTÁBIL</option>
+                <option value="SUCESSO DO CLIENTE">SUCESSO DO CLIENTE</option>
               </select>
             </div>
 
@@ -1750,6 +1752,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
               <option value="CLIENTE">CLIENTE</option>
               <option value="PESSOAL">PESSOAL</option>
               <option value="CONTÁBIL">CONTÁBIL</option>
+              <option value="SUCESSO DO CLIENTE">SUCESSO DO CLIENTE</option>
             </select>
           </div>
           {canCreateTasks && (
@@ -1839,6 +1842,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                   <option value="CLIENTE">CLIENTE</option>
                   <option value="PESSOAL">PESSOAL</option>
                   <option value="CONTÁBIL">CONTÁBIL</option>
+                  <option value="SUCESSO DO CLIENTE">SUCESSO DO CLIENTE</option>
                 </select>
               </div>
             )}
