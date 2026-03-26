@@ -457,9 +457,17 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, companyName, isOpen
     setError(null);
     try {
       const dataToSave = { ...formData };
-      if (dataToSave.status === 'CONCLUÍDA' && !dataToSave.data_conclusao) {
+      
+      // ✅ Só define data_conclusao se o status MUDOU para CONCLUÍDA
+      const statusMudouParaConcluida = dataToSave.status === 'CONCLUÍDA' && task.status !== 'CONCLUÍDA';
+      const statusNaoEhMaisConcluido = dataToSave.status !== 'CONCLUÍDA' && task.status === 'CONCLUÍDA';
+
+      if (statusMudouParaConcluida) {
         dataToSave.data_conclusao = new Date().toISOString();
+      } else if (statusNaoEhMaisConcluido) {
+        dataToSave.data_conclusao = undefined;
       }
+      
       await onSave(dataToSave);
       onClose();
     } catch (err: any) {
@@ -786,9 +794,14 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave, pr
     setError(null);
     try {
       const dataToSave = { ...formData };
+      
+      // ✅ Define data_conclusao se estiver criando já como CONCLUÍDA
       if (dataToSave.status === 'CONCLUÍDA' && !dataToSave.data_conclusao) {
         dataToSave.data_conclusao = new Date().toISOString();
+      } else if (dataToSave.status !== 'CONCLUÍDA') {
+        dataToSave.data_conclusao = '';
       }
+
       await onSave(dataToSave);
       onClose();
       setFormData({
