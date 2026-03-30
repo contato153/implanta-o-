@@ -8,6 +8,7 @@ import { ProjectTasks } from './pages/ProjectTasks';
 import { ProductivityDashboard } from './pages/ProductivityDashboard';
 import { TasksTemplate } from './pages/TasksTemplate';
 import { Historico } from './pages/Historico';
+import { Contratos } from './pages/Contratos';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ProtectedLayout } from './components/ProtectedLayout';
 import { AuthProvider } from './context/AuthContext';
@@ -28,6 +29,7 @@ function AppContent() {
               <Route path="/empresa/:id" element={<CompanyDashboard />} />
               <Route path="/dashboard" element={<ProductivityDashboard />} />
               <Route path="/project/:projectId/tasks" element={<ProjectTasks />} />
+              <Route path="/contratos" element={<Contratos />} />
               <Route path="/" element={<Navigate to="/empresas" replace />} />
             </Route>
 

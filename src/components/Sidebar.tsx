@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BarChart2, CheckSquare, Users, LogOut, Search, Building2, ClipboardList, Clock, Menu } from 'lucide-react';
+import { LayoutDashboard, BarChart2, CheckSquare, Users, LogOut, Search, Building2, ClipboardList, Clock, Menu, FileText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
 import { getClientData } from '../services/api';
@@ -121,6 +121,21 @@ export function Sidebar() {
             </div>
           )}
         </div>
+
+        <NavLink
+          to="/contratos"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+              isActive
+                ? 'text-[#F4C400] bg-[#1E1E1E] shadow-md'
+                : 'text-[#BDBDBD] hover:bg-[#1E1E1E] hover:text-white'
+            }`
+          }
+          title={isSidebarMinimized ? "Gerador de Contratos" : ""}
+        >
+          <FileText size={20} />
+          {!isSidebarMinimized && <span className="font-medium">Gerador de Contratos</span>}
+        </NavLink>
 
         {role === 'admin' && (
           <NavLink
