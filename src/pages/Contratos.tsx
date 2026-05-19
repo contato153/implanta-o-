@@ -516,10 +516,16 @@ export function Contratos() {
       {/* ESTILOS DE IMPRESSÃO EXCLUSIVOS DO NAVEGADOR (@media print) */}
       <style>{`
         @media print {
+          @page {
+            size: A4;
+            margin: 2.5cm;
+          }
           /* Esconder toda a UI escura do sistema na impressão */
           body, html, #root {
             background: white !important;
             color: black !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
           aside, nav, header, button, select, input, label, textarea, .no-print {
             display: none !important;
@@ -541,12 +547,23 @@ export function Contratos() {
           }
           .print-preview-text {
             font-family: 'Arial', sans-serif !important;
+            color: black !important;
+          }
+          .print-preview-text p {
+            font-family: 'Arial', sans-serif !important;
             font-size: 11pt !important;
             line-height: 1.5 !important;
-            color: black !important;
             text-align: justify !important;
             text-justify: inter-word !important;
             text-align-last: left !important;
+            margin-bottom: 6pt !important;
+            overflow-wrap: break-word !important;
+          }
+          .print-preview-text .text-center {
+            text-align: center !important;
+          }
+          .print-preview-text .underline {
+            text-decoration: underline !important;
           }
         }
       `}</style>
@@ -1000,22 +1017,35 @@ export function Contratos() {
 
           {/* FOLHA DE PRÉ-VISUALIZAÇÃO A4 */}
           <div className="bg-[#111111] border border-[#1E1E1E] rounded-xl p-2 md:p-8 flex justify-center shadow-inner overflow-x-auto">
-            <div className="print-preview-a4 bg-white text-black p-8 md:p-12 shadow-2xl rounded w-full max-w-[800px] border border-gray-300 min-h-[1000px] flex flex-col justify-between">
+            <div 
+              className="print-preview-a4 bg-white text-black shadow-2xl rounded border border-gray-300 flex flex-col justify-between"
+              style={{
+                width: '794px',
+                minHeight: '1123px',
+                padding: '2.5cm',
+                boxSizing: 'border-box'
+              }}
+            >
               {/* Conteúdo do Contrato */}
-              <div className="print-preview-text text-justify text-[13px] leading-relaxed break-words text-gray-900" style={{ fontFamily: 'Arial, sans-serif', textAlign: 'justify', textJustify: 'inter-word', textAlignLast: 'left' }}>
+              <div className="print-preview-text text-gray-900" style={{ fontFamily: 'Arial, sans-serif' }}>
                 {getSubstitutedText().split('\n').map((line, idx) => {
                   const trimmed = line.trim();
                   if (!trimmed) {
-                    return <div key={idx} className="h-2" />;
+                    return <div key={idx} style={{ height: '6pt' }} />;
                   }
 
-                  // 1. Título do Contrato: centralizado e em negrito
+                  // 1. Título do Contrato: centralizado e em negrito sem sublinhado
                   if (trimmed.toUpperCase().startsWith('CONTRATO')) {
                     return (
                       <p
                         key={idx}
-                        className="text-center font-bold text-[15px] uppercase mb-4"
-                        style={{ fontFamily: 'Arial, sans-serif' }}
+                        className="text-center font-bold uppercase mb-4"
+                        style={{ 
+                          fontFamily: 'Arial, sans-serif',
+                          fontSize: '13pt',
+                          lineHeight: '1.2',
+                          textAlign: 'center'
+                        }}
                       >
                         {line}
                       </p>
@@ -1027,8 +1057,14 @@ export function Contratos() {
                     return (
                       <p
                         key={idx}
-                        className="font-bold text-[13.5px] uppercase mt-3 mb-1 text-left underline"
-                        style={{ fontFamily: 'Arial, sans-serif' }}
+                        className="font-bold uppercase mt-4 mb-2 text-left underline"
+                        style={{ 
+                          fontFamily: 'Arial, sans-serif',
+                          fontSize: '11pt',
+                          lineHeight: '1.2',
+                          textAlign: 'left',
+                          textDecoration: 'underline'
+                        }}
                       >
                         {line}
                       </p>
@@ -1040,8 +1076,14 @@ export function Contratos() {
                     return (
                       <p
                         key={idx}
-                        className="text-left text-[12px] leading-snug mt-2"
-                        style={{ fontFamily: 'Arial, sans-serif' }}
+                        className="text-left mt-2"
+                        style={{ 
+                          fontFamily: 'Arial, sans-serif',
+                          fontSize: '11pt',
+                          lineHeight: '1.2',
+                          textAlign: 'left',
+                          overflowWrap: 'break-word'
+                        }}
                       >
                         {line}
                       </p>
@@ -1052,12 +1094,15 @@ export function Contratos() {
                   return (
                     <p
                       key={idx}
-                      className="text-justify text-[13px] leading-relaxed mb-1.5"
+                      className="text-justify mb-2"
                       style={{
                         fontFamily: 'Arial, sans-serif',
+                        fontSize: '11pt',
+                        lineHeight: '1.5',
                         textAlign: 'justify',
                         textJustify: 'inter-word',
-                        textAlignLast: 'left'
+                        textAlignLast: 'left',
+                        overflowWrap: 'break-word'
                       }}
                     >
                       {line}
@@ -1067,7 +1112,7 @@ export function Contratos() {
               </div>
 
               {/* Nota de rodapé ou marcação de página em visualização */}
-              <div className="mt-12 pt-4 border-t border-gray-200 text-center text-[10px] text-gray-400 no-print">
+              <div className="mt-8 pt-2 border-t border-gray-200 text-center text-[10px] text-gray-400 no-print">
                 Visualização do documento em alta fidelidade A4.
               </div>
             </div>
