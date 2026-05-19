@@ -233,6 +233,12 @@ export function Contratos() {
   // HTML do contrato editado e salvo no localStorage
   const [savedContractHtml, setSavedContractHtml] = useState<string | null>(null);
 
+  // Modelos Personalizados Reutilizáveis (Estilo Word)
+  const [savedDocuments, setSavedDocuments] = useState<Array<{ id: string, name: string, tipo: string, html: string }>>([]);
+  const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [newDocName, setNewDocName] = useState('');
+
   // Carregar contrato salvo ao selecionar as empresas ou mudar o tipo de contrato
   useEffect(() => {
     if (activeDocumentId) return; // Se houver um modelo personalizado ativo, não sobrescreve com o rascunho da empresa
@@ -243,12 +249,6 @@ export function Contratos() {
       setSavedContractHtml(null);
     }
   }, [contratanteId, contratadoId, tipoContrato, activeDocumentId]);
-
-  // Modelos Personalizados Reutilizáveis (Estilo Word)
-  const [savedDocuments, setSavedDocuments] = useState<Array<{ id: string, name: string, tipo: string, html: string }>>([]);
-  const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null);
-  const [showSaveModal, setShowSaveModal] = useState(false);
-  const [newDocName, setNewDocName] = useState('');
 
   // Carregar lista de modelos customizados do localStorage
   useEffect(() => {
