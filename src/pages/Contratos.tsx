@@ -439,7 +439,7 @@ export function Contratos() {
     const contratado = empresas.find(e => e.id === contratadoId);
     const rawText = getSubstitutedText();
 
-    // Formata o texto plano com parágrafos HTML para um arquivo Word .doc de alta compatibilidade em Arial seguindo fielmente o modelo do PDF
+    // Formata o texto plano com parágrafos HTML para um arquivo Word .doc de alta compatibilidade em Arial seguindo fielmente o modelo do PDF e a justificação do Word
     const lines = rawText.split('\n');
     const formattedHtml = lines
       .map(line => {
@@ -463,8 +463,8 @@ export function Contratos() {
           return `<p style="text-align: left; margin-top: 3pt; margin-bottom: 3pt; font-family: 'Arial'; font-size: 11pt; line-height: 1.2;">${line}</p>`;
         }
 
-        // 4. Parágrafo padrão justificado sem recuo na primeira linha, exatamente igual ao modelo do PDF
-        return `<p style="text-align: justify; margin-bottom: 6pt; font-family: 'Arial'; font-size: 11pt; line-height: 1.5;">${line}</p>`;
+        // 4. Parágrafo padrão justificado exatamente igual à função "justificar" do Word
+        return `<p style="text-align: justify; text-justify: inter-word; text-align-last: left; margin-bottom: 6pt; font-family: 'Arial'; font-size: 11pt; line-height: 1.5;">${line}</p>`;
       })
       .join('');
 
@@ -545,6 +545,8 @@ export function Contratos() {
             line-height: 1.5 !important;
             color: black !important;
             text-align: justify !important;
+            text-justify: inter-word !important;
+            text-align-last: left !important;
           }
         }
       `}</style>
@@ -1000,7 +1002,7 @@ export function Contratos() {
           <div className="bg-[#111111] border border-[#1E1E1E] rounded-xl p-2 md:p-8 flex justify-center shadow-inner overflow-x-auto">
             <div className="print-preview-a4 bg-white text-black p-8 md:p-12 shadow-2xl rounded w-full max-w-[800px] border border-gray-300 min-h-[1000px] flex flex-col justify-between">
               {/* Conteúdo do Contrato */}
-              <div className="print-preview-text text-justify text-[13px] leading-relaxed break-words text-gray-900" style={{ fontFamily: 'Arial, sans-serif' }}>
+              <div className="print-preview-text text-justify text-[13px] leading-relaxed break-words text-gray-900" style={{ fontFamily: 'Arial, sans-serif', textAlign: 'justify', textJustify: 'inter-word', textAlignLast: 'left' }}>
                 {getSubstitutedText().split('\n').map((line, idx) => {
                   const trimmed = line.trim();
                   if (!trimmed) {
@@ -1046,13 +1048,16 @@ export function Contratos() {
                     );
                   }
 
-                  // 4. Parágrafo padrão justificado sem recuo na primeira linha (seguindo fielmente o modelo do PDF)
+                  // 4. Parágrafo padrão justificado sem recuo na primeira linha (conforme a função "justificar" do Word)
                   return (
                     <p
                       key={idx}
                       className="text-justify text-[13px] leading-relaxed mb-1.5"
                       style={{
-                        fontFamily: 'Arial, sans-serif'
+                        fontFamily: 'Arial, sans-serif',
+                        textAlign: 'justify',
+                        textJustify: 'inter-word',
+                        textAlignLast: 'left'
                       }}
                     >
                       {line}
