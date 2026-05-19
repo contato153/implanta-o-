@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Download, Building2, Printer, RotateCcw, Edit3, Eye, Settings, CreditCard, Calendar, Landmark } from 'lucide-react';
+import { FileText, Download, Building2, Printer, RotateCcw, Edit3, Eye, Settings, CreditCard, Calendar, Landmark, AlignLeft, AlignCenter, AlignRight, AlignJustify, Undo, Redo } from 'lucide-react';
 import { getSupabase } from '../lib/supabase';
 import { Empresa, Socio } from '../types';
 
@@ -226,6 +226,17 @@ export function Contratos() {
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
+  // Modo de Edição Direta Estilo Word
+  const [isDirectEditing, setIsDirectEditing] = useState(false);
+  const [editedHtml, setEditedHtml] = useState('');
+
+  // Limpar HTML editado se os parâmetros mudarem fora do modo de edição
+  useEffect(() => {
+    if (!isDirectEditing) {
+      setEditedHtml('');
+    }
+  }, [contratanteId, contratadoId, contratanteExtra, contratadoExtra, valor, diaUtil, dadosBancarios, foro, cidadeAssinatura, dataAssinatura, tipoContrato, isDirectEditing]);
+
   // Carregar Empresas do Supabase
   useEffect(() => {
     async function fetchEmpresas() {
@@ -428,20 +439,11 @@ export function Contratos() {
     window.print();
   };
 
-  // AÇÃO DE DOWNLOAD COMO .DOC (WORD COMPATÍVEL)
-  const handleDownloadDoc = () => {
-    if (!contratanteId || !contratadoId) {
-      alert('Por favor, selecione o Contratante e o Contratado antes de baixar.');
-      return;
-    }
-
-    const contratante = empresas.find(e => e.id === contratanteId);
-    const contratado = empresas.find(e => e.id === contratadoId);
+  // GERAR O HTML DO CONTRATO COM VARIÁVEIS SUBSTITUÍDAS
+  const generateSubstitutedHtml = () => {
     const rawText = getSubstitutedText();
-
-    // Formata o texto plano com parágrafos HTML para um arquivo Word .doc de alta compatibilidade em Arial seguindo fielmente o modelo do PDF e a justificação do Word
     const lines = rawText.split('\n');
-    const formattedHtml = lines
+    return lines
       .map(line => {
         const trimmed = line.trim();
         if (!trimmed) {
@@ -460,13 +462,27 @@ export function Contratos() {
 
         // 3. Linha de Assinatura ou etiquetas correspondentes
         if (trimmed.startsWith('___') || trimmed.includes('CONTRATANTE') || trimmed.includes('CONTRATADA') || trimmed.includes('LOCADOR') || trimmed.includes('LOCATÁRIO') || trimmed.includes('Testemunha')) {
-          return `<p style="text-align: left; margin-top: 3pt; margin-bottom: 3pt; font-family: 'Arial'; font-size: 11pt; line-height: 1.2;">${line}</p>`;
+          return `<p style="text-align: left; margin-top: 3pt; margin-bottom: 3pt; font-family: 'Arial'; font-size: 11pt; line-height: 1.2; overflow-wrap: break-word;">${line}</p>`;
         }
 
         // 4. Parágrafo padrão justificado exatamente igual à função "justificar" do Word
-        return `<p style="text-align: justify; text-justify: inter-word; text-align-last: left; margin-bottom: 6pt; font-family: 'Arial'; font-size: 11pt; line-height: 1.5;">${line}</p>`;
+        return `<p style="text-align: justify; text-justify: inter-word; text-align-last: left; margin-bottom: 6pt; font-family: 'Arial'; font-size: 11pt; line-height: 1.5; overflow-wrap: break-word;">${line}</p>`;
       })
       .join('');
+  };
+
+  // AÇÃO DE DOWNLOAD COMO .DOC (WORD COMPATÍVEL)
+  const handleDownloadDoc = () => {
+    if (!contratanteId || !contratadoId) {
+      alert('Por favor, selecione o Contratante e o Contratado antes de baixar.');
+      return;
+    }
+
+    const contratado = empresas.find(e => e.id === contratadoId);
+    
+    // Se o usuário editou diretamente no Modo Word, usa o editedHtml.
+    // Caso contrário, gera a partir da substituição de tags dinâmica.
+    const rawHtml = isDirectEditing ? editedHtml : generateSubstitutedHtml();
 
     const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
 <head>
@@ -494,7 +510,7 @@ export function Contratos() {
 </head>
 <body>`;
     const footer = "</body></html>";
-    const sourceHTML = header + formattedHtml + footer;
+    const sourceHTML = header + rawHtml + footer;
 
     const blob = new Blob(['\ufeff' + sourceHTML], {
       type: 'application/msword;charset=utf-8'
@@ -948,6 +964,27 @@ export function Contratos() {
             </button>
 
             <button
+              onClick={() => {
+                if (!contratanteId || !contratadoId) {
+                  alert('Por favor, selecione o Contratante e o Contratado antes de editar.');
+                  return;
+                }
+                if (!isDirectEditing) {
+                  setEditedHtml(generateSubstitutedHtml());
+                }
+                setIsDirectEditing(!isDirectEditing);
+              }}
+              className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-bold transition-all ${
+                isDirectEditing 
+                  ? 'bg-blue-600 border-blue-500 text-white hover:bg-blue-500 shadow-md shadow-blue-600/20' 
+                  : 'border-[#1E1E1E] text-[#BDBDBD] hover:text-white hover:bg-[#1E1E1E]'
+              }`}
+            >
+              <Edit3 size={16} />
+              {isDirectEditing ? 'Visualizar Contrato' : 'Editar no Modo Word'}
+            </button>
+
+            <button
               onClick={handlePrint}
               className="flex items-center gap-2 bg-[#F4C400] hover:bg-[#FFD84D] text-[#0B0B0B] px-5 py-2 rounded-lg font-bold text-sm transition-all"
             >
@@ -1013,7 +1050,96 @@ export function Contratos() {
           )}
 
           {/* FOLHA DE PRÉ-VISUALIZAÇÃO A4 */}
-          <div className="bg-[#111111] border border-[#1E1E1E] rounded-xl p-2 md:p-8 flex justify-center shadow-inner overflow-x-auto">
+          <div className="bg-[#111111] border border-[#1E1E1E] rounded-xl p-2 md:p-8 flex flex-col items-center shadow-inner overflow-x-auto">
+            
+            {/* FLOATING RICH TEXT TOOLBAR (WORD-LIKE) */}
+            {isDirectEditing && (
+              <div className="flex flex-wrap items-center gap-1 bg-[#161616] border border-[#1E1E1E] rounded-lg p-2 mb-4 no-print w-full max-w-[794px]">
+                <button
+                  type="button"
+                  onClick={() => document.execCommand('bold', false)}
+                  className="w-8 h-8 flex items-center justify-center hover:bg-[#2A2A2A] rounded text-white font-bold text-sm transition-all"
+                  title="Negrito (Ctrl+B)"
+                >
+                  B
+                </button>
+                <button
+                  type="button"
+                  onClick={() => document.execCommand('italic', false)}
+                  className="w-8 h-8 flex items-center justify-center hover:bg-[#2A2A2A] rounded text-white italic text-sm transition-all"
+                  title="Itálico (Ctrl+I)"
+                >
+                  I
+                </button>
+                <button
+                  type="button"
+                  onClick={() => document.execCommand('underline', false)}
+                  className="w-8 h-8 flex items-center justify-center hover:bg-[#2A2A2A] rounded text-white underline text-sm transition-all"
+                  title="Sublinhado (Ctrl+U)"
+                >
+                  U
+                </button>
+                <div className="h-6 w-px bg-[#2A2A2A] mx-1" />
+                <button
+                  type="button"
+                  onClick={() => document.execCommand('justifyLeft', false)}
+                  className="w-8 h-8 flex items-center justify-center hover:bg-[#2A2A2A] rounded text-[#BDBDBD] hover:text-white transition-all"
+                  title="Alinhar à Esquerda"
+                >
+                  <AlignLeft size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => document.execCommand('justifyCenter', false)}
+                  className="w-8 h-8 flex items-center justify-center hover:bg-[#2A2A2A] rounded text-[#BDBDBD] hover:text-white transition-all"
+                  title="Alinhar ao Centro"
+                >
+                  <AlignCenter size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => document.execCommand('justifyRight', false)}
+                  className="w-8 h-8 flex items-center justify-center hover:bg-[#2A2A2A] rounded text-[#BDBDBD] hover:text-white transition-all"
+                  title="Alinhar à Direita"
+                >
+                  <AlignRight size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => document.execCommand('justifyFull', false)}
+                  className="w-8 h-8 flex items-center justify-center hover:bg-[#2A2A2A] rounded text-[#BDBDBD] hover:text-white transition-all"
+                  title="Justificar"
+                >
+                  <AlignJustify size={16} />
+                </button>
+                <div className="h-6 w-px bg-[#2A2A2A] mx-1" />
+                <button
+                  type="button"
+                  onClick={() => document.execCommand('undo', false)}
+                  className="w-8 h-8 flex items-center justify-center hover:bg-[#2A2A2A] rounded text-[#BDBDBD] hover:text-white transition-all"
+                  title="Desfazer (Ctrl+Z)"
+                >
+                  <Undo size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => document.execCommand('redo', false)}
+                  className="w-8 h-8 flex items-center justify-center hover:bg-[#2A2A2A] rounded text-[#BDBDBD] hover:text-white transition-all"
+                  title="Refazer"
+                >
+                  <Redo size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => document.execCommand('removeFormat', false)}
+                  className="px-2 h-8 flex items-center justify-center hover:bg-[#2A2A2A] rounded text-[#BDBDBD] hover:text-white text-xs font-mono transition-all"
+                  title="Limpar Formatação"
+                >
+                  Tx
+                </button>
+              </div>
+            )}
+
             <div 
               className="print-preview-a4 bg-white text-black shadow-2xl rounded border border-gray-300 flex flex-col justify-between"
               style={{
@@ -1024,88 +1150,103 @@ export function Contratos() {
               }}
             >
               {/* Conteúdo do Contrato */}
-              <div className="print-preview-text text-gray-900" style={{ fontFamily: 'Arial, sans-serif' }}>
-                {getSubstitutedText().split('\n').map((line, idx) => {
-                  const trimmed = line.trim();
-                  if (!trimmed) {
-                    return <div key={idx} style={{ height: '6pt' }} />;
-                  }
+              {isDirectEditing ? (
+                <div
+                  className="print-preview-text text-gray-900 outline-none w-full min-h-[900px]"
+                  contentEditable
+                  suppressContentEditableWarning
+                  onInput={(e) => setEditedHtml(e.currentTarget.innerHTML)}
+                  dangerouslySetInnerHTML={{ __html: editedHtml }}
+                  style={{ 
+                    fontFamily: 'Arial, sans-serif',
+                    outline: 'none',
+                    border: 'none'
+                  }}
+                />
+              ) : (
+                <div className="print-preview-text text-gray-900" style={{ fontFamily: 'Arial, sans-serif' }}>
+                  {getSubstitutedText().split('\n').map((line, idx) => {
+                    const trimmed = line.trim();
+                    if (!trimmed) {
+                      return <div key={idx} style={{ height: '6pt' }} />;
+                    }
 
-                  // 1. Título do Contrato: centralizado e em negrito sem sublinhado
-                  if (trimmed.toUpperCase().startsWith('CONTRATO')) {
+                    // 1. Título do Contrato: centralizado e em negrito sem sublinhado
+                    if (trimmed.toUpperCase().startsWith('CONTRATO')) {
+                      return (
+                        <p
+                          key={idx}
+                          className="text-center font-bold uppercase mb-4"
+                          style={{ 
+                            fontFamily: 'Arial, sans-serif',
+                            fontSize: '13pt',
+                            lineHeight: '1.2',
+                            textAlign: 'center'
+                          }}
+                        >
+                          {line}
+                        </p>
+                      );
+                    }
+
+                    // 2. Título de Cláusula: apenas em negrito e alinhado à esquerda
+                    if (trimmed.toUpperCase().startsWith('CLÁUSULA')) {
+                      return (
+                        <p
+                          key={idx}
+                          className="font-bold mt-4 mb-2 text-left"
+                          style={{ 
+                            fontFamily: 'Arial, sans-serif',
+                            fontSize: '11pt',
+                            lineHeight: '1.2',
+                            textAlign: 'left'
+                          }}
+                        >
+                          {line}
+                        </p>
+                      );
+                    }
+
+                    // 3. Linha de Assinatura ou etiquetas correspondentes com espaçamento reduzido
+                    if (trimmed.startsWith('___') || trimmed.includes('CONTRATANTE') || trimmed.includes('CONTRATADA') || trimmed.includes('LOCADOR') || trimmed.includes('LOCATÁRIO') || trimmed.includes('Testemunha')) {
+                      return (
+                        <p
+                          key={idx}
+                          className="text-left mt-2"
+                          style={{ 
+                            fontFamily: 'Arial, sans-serif',
+                            fontSize: '11pt',
+                            lineHeight: '1.2',
+                            textAlign: 'left',
+                            overflowWrap: 'break-word'
+                          }}
+                        >
+                          {line}
+                        </p>
+                      );
+                    }
+
+                    // 4. Parágrafo padrão justificado sem recuo na primeira linha (conforme a função "justificar" do Word)
                     return (
                       <p
                         key={idx}
-                        className="text-center font-bold uppercase mb-4"
-                        style={{ 
-                          fontFamily: 'Arial, sans-serif',
-                          fontSize: '13pt',
-                          lineHeight: '1.2',
-                          textAlign: 'center'
-                        }}
-                      >
-                        {line}
-                      </p>
-                    );
-                  }
-
-                  // 2. Título de Cláusula: apenas em negrito e alinhado à esquerda
-                  if (trimmed.toUpperCase().startsWith('CLÁUSULA')) {
-                    return (
-                      <p
-                        key={idx}
-                        className="font-bold mt-4 mb-2 text-left"
-                        style={{ 
+                        className="text-justify mb-2"
+                        style={{
                           fontFamily: 'Arial, sans-serif',
                           fontSize: '11pt',
-                          lineHeight: '1.2',
-                          textAlign: 'left'
-                        }}
-                      >
-                        {line}
-                      </p>
-                    );
-                  }
-
-                  // 3. Linha de Assinatura ou etiquetas correspondentes com espaçamento reduzido
-                  if (trimmed.startsWith('___') || trimmed.includes('CONTRATANTE') || trimmed.includes('CONTRATADA') || trimmed.includes('LOCADOR') || trimmed.includes('LOCATÁRIO') || trimmed.includes('Testemunha')) {
-                    return (
-                      <p
-                        key={idx}
-                        className="text-left mt-2"
-                        style={{ 
-                          fontFamily: 'Arial, sans-serif',
-                          fontSize: '11pt',
-                          lineHeight: '1.2',
-                          textAlign: 'left',
+                          lineHeight: '1.5',
+                          textAlign: 'justify',
+                          textJustify: 'inter-word',
+                          textAlignLast: 'left',
                           overflowWrap: 'break-word'
                         }}
                       >
                         {line}
                       </p>
                     );
-                  }
-
-                  // 4. Parágrafo padrão justificado sem recuo na primeira linha (conforme a função "justificar" do Word)
-                  return (
-                    <p
-                      key={idx}
-                      className="text-justify mb-2"
-                      style={{
-                        fontFamily: 'Arial, sans-serif',
-                        fontSize: '11pt',
-                        lineHeight: '1.5',
-                        textAlign: 'justify',
-                        textJustify: 'inter-word',
-                        textAlignLast: 'left',
-                        overflowWrap: 'break-word'
-                      }}
-                    >
-                      {line}
-                    </p>
-                  );
-                })}
-              </div>
+                  })}
+                </div>
+              )}
 
               {/* Nota de rodapé ou marcação de página em visualização */}
               <div className="mt-8 pt-2 border-t border-gray-200 text-center text-[10px] text-gray-400 no-print">
