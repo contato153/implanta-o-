@@ -235,24 +235,114 @@ export function Contratos() {
 
   // Carregar contrato salvo ao selecionar as empresas ou mudar o tipo de contrato
   useEffect(() => {
+    if (activeDocumentId) return; // Se houver um modelo personalizado ativo, não sobrescreve com o rascunho da empresa
     if (contratanteId && contratadoId) {
       const saved = localStorage.getItem(`contrato_editado_${tipoContrato}_${contratanteId}_${contratadoId}`);
       setSavedContractHtml(saved);
     } else {
       setSavedContractHtml(null);
     }
-  }, [contratanteId, contratadoId, tipoContrato]);
+  }, [contratanteId, contratadoId, tipoContrato, activeDocumentId]);
+
+  // Modelos Personalizados Reutilizáveis (Estilo Word)
+  const [savedDocuments, setSavedDocuments] = useState<Array<{ id: string, name: string, tipo: string, html: string }>>([]);
+  const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [newDocName, setNewDocName] = useState('');
+
+  // Carregar lista de modelos customizados do localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('contratos_salvos_custom');
+    if (saved) {
+      try {
+        setSavedDocuments(JSON.parse(saved));
+      } catch (e) {
+        console.error('Error parsing custom contracts:', e);
+      }
+    }
+  }, []);
+
+  // Ação para carregar um modelo salvo
+  const handleLoadDocument = (id: string) => {
+    if (!id) {
+      setActiveDocumentId(null);
+      setSavedContractHtml(null);
+      setIsDirectEditing(false);
+      setEditedHtml('');
+      return;
+    }
+    const doc = savedDocuments.find(d => d.id === id);
+    if (doc) {
+      setActiveDocumentId(doc.id);
+      setSavedContractHtml(doc.html);
+      setEditedHtml(doc.html);
+      setIsDirectEditing(true);
+      setTipoContrato(doc.tipo as 'terceirizacao' | 'aluguel');
+    }
+  };
+
+  // Ação para excluir um modelo salvo
+  const handleDeleteDocument = () => {
+    if (!activeDocumentId) return;
+    const doc = savedDocuments.find(d => d.id === activeDocumentId);
+    if (!doc) return;
+    if (confirm(`Tem certeza de que deseja excluir permanentemente o modelo "${doc.name}"?`)) {
+      const updated = savedDocuments.filter(d => d.id !== activeDocumentId);
+      setSavedDocuments(updated);
+      localStorage.setItem('contratos_salvos_custom', JSON.stringify(updated));
+      setActiveDocumentId(null);
+      setSavedContractHtml(null);
+      setIsDirectEditing(false);
+      setEditedHtml('');
+      alert('Modelo excluído com sucesso.');
+    }
+  };
+
+  // Criar um novo modelo customizado
+  const handleCreateNewDocument = (name: string) => {
+    if (!name.trim()) {
+      alert('Por favor, insira um nome válido para o modelo.');
+      return;
+    }
+    const htmlToSave = isDirectEditing ? editedHtml : generateSubstitutedHtml();
+    const newDoc = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: name.trim(),
+      tipo: tipoContrato,
+      html: htmlToSave
+    };
+    const updated = [...savedDocuments, newDoc];
+    setSavedDocuments(updated);
+    localStorage.setItem('contratos_salvos_custom', JSON.stringify(updated));
+    setActiveDocumentId(newDoc.id);
+    setSavedContractHtml(htmlToSave);
+    setIsDirectEditing(true);
+    setEditedHtml(htmlToSave);
+    setShowSaveModal(false);
+    alert(`Modelo "${name}" salvo com sucesso e disponível para uso!`);
+  };
 
   // Ação para salvar edições feitas no Modo Word
   const handleSaveEditedContract = () => {
-    if (!contratanteId || !contratadoId) {
-      alert('Por favor, selecione o Contratante e o Contratado antes de salvar.');
-      return;
+    if (activeDocumentId) {
+      const updated = savedDocuments.map(doc => {
+        if (doc.id === activeDocumentId) {
+          return { ...doc, html: editedHtml };
+        }
+        return doc;
+      });
+      setSavedDocuments(updated);
+      localStorage.setItem('contratos_salvos_custom', JSON.stringify(updated));
+      setSavedContractHtml(editedHtml);
+      alert('Modelo personalizado atualizado com sucesso!');
+    } else {
+      if (!contratanteId || !contratadoId) {
+        alert('Por favor, selecione o Contratante e o Contratado para gerar o conteúdo base do modelo.');
+        return;
+      }
+      setNewDocName(`Modelo ${tipoContrato === 'terceirizacao' ? 'Prestação' : 'Locação'} - ${new Date().toLocaleDateString()}`);
+      setShowSaveModal(true);
     }
-    const key = `contrato_editado_${tipoContrato}_${contratanteId}_${contratadoId}`;
-    localStorage.setItem(key, editedHtml);
-    setSavedContractHtml(editedHtml);
-    alert('Edições do contrato salvas com sucesso no navegador!');
   };
 
   // Ação para descartar alterações e restaurar modelo dinâmico
@@ -994,6 +1084,49 @@ export function Contratos() {
 
         {/* COLUNA DA DIREITA: PRÉ-VISUALIZAÇÃO A4 E EDITOR DE TEMPLATE */}
         <div className="lg:col-span-7 space-y-6">
+
+          {/* BARRA DE MODELOS PERSONALIZADOS REUTILIZÁVEIS */}
+          <div className="flex flex-wrap items-center gap-3 bg-[#161616] border border-[#1E1E1E] rounded-xl p-4 shadow-lg no-print">
+            <span className="text-xs font-bold text-[#F4C400] uppercase tracking-wider flex items-center gap-1.5">
+              <FileText size={14} />
+              Modelos Salvos:
+            </span>
+            <select
+              value={activeDocumentId || ''}
+              onChange={(e) => handleLoadDocument(e.target.value)}
+              className="bg-[#111111] border border-[#1E1E1E] rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-[#F4C400] min-w-[200px]"
+            >
+              <option value="">-- Modelo Dinâmico Padrão --</option>
+              {savedDocuments.map(doc => (
+                <option key={doc.id} value={doc.id}>
+                  {doc.name} ({doc.tipo === 'terceirizacao' ? 'Prestação' : 'Locação'})
+                </option>
+              ))}
+            </select>
+
+            {activeDocumentId && (
+              <button
+                onClick={handleDeleteDocument}
+                className="px-2.5 py-1.5 bg-red-950/40 hover:bg-red-900/30 border border-red-900/50 text-red-400 text-xs font-bold rounded-lg transition-all"
+                title="Excluir este modelo"
+              >
+                Excluir
+              </button>
+            )}
+
+            <button
+              onClick={() => {
+                setNewDocName(`Modelo ${tipoContrato === 'terceirizacao' ? 'Prestação' : 'Locação'} - ${new Date().toLocaleDateString()}`);
+                setShowSaveModal(true);
+              }}
+              className="ml-auto flex items-center gap-1.5 bg-green-700 hover:bg-green-600 text-white px-3.5 py-1.5 rounded-lg font-bold text-xs transition-all shadow-md shadow-green-700/20"
+              title="Salvar o estado atual como um novo modelo permanente"
+            >
+              <Save size={12} />
+              Salvar como Novo Modelo
+            </button>
+          </div>
+
           {/* BARRA DE AÇÕES DO DOCUMENTO */}
           <div className="flex flex-wrap gap-3 justify-end items-center bg-[#161616] border border-[#1E1E1E] rounded-xl p-4 shadow-lg">
             <button
@@ -1360,6 +1493,54 @@ export function Contratos() {
           </p>
         </div>
       </div>
+
+      {/* MODAL PARA SALVAR NOVO MODELO (ESTILO PREMIUM GLASSMORPHISM) */}
+      {showSaveModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 no-print">
+          <div className="bg-[#161616] border border-[#1E1E1E] rounded-xl max-w-md w-full p-6 shadow-2xl space-y-5 transform scale-100 transition-all animate-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 pb-3 border-b border-[#1E1E1E]">
+              <div className="p-2.5 bg-[#F4C400]/10 border border-[#F4C400]/25 rounded-lg text-[#F4C400]">
+                <Save size={20} />
+              </div>
+              <div>
+                <h3 className="text-md font-bold text-white">Salvar como Reutilizável</h3>
+                <p className="text-xs text-[#BDBDBD] mt-0.5">O modelo ficará disponível para uso global no sistema.</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-[#BDBDBD] uppercase tracking-wider">
+                Nome do Modelo Personalizado
+              </label>
+              <input
+                type="text"
+                value={newDocName}
+                onChange={(e) => setNewDocName(e.target.value)}
+                placeholder="Ex: Contrato de TI Padrão - Belo Horizonte"
+                className="w-full bg-[#111111] border border-[#1E1E1E] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#F4C400] transition-colors"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-3 border-t border-[#1E1E1E]">
+              <button
+                type="button"
+                onClick={() => setShowSaveModal(false)}
+                className="px-4 py-2 border border-[#1E1E1E] rounded-lg text-sm text-[#BDBDBD] hover:text-white hover:bg-[#1E1E1E] transition-all font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => handleCreateNewDocument(newDocName)}
+                className="px-5 py-2 bg-[#F4C400] hover:bg-[#FFD84D] text-[#0B0B0B] rounded-lg font-bold text-sm transition-all shadow-md shadow-[#F4C400]/10"
+              >
+                Salvar Modelo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
