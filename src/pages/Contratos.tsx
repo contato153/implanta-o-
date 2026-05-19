@@ -682,6 +682,25 @@ export function Contratos() {
             margin: 0 !important;
             max-width: 100% !important;
           }
+          .a4-container {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            display: block !important;
+            overflow: visible !important;
+          }
+          .print-no-grid {
+            display: block !important;
+            width: 100% !important;
+          }
+          .print-full-width {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
           .print-preview-a4 {
             border: none !important;
             box-shadow: none !important;
@@ -751,9 +770,9 @@ export function Contratos() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 no-print">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 print-no-grid">
         {/* COLUNA DA ESQUERDA: CADASTRO E PARÂMETROS DO CONTRATO */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className="lg:col-span-5 space-y-6 no-print">
           <div className="bg-[#161616] border border-[#1E1E1E] rounded-xl p-6 shadow-lg">
             <h2 className="text-md font-bold text-[#F4C400] mb-5 uppercase tracking-wider flex items-center gap-2">
               <Building2 size={18} />
@@ -1083,7 +1102,7 @@ export function Contratos() {
         </div>
 
         {/* COLUNA DA DIREITA: PRÉ-VISUALIZAÇÃO A4 E EDITOR DE TEMPLATE */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className="lg:col-span-7 space-y-6 print-full-width">
 
           {/* BARRA DE MODELOS PERSONALIZADOS REUTILIZÁVEIS */}
           <div className="flex flex-wrap items-center gap-3 bg-[#161616] border border-[#1E1E1E] rounded-xl p-4 shadow-lg no-print">
@@ -1128,7 +1147,7 @@ export function Contratos() {
           </div>
 
           {/* BARRA DE AÇÕES DO DOCUMENTO */}
-          <div className="flex flex-wrap gap-3 justify-end items-center bg-[#161616] border border-[#1E1E1E] rounded-xl p-4 shadow-lg">
+          <div className="flex flex-wrap gap-3 justify-end items-center bg-[#161616] border border-[#1E1E1E] rounded-xl p-4 shadow-lg no-print">
             <button
               onClick={() => setShowTemplateEditor(!showTemplateEditor)}
               className="flex items-center gap-2 px-4 py-2 border border-[#1E1E1E] rounded-lg text-sm text-[#BDBDBD] hover:text-white hover:bg-[#1E1E1E] transition-all"
@@ -1187,7 +1206,7 @@ export function Contratos() {
 
           {/* EDITOR DE TEMPLATES INTEGRADO (EXPANSÍVEL) */}
           {showTemplateEditor && (
-            <div className="bg-[#161616] border border-[#1E1E1E] rounded-xl p-6 shadow-lg space-y-4 animate-in slide-in-from-top duration-200">
+            <div className="bg-[#161616] border border-[#1E1E1E] rounded-xl p-6 shadow-lg space-y-4 animate-in slide-in-from-top duration-200 no-print">
               <div className="flex justify-between items-center pb-3 border-b border-[#1E1E1E]">
                 <h3 className="text-sm font-bold text-[#F4C400] uppercase tracking-wider flex items-center gap-2">
                   <Edit3 size={16} />
@@ -1234,7 +1253,7 @@ export function Contratos() {
           )}
 
           {/* FOLHA DE PRÉ-VISUALIZAÇÃO A4 */}
-          <div className="bg-[#111111] border border-[#1E1E1E] rounded-xl p-2 md:p-8 flex flex-col items-center shadow-inner overflow-x-auto">
+          <div className="bg-[#111111] border border-[#1E1E1E] rounded-xl p-2 md:p-8 flex flex-col items-center shadow-inner overflow-x-auto a4-container">
             
             {/* FLOATING RICH TEXT TOOLBAR (WORD-LIKE) */}
             {isDirectEditing && (
