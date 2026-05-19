@@ -439,34 +439,34 @@ export function Contratos() {
     const contratado = empresas.find(e => e.id === contratadoId);
     const rawText = getSubstitutedText();
 
-    // Formata o texto plano com parágrafos HTML para um arquivo Word .doc de alta compatibilidade em Arial
+    // Formata o texto plano com parágrafos HTML para um arquivo Word .doc de alta compatibilidade em Arial com espaçamento compacto
     const lines = rawText.split('\n');
     const formattedHtml = lines
       .map(line => {
         const trimmed = line.trim();
         if (!trimmed) {
-          return `<p style="margin: 0; padding: 0; font-family: 'Arial'; font-size: 11pt; line-height: 1.5; min-height: 11pt;">&nbsp;</p>`;
+          return `<p style="margin: 0; padding: 0; font-family: 'Arial'; font-size: 6pt; line-height: 1.0; min-height: 6pt;">&nbsp;</p>`;
         }
 
-        // 1. Título do Contrato: centralizado e em negrito
+        // 1. Título do Contrato: centralizado e em negrito com espaçamento compacto
         if (trimmed.toUpperCase().startsWith('CONTRATO')) {
-          return `<p style="text-align: center; font-weight: bold; margin-top: 12pt; margin-bottom: 12pt; font-family: 'Arial'; font-size: 14pt; text-transform: uppercase;">${line}</p>`;
+          return `<p style="text-align: center; font-weight: bold; margin-top: 8pt; margin-bottom: 8pt; font-family: 'Arial'; font-size: 13pt; text-transform: uppercase;">${line}</p>`;
         }
 
-        // 2. Título de Cláusula: em negrito e alinhado à esquerda
+        // 2. Título de Cláusula: em negrito, alinhado à esquerda com espaçamento compacto
         if (trimmed.toUpperCase().startsWith('CLÁUSULA')) {
-          return `<p style="text-align: left; font-weight: bold; margin-top: 18pt; margin-bottom: 6pt; font-family: 'Arial'; font-size: 11pt;">${line}</p>`;
+          return `<p style="text-align: left; font-weight: bold; margin-top: 8pt; margin-bottom: 2pt; font-family: 'Arial'; font-size: 11pt;">${line}</p>`;
         }
 
-        // 3. Linha de Assinatura ou etiquetas correspondentes
+        // 3. Linha de Assinatura ou etiquetas correspondentes com espaçamento compacto
         if (trimmed.startsWith('___') || trimmed.includes('CONTRATANTE') || trimmed.includes('CONTRATADA') || trimmed.includes('LOCADOR') || trimmed.includes('LOCATÁRIO') || trimmed.includes('Testemunha')) {
-          return `<p style="text-align: left; margin-top: 6pt; margin-bottom: 6pt; font-family: 'Arial'; font-size: 11pt; line-height: 1.2;">${line}</p>`;
+          return `<p style="text-align: left; margin-top: 3pt; margin-bottom: 3pt; font-family: 'Arial'; font-size: 11pt; line-height: 1.2;">${line}</p>`;
         }
 
-        // 4. Parágrafo padrão justificado com recuo na primeira linha (exceto listas/parágrafos específicos)
+        // 4. Parágrafo padrão justificado com recuo na primeira linha e espaçamento compacto
         const hasIndent = !(trimmed.startsWith('•') || trimmed.startsWith('§') || trimmed.startsWith('Parágrafo'));
         const indentStyle = hasIndent ? 'text-indent: 1.5cm;' : '';
-        return `<p style="text-align: justify; ${indentStyle} margin-bottom: 8pt; font-family: 'Arial'; font-size: 11pt; line-height: 1.5;">${line}</p>`;
+        return `<p style="text-align: justify; ${indentStyle} margin-bottom: 4pt; font-family: 'Arial'; font-size: 11pt; line-height: 1.5;">${line}</p>`;
       })
       .join('');
 
@@ -1006,7 +1006,7 @@ export function Contratos() {
                 {getSubstitutedText().split('\n').map((line, idx) => {
                   const trimmed = line.trim();
                   if (!trimmed) {
-                    return <div key={idx} className="h-4" />;
+                    return <div key={idx} className="h-2" />;
                   }
 
                   // 1. Título do Contrato: centralizado e em negrito
@@ -1014,7 +1014,7 @@ export function Contratos() {
                     return (
                       <p
                         key={idx}
-                        className="text-center font-bold text-[15px] uppercase mb-6"
+                        className="text-center font-bold text-[15px] uppercase mb-4"
                         style={{ fontFamily: 'Arial, sans-serif' }}
                       >
                         {line}
@@ -1022,12 +1022,12 @@ export function Contratos() {
                     );
                   }
 
-                  // 2. Título de Cláusula: em negrito e alinhado à esquerda
+                  // 2. Título de Cláusula: em negrito e alinhado à esquerda com margens reduzidas
                   if (trimmed.toUpperCase().startsWith('CLÁUSULA')) {
                     return (
                       <p
                         key={idx}
-                        className="font-bold text-[13.5px] uppercase mt-6 mb-3 text-left"
+                        className="font-bold text-[13.5px] uppercase mt-3 mb-1 text-left"
                         style={{ fontFamily: 'Arial, sans-serif' }}
                       >
                         {line}
@@ -1035,12 +1035,12 @@ export function Contratos() {
                     );
                   }
 
-                  // 3. Linha de Assinatura ou etiquetas correspondentes
+                  // 3. Linha de Assinatura ou etiquetas correspondentes com espaçamento reduzido
                   if (trimmed.startsWith('___') || trimmed.includes('CONTRATANTE') || trimmed.includes('CONTRATADA') || trimmed.includes('LOCADOR') || trimmed.includes('LOCATÁRIO') || trimmed.includes('Testemunha')) {
                     return (
                       <p
                         key={idx}
-                        className="text-left text-[12px] leading-snug mt-4"
+                        className="text-left text-[12px] leading-snug mt-2"
                         style={{ fontFamily: 'Arial, sans-serif' }}
                       >
                         {line}
@@ -1048,12 +1048,12 @@ export function Contratos() {
                     );
                   }
 
-                  // 4. Parágrafo padrão justificado com recuo na primeira linha (exceto listas/parágrafos específicos)
+                  // 4. Parágrafo padrão justificado com recuo na primeira linha (exceto listas/parágrafos específicos) com margens reduzidas
                   const hasIndent = !(trimmed.startsWith('•') || trimmed.startsWith('§') || trimmed.startsWith('Parágrafo'));
                   return (
                     <p
                       key={idx}
-                      className="text-justify text-[13px] leading-relaxed mb-3"
+                      className="text-justify text-[13px] leading-relaxed mb-1.5"
                       style={{
                         fontFamily: 'Arial, sans-serif',
                         textIndent: hasIndent ? '1.5cm' : '0'
