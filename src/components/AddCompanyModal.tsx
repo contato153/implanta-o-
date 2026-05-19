@@ -72,6 +72,14 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
     observacoes_gerais: '',
     data_inicio_prevista: '',
     data_fim_prevista: '',
+    rua: '',
+    numero: '',
+    bairro: '',
+    cep: '',
+    cidade: '',
+    uf: '',
+    representante_nome: '',
+    representante_cpf: '',
     socios: [
       { nome: '', whatsapp: '', email: '' },
       { nome: '', whatsapp: '', email: '' },
@@ -105,6 +113,14 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
           observacoes_gerais: '',
           data_inicio_prevista: '',
           data_fim_prevista: '',
+          rua: '',
+          numero: '',
+          bairro: '',
+          cep: '',
+          cidade: '',
+          uf: '',
+          representante_nome: '',
+          representante_cpf: '',
           socios: [
             { nome: '', whatsapp: '', email: '' },
             { nome: '', whatsapp: '', email: '' },
@@ -141,6 +157,36 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
           });
         }
 
+        let rua = '';
+        let numero = '';
+        let bairro = '';
+        let cep = '';
+        let cidade = '';
+        let uf = '';
+        let representante_nome = '';
+        let representante_cpf = '';
+
+        const saved = localStorage.getItem(`empresa_dados_contrato_${id}`);
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            rua = parsed.rua || '';
+            numero = parsed.numero || '';
+            bairro = parsed.bairro || '';
+            cep = parsed.cep || '';
+            cidade = parsed.cidade || '';
+            uf = parsed.uf || '';
+            representante_nome = parsed.representante_nome || '';
+            representante_cpf = parsed.representante_cpf || '';
+          } catch (e) {
+            console.error('Error parsing company extra contract data', e);
+          }
+        }
+
+        if (!representante_nome && loadedSocios[0].nome) {
+          representante_nome = loadedSocios[0].nome;
+        }
+
         setFormData({
           codigo_interno: empresa.codigo_interno || '',
           razao_social: empresa.razao_social || '',
@@ -160,6 +206,14 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
           observacoes_gerais: empresa.observacoes_gerais || '',
           data_inicio_prevista: projeto?.data_inicio_prevista || '',
           data_fim_prevista: projeto?.data_fim_prevista || '',
+          rua,
+          numero,
+          bairro,
+          cep,
+          cidade,
+          uf,
+          representante_nome,
+          representante_cpf,
           socios: loadedSocios
         });
       }
@@ -212,6 +266,14 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
           const ie = dataWs.estabelecimento?.inscricoes_estaduais?.[0]?.inscricao_estadual || '';
           const im = dataWs.estabelecimento?.inscricao_municipal || '';
           
+          const rua = dataWs.estabelecimento?.logradouro || '';
+          const numero = dataWs.estabelecimento?.numero || '';
+          const bairro = dataWs.estabelecimento?.bairro || '';
+          const cep = dataWs.estabelecimento?.cep || '';
+          const cidade = dataWs.estabelecimento?.cidade?.nome || '';
+          const uf = dataWs.estabelecimento?.estado?.sigla || '';
+          const representante_nome = dataWs.socios?.[0]?.nome || '';
+
           const missing: string[] = [];
           if (!dataWs.razao_social) missing.push('razao_social');
           if (!dataWs.estabelecimento?.nome_fantasia && !dataWs.razao_social) missing.push('nome_fantasia');
@@ -251,6 +313,13 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
               im: im || prev.im,
               regime_atual: regime,
               socios: newSocios,
+              rua: rua || prev.rua,
+              numero: numero || prev.numero,
+              bairro: bairro || prev.bairro,
+              cep: cep || prev.cep,
+              cidade: cidade || prev.cidade,
+              uf: uf || prev.uf,
+              representante_nome: representante_nome || prev.representante_nome
             };
           });
           setNotFoundFields(missing);
@@ -268,6 +337,14 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
       }
       const data = await response.json();
       
+      const rua = data.logradouro || '';
+      const numero = data.numero || '';
+      const bairro = data.bairro || '';
+      const cep = data.cep || '';
+      const cidade = data.municipio || '';
+      const uf = data.uf || '';
+      const representante_nome = data.qsa?.[0]?.nome_socio || data.qsa?.[0]?.nome || '';
+
       const missing: string[] = ['ie', 'im'];
       if (!data.razao_social) missing.push('razao_social');
       if (!data.nome_fantasia && !data.razao_social) missing.push('nome_fantasia');
@@ -301,6 +378,13 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
           nome_fantasia: data.nome_fantasia || data.razao_social || prev.nome_fantasia,
           regime_atual: regime,
           socios: newSocios,
+          rua: rua || prev.rua,
+          numero: numero || prev.numero,
+          bairro: bairro || prev.bairro,
+          cep: cep || prev.cep,
+          cidade: cidade || prev.cidade,
+          uf: uf || prev.uf,
+          representante_nome: representante_nome || prev.representante_nome
         };
       });
       setNotFoundFields(missing);
@@ -382,10 +466,40 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
       if (companyId) {
         // Update existing company
         await updateCompany(companyId, empresaData, sociosData, projetoData);
+        
+        // Save supplementary contract data to local storage
+        const extraKey = `empresa_dados_contrato_${companyId}`;
+        const extraData = {
+          rua: formData.rua,
+          numero: formData.numero,
+          bairro: formData.bairro,
+          cep: formData.cep,
+          cidade: formData.cidade,
+          uf: formData.uf,
+          representante_nome: formData.representante_nome,
+          representante_cpf: formData.representante_cpf
+        };
+        localStorage.setItem(extraKey, JSON.stringify(extraData));
+
         onSuccess(companyId);
       } else {
         // Create new company
         const { empresaId } = await createCompany(empresaData as Omit<Empresa, 'id'>, sociosData, projetoData);
+        
+        // Save supplementary contract data to local storage
+        const extraKey = `empresa_dados_contrato_${empresaId}`;
+        const extraData = {
+          rua: formData.rua,
+          numero: formData.numero,
+          bairro: formData.bairro,
+          cep: formData.cep,
+          cidade: formData.cidade,
+          uf: formData.uf,
+          representante_nome: formData.representante_nome,
+          representante_cpf: formData.representante_cpf
+        };
+        localStorage.setItem(extraKey, JSON.stringify(extraData));
+
         onSuccess(empresaId);
       }
       
@@ -648,6 +762,110 @@ export const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ isOpen, onClos
                 />
               </div>
             </div>
+
+          {/* Endereço e Representação para Contratos */}
+          <div className="space-y-6">
+            <h3 className="text-lg font-bold text-brand-accent border-b border-brand-gray pb-2 uppercase tracking-wider">
+              Endereço e Representação (Contratos)
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Logradouro / Rua</label>
+                <input
+                  type="text"
+                  name="rua"
+                  value={formData.rua}
+                  onChange={handleChange}
+                  placeholder="Ex: Av. Afonso Pena"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Número</label>
+                <input
+                  type="text"
+                  name="numero"
+                  value={formData.numero}
+                  onChange={handleChange}
+                  placeholder="Ex: 1500"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Bairro</label>
+                <input
+                  type="text"
+                  name="bairro"
+                  value={formData.bairro}
+                  onChange={handleChange}
+                  placeholder="Ex: Centro"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">CEP</label>
+                <input
+                  type="text"
+                  name="cep"
+                  value={formData.cep}
+                  onChange={handleChange}
+                  placeholder="Ex: 30130-003"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Cidade</label>
+                <input
+                  type="text"
+                  name="cidade"
+                  value={formData.cidade}
+                  onChange={handleChange}
+                  placeholder="Ex: Belo Horizonte"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Estado (UF)</label>
+                <input
+                  type="text"
+                  name="uf"
+                  value={formData.uf}
+                  onChange={handleChange}
+                  placeholder="Ex: MG"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Representante Legal (Nome)</label>
+                <input
+                  type="text"
+                  name="representante_nome"
+                  value={formData.representante_nome}
+                  onChange={handleChange}
+                  placeholder="Ex: Carlos Silva"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1">Representante Legal (CPF)</label>
+                <input
+                  type="text"
+                  name="representante_cpf"
+                  value={formData.representante_cpf}
+                  onChange={handleChange}
+                  placeholder="Ex: 000.000.000-00"
+                  className="w-full px-4 py-2 bg-brand-black border border-brand-gray text-brand-text-primary rounded-lg focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all placeholder-gray-600"
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Sócios */}
           <div className="space-y-6">
