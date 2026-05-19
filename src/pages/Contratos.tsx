@@ -453,9 +453,9 @@ export function Contratos() {
           return `<p style="text-align: center; font-weight: bold; margin-top: 8pt; margin-bottom: 8pt; font-family: 'Arial'; font-size: 13pt; text-transform: uppercase;">${line}</p>`;
         }
 
-        // 2. Título de Cláusula: em negrito, sublinhado e alinhado à esquerda
+        // 2. Título de Cláusula: apenas em negrito e alinhado à esquerda
         if (trimmed.toUpperCase().startsWith('CLÁUSULA')) {
-          return `<p style="text-align: left; font-weight: bold; text-decoration: underline; margin-top: 10pt; margin-bottom: 4pt; font-family: 'Arial'; font-size: 11pt;">${line}</p>`;
+          return `<p style="text-align: left; font-weight: bold; margin-top: 10pt; margin-bottom: 4pt; font-family: 'Arial'; font-size: 11pt;">${line}</p>`;
         }
 
         // 3. Linha de Assinatura ou etiquetas correspondentes
@@ -561,9 +561,6 @@ export function Contratos() {
           }
           .print-preview-text .text-center {
             text-align: center !important;
-          }
-          .print-preview-text .underline {
-            text-decoration: underline !important;
           }
         }
       `}</style>
@@ -1052,18 +1049,17 @@ export function Contratos() {
                     );
                   }
 
-                  // 2. Título de Cláusula: em negrito, sublinhado e alinhado à esquerda
+                  // 2. Título de Cláusula: apenas em negrito e alinhado à esquerda
                   if (trimmed.toUpperCase().startsWith('CLÁUSULA')) {
                     return (
                       <p
                         key={idx}
-                        className="font-bold uppercase mt-4 mb-2 text-left underline"
+                        className="font-bold mt-4 mb-2 text-left"
                         style={{ 
                           fontFamily: 'Arial, sans-serif',
                           fontSize: '11pt',
                           lineHeight: '1.2',
-                          textAlign: 'left',
-                          textDecoration: 'underline'
+                          textAlign: 'left'
                         }}
                       >
                         {line}
