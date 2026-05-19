@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Download, Building2, Printer, RotateCcw, Edit3, Eye, Settings, CreditCard, Calendar, Landmark, AlignLeft, AlignCenter, AlignRight, AlignJustify, Undo, Redo } from 'lucide-react';
+import { FileText, Download, Building2, Printer, RotateCcw, Edit3, Eye, Settings, CreditCard, Calendar, Landmark, AlignLeft, AlignCenter, AlignRight, AlignJustify, Undo, Redo, Save } from 'lucide-react';
 import { getSupabase } from '../lib/supabase';
 import { Empresa, Socio } from '../types';
 
@@ -229,6 +229,44 @@ export function Contratos() {
   // Modo de Edição Direta Estilo Word
   const [isDirectEditing, setIsDirectEditing] = useState(false);
   const [editedHtml, setEditedHtml] = useState('');
+  
+  // HTML do contrato editado e salvo no localStorage
+  const [savedContractHtml, setSavedContractHtml] = useState<string | null>(null);
+
+  // Carregar contrato salvo ao selecionar as empresas ou mudar o tipo de contrato
+  useEffect(() => {
+    if (contratanteId && contratadoId) {
+      const saved = localStorage.getItem(`contrato_editado_${tipoContrato}_${contratanteId}_${contratadoId}`);
+      setSavedContractHtml(saved);
+    } else {
+      setSavedContractHtml(null);
+    }
+  }, [contratanteId, contratadoId, tipoContrato]);
+
+  // Ação para salvar edições feitas no Modo Word
+  const handleSaveEditedContract = () => {
+    if (!contratanteId || !contratadoId) {
+      alert('Por favor, selecione o Contratante e o Contratado antes de salvar.');
+      return;
+    }
+    const key = `contrato_editado_${tipoContrato}_${contratanteId}_${contratadoId}`;
+    localStorage.setItem(key, editedHtml);
+    setSavedContractHtml(editedHtml);
+    alert('Edições do contrato salvas com sucesso no navegador!');
+  };
+
+  // Ação para descartar alterações e restaurar modelo dinâmico
+  const handleDiscardEditedContract = () => {
+    if (confirm('Tem certeza de que deseja descartar suas alterações manuais e voltar ao modelo dinâmico original?')) {
+      const key = `contrato_editado_${tipoContrato}_${contratanteId}_${contratadoId}`;
+      localStorage.removeItem(key);
+      setSavedContractHtml(null);
+      if (isDirectEditing) {
+        setEditedHtml(generateSubstitutedHtml());
+      }
+      alert('Edições descartadas. Retornado ao modelo dinâmico original.');
+    }
+  };
 
   // Limpar HTML editado se os parâmetros mudarem fora do modo de edição
   useEffect(() => {
@@ -481,8 +519,11 @@ export function Contratos() {
     const contratado = empresas.find(e => e.id === contratadoId);
     
     // Se o usuário editou diretamente no Modo Word, usa o editedHtml.
+    // Se não está editando agora mas há uma versão salva, usa a versão salva.
     // Caso contrário, gera a partir da substituição de tags dinâmica.
-    const rawHtml = isDirectEditing ? editedHtml : generateSubstitutedHtml();
+    const rawHtml = isDirectEditing 
+      ? editedHtml 
+      : (savedContractHtml || generateSubstitutedHtml());
 
     const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
 <head>
@@ -970,7 +1011,7 @@ export function Contratos() {
                   return;
                 }
                 if (!isDirectEditing) {
-                  setEditedHtml(generateSubstitutedHtml());
+                  setEditedHtml(savedContractHtml || generateSubstitutedHtml());
                 }
                 setIsDirectEditing(!isDirectEditing);
               }}
@@ -983,6 +1024,16 @@ export function Contratos() {
               <Edit3 size={16} />
               {isDirectEditing ? 'Visualizar Contrato' : 'Editar no Modo Word'}
             </button>
+
+            {isDirectEditing && (
+              <button
+                onClick={handleSaveEditedContract}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white px-5 py-2 rounded-lg font-bold text-sm transition-all shadow-md shadow-green-600/20 animate-in zoom-in duration-200"
+              >
+                <Save size={16} />
+                Salvar Alterações
+              </button>
+            )}
 
             <button
               onClick={handlePrint}
@@ -1137,6 +1188,39 @@ export function Contratos() {
                 >
                   Tx
                 </button>
+                <div className="h-6 w-px bg-[#2A2A2A] mx-1" />
+                <button
+                  type="button"
+                  onClick={handleSaveEditedContract}
+                  className="flex items-center gap-1.5 px-3 h-8 bg-green-700 hover:bg-green-600 text-white rounded text-xs font-bold transition-all ml-auto"
+                  title="Salvar Alterações no Navegador"
+                >
+                  <Save size={12} />
+                  Salvar
+                </button>
+              </div>
+            )}
+
+            {/* ALERTA DE VERSÃO SALVA */}
+            {!isDirectEditing && savedContractHtml && (
+              <div className="flex items-center justify-between gap-4 bg-amber-950/40 border border-amber-900/50 rounded-xl p-4 mb-4 no-print w-full max-w-[794px] animate-in slide-in-from-top duration-200">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-amber-500/20 rounded-full text-amber-500">
+                    <FileText size={18} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-white text-xs">Exibindo Versão Personalizada Salva</p>
+                    <p className="text-[#BDBDBD] text-[11px]">
+                      Você fez edições manuais estilo Word neste contrato. Parâmetros ao lado não serão aplicados até você voltar ao padrão.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleDiscardEditedContract}
+                  className="px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 border border-red-800 text-red-200 text-xs font-bold rounded-lg transition-all whitespace-nowrap"
+                >
+                  Voltar ao Dinâmico
+                </button>
               </div>
             )}
 
@@ -1165,86 +1249,93 @@ export function Contratos() {
                 />
               ) : (
                 <div className="print-preview-text text-gray-900" style={{ fontFamily: 'Arial, sans-serif' }}>
-                  {getSubstitutedText().split('\n').map((line, idx) => {
-                    const trimmed = line.trim();
-                    if (!trimmed) {
-                      return <div key={idx} style={{ height: '6pt' }} />;
-                    }
+                  {savedContractHtml ? (
+                    <div 
+                      dangerouslySetInnerHTML={{ __html: savedContractHtml }} 
+                      style={{ fontFamily: 'Arial, sans-serif' }}
+                    />
+                  ) : (
+                    getSubstitutedText().split('\n').map((line, idx) => {
+                      const trimmed = line.trim();
+                      if (!trimmed) {
+                        return <div key={idx} style={{ height: '6pt' }} />;
+                      }
 
-                    // 1. Título do Contrato: centralizado e em negrito sem sublinhado
-                    if (trimmed.toUpperCase().startsWith('CONTRATO')) {
+                      // 1. Título do Contrato: centralizado e em negrito sem sublinhado
+                      if (trimmed.toUpperCase().startsWith('CONTRATO')) {
+                        return (
+                          <p
+                            key={idx}
+                            className="text-center font-bold uppercase mb-4"
+                            style={{ 
+                              fontFamily: 'Arial, sans-serif',
+                              fontSize: '13pt',
+                              lineHeight: '1.2',
+                              textAlign: 'center'
+                            }}
+                          >
+                            {line}
+                          </p>
+                        );
+                      }
+
+                      // 2. Título de Cláusula: apenas em negrito e alinhado à esquerda
+                      if (trimmed.toUpperCase().startsWith('CLÁUSULA')) {
+                        return (
+                          <p
+                            key={idx}
+                            className="font-bold mt-4 mb-2 text-left"
+                            style={{ 
+                              fontFamily: 'Arial, sans-serif',
+                              fontSize: '11pt',
+                              lineHeight: '1.2',
+                              textAlign: 'left'
+                            }}
+                          >
+                            {line}
+                          </p>
+                        );
+                      }
+
+                      // 3. Linha de Assinatura ou etiquetas correspondentes com espaçamento reduzido
+                      if (trimmed.startsWith('___') || trimmed.includes('CONTRATANTE') || trimmed.includes('CONTRATADA') || trimmed.includes('LOCADOR') || trimmed.includes('LOCATÁRIO') || trimmed.includes('Testemunha')) {
+                        return (
+                          <p
+                            key={idx}
+                            className="text-left mt-2"
+                            style={{ 
+                              fontFamily: 'Arial, sans-serif',
+                              fontSize: '11pt',
+                              lineHeight: '1.2',
+                              textAlign: 'left',
+                              overflowWrap: 'break-word'
+                            }}
+                          >
+                            {line}
+                          </p>
+                        );
+                      }
+
+                      // 4. Parágrafo padrão justificado sem recuo na primeira linha (conforme a função "justificar" do Word)
                       return (
                         <p
                           key={idx}
-                          className="text-center font-bold uppercase mb-4"
-                          style={{ 
-                            fontFamily: 'Arial, sans-serif',
-                            fontSize: '13pt',
-                            lineHeight: '1.2',
-                            textAlign: 'center'
-                          }}
-                        >
-                          {line}
-                        </p>
-                      );
-                    }
-
-                    // 2. Título de Cláusula: apenas em negrito e alinhado à esquerda
-                    if (trimmed.toUpperCase().startsWith('CLÁUSULA')) {
-                      return (
-                        <p
-                          key={idx}
-                          className="font-bold mt-4 mb-2 text-left"
-                          style={{ 
+                          className="text-justify mb-2"
+                          style={{
                             fontFamily: 'Arial, sans-serif',
                             fontSize: '11pt',
-                            lineHeight: '1.2',
-                            textAlign: 'left'
-                          }}
-                        >
-                          {line}
-                        </p>
-                      );
-                    }
-
-                    // 3. Linha de Assinatura ou etiquetas correspondentes com espaçamento reduzido
-                    if (trimmed.startsWith('___') || trimmed.includes('CONTRATANTE') || trimmed.includes('CONTRATADA') || trimmed.includes('LOCADOR') || trimmed.includes('LOCATÁRIO') || trimmed.includes('Testemunha')) {
-                      return (
-                        <p
-                          key={idx}
-                          className="text-left mt-2"
-                          style={{ 
-                            fontFamily: 'Arial, sans-serif',
-                            fontSize: '11pt',
-                            lineHeight: '1.2',
-                            textAlign: 'left',
+                            lineHeight: '1.5',
+                            textAlign: 'justify',
+                            textJustify: 'inter-word',
+                            textAlignLast: 'left',
                             overflowWrap: 'break-word'
                           }}
                         >
                           {line}
                         </p>
                       );
-                    }
-
-                    // 4. Parágrafo padrão justificado sem recuo na primeira linha (conforme a função "justificar" do Word)
-                    return (
-                      <p
-                        key={idx}
-                        className="text-justify mb-2"
-                        style={{
-                          fontFamily: 'Arial, sans-serif',
-                          fontSize: '11pt',
-                          lineHeight: '1.5',
-                          textAlign: 'justify',
-                          textJustify: 'inter-word',
-                          textAlignLast: 'left',
-                          overflowWrap: 'break-word'
-                        }}
-                      >
-                        {line}
-                      </p>
-                    );
-                  })}
+                    })
+                  )}
                 </div>
               )}
 
