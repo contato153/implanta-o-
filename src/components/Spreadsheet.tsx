@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { ClientData, Role } from '../types';
-import { getSupabase } from '../lib/supabase';
+import { getSupabase, isRealtimeEnabled } from '../lib/supabase';
 import { Upload, Image as ImageIcon } from 'lucide-react';
 
 interface SpreadsheetProps {
@@ -171,7 +171,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({ data, loading, role })
     fetchAndCalculate();
 
     // Setup da subscription em tempo real
-    if (projeto?.id) {
+    if (projeto?.id && isRealtimeEnabled()) {
       const supabase = getSupabase();
       subscription = supabase
         .channel(`public:tarefas:projeto_${projeto.id}`)
@@ -250,13 +250,13 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({ data, loading, role })
   };
 
   // Logs temporários para verificação
-  useEffect(() => {
-    if (empresa) {
-      console.log('Empresa carregada:', empresa);
-      console.log('comp_inicial:', empresa.comp_inicial);
-      console.log('aprovado_reuniao:', empresa.aprovado_reuniao);
-    }
-  }, [empresa]);
+  // useEffect(() => {
+  //   if (empresa) {
+  //     console.log('Empresa carregada:', empresa);
+  //     console.log('comp_inicial:', empresa.comp_inicial);
+  //     console.log('aprovado_reuniao:', empresa.aprovado_reuniao);
+  //   }
+  // }, [empresa]);
 
   if (loading) {
     return (

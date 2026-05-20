@@ -27,3 +27,8 @@ export const getSupabase = (): SupabaseClient => {
 
   return supabaseInstance;
 };
+
+export const isRealtimeEnabled = (): boolean => {
+  return import.meta.env.VITE_ENABLE_REALTIME === 'true';
+};
+

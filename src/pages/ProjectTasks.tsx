@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { TasksTable } from '../components/TasksTable';
 import { getProjectData, getClientData } from '../services/api';
-import { getSupabase } from '../lib/supabase';
+import { getSupabase, isRealtimeEnabled } from '../lib/supabase';
 import { Projeto, Tarefa } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
@@ -93,27 +93,34 @@ export function ProjectTasks() {
     if (projectId) {
       carregarTarefas(projectId);
 
-      const supabase = getSupabase();
-      const channel = supabase
-        .channel('realtime-tarefas')
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'tarefas', filter: `projeto_id=eq.${projectId}` },
-          () => {
-            carregarTarefas(projectId, false);
-          }
-        )
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'projetos', filter: `id=eq.${projectId}` },
-          () => {
-            carregarTarefas(projectId, false);
-          }
-        )
-        .subscribe();
+      let channel: any;
+
+      if (isRealtimeEnabled()) {
+        const supabase = getSupabase();
+        channel = supabase
+          .channel('realtime-tarefas')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'tarefas', filter: `projeto_id=eq.${projectId}` },
+            () => {
+              carregarTarefas(projectId, false);
+            }
+          )
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'projetos', filter: `id=eq.${projectId}` },
+            () => {
+              carregarTarefas(projectId, false);
+            }
+          )
+          .subscribe();
+      }
 
       return () => {
-        supabase.removeChannel(channel);
+        if (channel) {
+          const supabase = getSupabase();
+          supabase.removeChannel(channel);
+        }
       };
     }
   }, [projectId]);

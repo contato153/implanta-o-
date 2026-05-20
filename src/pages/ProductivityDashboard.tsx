@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getSupabase } from '../lib/supabase';
+import { getSupabase, isRealtimeEnabled } from '../lib/supabase';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Filter, LayoutDashboard, AlertTriangle, Building2, ClipboardList, Clock, User, X, PlayCircle, CheckCircle2, Calendar } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
@@ -64,34 +64,41 @@ export function ProductivityDashboard() {
   useEffect(() => {
     carregarDados();
 
-    const supabase = getSupabase();
-    const channel = supabase
-      .channel('realtime-dashboard')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'tarefas' },
-        () => {
-          carregarDados(false);
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'empresas' },
-        () => {
-          carregarDados(false);
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'projetos' },
-        () => {
-          carregarDados(false);
-        }
-      )
-      .subscribe();
+    let channel: any;
+
+    if (isRealtimeEnabled()) {
+      const supabase = getSupabase();
+      channel = supabase
+        .channel('realtime-dashboard')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'tarefas' },
+          () => {
+            carregarDados(false);
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'empresas' },
+          () => {
+            carregarDados(false);
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'projetos' },
+          () => {
+            carregarDados(false);
+          }
+        )
+        .subscribe();
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        const supabase = getSupabase();
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 
@@ -606,27 +613,25 @@ export function ProductivityDashboard() {
               <p className="text-7xl font-light text-brand-text-primary tracking-tight z-10 group-hover:scale-105 transition-transform duration-500">{metrics.countTodo}</p>
               <span className="text-[10px] text-brand-text-muted uppercase tracking-widest mb-6 z-10">Projetos Pendentes</span>
               
-              <div className="h-40 w-40 relative z-10">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={donutTodoData}
-                      innerRadius={64}
-                      outerRadius={72}
-                      dataKey="value"
-                      startAngle={90}
-                      endAngle={-270}
-                      stroke="none"
-                      animationBegin={0}
-                      animationDuration={1500}
-                      cornerRadius={10}
-                    >
-                      {donutTodoData.map((entry, index) => (
-                        <Cell key={`cell-todo-${index}`} fill={entry.color} style={{ filter: index === 0 ? `drop-shadow(0px 0px 8px ${entry.color}cc)` : 'none' }} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="h-40 w-40 relative z-10 flex items-center justify-center">
+                <PieChart width={160} height={160}>
+                  <Pie
+                    data={donutTodoData}
+                    innerRadius={64}
+                    outerRadius={72}
+                    dataKey="value"
+                    startAngle={90}
+                    endAngle={-270}
+                    stroke="none"
+                    animationBegin={0}
+                    animationDuration={1500}
+                    cornerRadius={10}
+                  >
+                    {donutTodoData.map((entry, index) => (
+                      <Cell key={`cell-todo-${index}`} fill={entry.color} style={{ filter: index === 0 ? `drop-shadow(0px 0px 8px ${entry.color}cc)` : 'none' }} />
+                    ))}
+                  </Pie>
+                </PieChart>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-3xl font-light text-brand-text-primary tracking-tight mt-1">
                     {metrics.totalProjects > 0 ? Math.round((metrics.countTodo / metrics.totalProjects) * 100) : 0}<span className="text-sm text-brand-text-muted font-normal">%</span>
@@ -649,27 +654,25 @@ export function ProductivityDashboard() {
               <p className="text-7xl font-light text-brand-text-primary tracking-tight z-10 group-hover:scale-105 transition-transform duration-500">{metrics.countDoing}</p>
               <span className="text-[10px] text-brand-text-muted uppercase tracking-widest mb-6 z-10">Projetos Em Andamento</span>
               
-              <div className="h-40 w-40 relative z-10">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={donutDoingData}
-                      innerRadius={64}
-                      outerRadius={72}
-                      dataKey="value"
-                      startAngle={90}
-                      endAngle={-270}
-                      stroke="none"
-                      animationBegin={200}
-                      animationDuration={1500}
-                      cornerRadius={10}
-                    >
-                      {donutDoingData.map((entry, index) => (
-                        <Cell key={`cell-doing-${index}`} fill={entry.color} style={{ filter: index === 0 ? `drop-shadow(0px 0px 8px ${entry.color}cc)` : 'none' }} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="h-40 w-40 relative z-10 flex items-center justify-center">
+                <PieChart width={160} height={160}>
+                  <Pie
+                    data={donutDoingData}
+                    innerRadius={64}
+                    outerRadius={72}
+                    dataKey="value"
+                    startAngle={90}
+                    endAngle={-270}
+                    stroke="none"
+                    animationBegin={200}
+                    animationDuration={1500}
+                    cornerRadius={10}
+                  >
+                    {donutDoingData.map((entry, index) => (
+                      <Cell key={`cell-doing-${index}`} fill={entry.color} style={{ filter: index === 0 ? `drop-shadow(0px 0px 8px ${entry.color}cc)` : 'none' }} />
+                    ))}
+                  </Pie>
+                </PieChart>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-3xl font-light text-brand-text-primary tracking-tight mt-1">
                     {metrics.totalProjects > 0 ? Math.round((metrics.countDoing / metrics.totalProjects) * 100) : 0}<span className="text-sm text-brand-text-muted font-normal">%</span>
@@ -692,27 +695,25 @@ export function ProductivityDashboard() {
               <p className="text-7xl font-light text-brand-text-primary tracking-tight z-10 group-hover:scale-105 transition-transform duration-500">{metrics.countDone}</p>
               <span className="text-[10px] text-brand-text-muted uppercase tracking-widest mb-6 z-10">Projetos Concluídos</span>
               
-              <div className="h-40 w-40 relative z-10">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={donutDoneData}
-                      innerRadius={64}
-                      outerRadius={72}
-                      dataKey="value"
-                      startAngle={90}
-                      endAngle={-270}
-                      stroke="none"
-                      animationBegin={400}
-                      animationDuration={1500}
-                      cornerRadius={10}
-                    >
-                      {donutDoneData.map((entry, index) => (
-                        <Cell key={`cell-done-${index}`} fill={entry.color} style={{ filter: index === 0 ? `drop-shadow(0px 0px 8px ${entry.color}cc)` : 'none' }} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="h-40 w-40 relative z-10 flex items-center justify-center">
+                <PieChart width={160} height={160}>
+                  <Pie
+                    data={donutDoneData}
+                    innerRadius={64}
+                    outerRadius={72}
+                    dataKey="value"
+                    startAngle={90}
+                    endAngle={-270}
+                    stroke="none"
+                    animationBegin={400}
+                    animationDuration={1500}
+                    cornerRadius={10}
+                  >
+                    {donutDoneData.map((entry, index) => (
+                      <Cell key={`cell-done-${index}`} fill={entry.color} style={{ filter: index === 0 ? `drop-shadow(0px 0px 8px ${entry.color}cc)` : 'none' }} />
+                    ))}
+                  </Pie>
+                </PieChart>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-3xl font-light text-brand-text-primary tracking-tight mt-1">
                     {metrics.totalProjects > 0 ? Math.round((metrics.countDone / metrics.totalProjects) * 100) : 0}<span className="text-sm text-brand-text-muted font-normal">%</span>
@@ -758,7 +759,7 @@ export function ProductivityDashboard() {
                 Projetos: Fazendo x Feitos
               </h3>
               <div className="w-full h-[160px] mt-8">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <PieChart>
                     <Pie 
                       data={pieDoingDoneData} 

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Empresa } from '../types';
 import { getClients } from '../services/api';
-import { getSupabase } from '../lib/supabase';
+import { getSupabase, isRealtimeEnabled } from '../lib/supabase';
 
 interface CompanyContextType {
   clients: Empresa[];
@@ -48,28 +48,34 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     carregarEmpresas();
 
-    const supabase = getSupabase();
-    const channel = supabase
-      .channel('realtime-empresas')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'empresas' },
-        () => {
-          carregarEmpresas(false);
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'projetos' },
-        () => {
-          carregarEmpresas(false);
-        }
-      )
+    let channel: any;
 
-      .subscribe();
+    if (isRealtimeEnabled()) {
+      const supabase = getSupabase();
+      channel = supabase
+        .channel('realtime-empresas')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'empresas' },
+          () => {
+            carregarEmpresas(false);
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'projetos' },
+          () => {
+            carregarEmpresas(false);
+          }
+        )
+        .subscribe();
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        const supabase = getSupabase();
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 
