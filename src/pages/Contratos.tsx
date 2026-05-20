@@ -33,40 +33,54 @@ function numeroParaExtenso(valor: number): string {
     return partes.join(' e ');
   };
 
-  const partesMonetarias: string[] = [];
   const valorInteiro = Math.floor(valor);
   const centavos = Math.round((valor - valorInteiro) * 100);
+
+  let resultado = '';
 
   if (valorInteiro > 0) {
     const milhoes = Math.floor(valorInteiro / 1000000);
     const milhares = Math.floor((valorInteiro % 1000000) / 1000);
     const unidadesSimples = valorInteiro % 1000;
 
+    let partes: string[] = [];
+
     if (milhoes > 0) {
-      partesMonetarias.push(milhoes === 1 ? 'un milhão' : `${escreverGrupo(milhoes)} milhões`);
+      partes.push(milhoes === 1 ? 'um milhão' : `${escreverGrupo(milhoes)} milhões`);
     }
 
     if (milhares > 0) {
-      partesMonetarias.push(milhares === 1 ? 'mil' : `${escreverGrupo(milhares)} mil`);
+      partes.push(milhares === 1 ? 'mil' : escreverGrupo(milhares) + ' mil');
     }
 
     if (unidadesSimples > 0) {
-      partesMonetarias.push(escreverGrupo(unidadesSimples));
+      partes.push(escreverGrupo(unidadesSimples));
     }
 
-    partesMonetarias.push(valorInteiro === 1 ? 'real' : 'reais');
+    if (partes.length === 1) {
+      resultado = partes[0];
+    } else {
+      const ultimaParte = partes.pop();
+      resultado = partes.join(', ') + ' e ' + ultimaParte;
+    }
+
+    if (milhoes > 0 && milhares === 0 && unidadesSimples === 0) {
+      resultado += ' de reais';
+    } else {
+      resultado += valorInteiro === 1 ? ' real' : ' reais';
+    }
   }
 
   if (centavos > 0) {
     const parteCentavos = centavos === 1 ? 'um centavo' : `${escreverGrupo(centavos)} centavos`;
-    if (partesMonetarias.length > 0) {
-      partesMonetarias.push(`e ${parteCentavos}`);
+    if (resultado !== '') {
+      resultado += ` e ${parteCentavos}`;
     } else {
-      partesMonetarias.push(parteCentavos);
+      resultado = parteCentavos;
     }
   }
 
-  return partesMonetarias.join(' e ').replace(/e e/g, 'e');
+  return resultado;
 }
 
 function parseMoney(valueStr: string): number {
@@ -79,7 +93,7 @@ const DEFAULT_TEMPLATE_TERCEIRIZACAO = `CONTRATO PARTICULAR DE PRESTAÇÃO DE SE
 
 {{contratante_razao_social}}, pessoa jurídica de direito privado constituída sob a forma de sociedade empresária limitada, inscrita no Cadastro Nacional da Pessoa Jurídica do Ministério da Fazenda (CNPJ/MF) sob o n.º {{contratante_cnpj}}, e no Cadastro de Contribuintes do ICMS do Estado de Minas Gerais (CCICMS/MG) sob o n.º {{contratante_ie}}, estabelecida à {{contratante_endereco}}, representada por {{contratante_representante_nome}}, inscrito no Cadastro de Pessoas Físicas (CPF/MF) do Ministério da Fazenda sob o n.º {{contratante_representante_cpf}}, neste ato denominada CONTRATANTE e;
 
-{{contrada_razao_social}}, pessoa jurídica de direito privado constituída sob a forma de sociedade empresária limitada, inscrita no CNPJ‐MF sob o n.º {{contrada_cnpj}}, estabelecida na {{contrada_endereco}}, representada por {{contrada_representante_nome}}, inscrito no CPF/MF sob o n.º {{contrada_representante_cpf}}, neste ato denominada como CONTRATADA; têm entre si como justo e acertado o presente contrato de prestação de serviços que se regerá pelas seguintes cláusulas e condições.
+{{contratada_razao_social}}, pessoa jurídica de direito privado constituída sob a forma de sociedade empresária limitada, inscrita no CNPJ‐MF sob o n.º {{contratada_cnpj}}, estabelecida na {{contratada_endereco}}, representada por {{contratada_representante_nome}}, inscrito no CPF/MF sob o n.º {{contratada_representante_cpf}}, neste ato denominada como CONTRATADA; têm entre si como justo e acertado o presente contrato de prestação de serviços que se regerá pelas seguintes cláusulas e condições.
 
 CLÁUSULA PRIMEIRA – DO OBJETO
 O objeto do presente contrato é a prestação dos serviços profissionais e especializados pela CONTRATADA à CONTRATANTE sem qualquer exclusividade, e de acordo com as necessidades, condições e especificações informadas por esta última.
@@ -138,7 +152,7 @@ CONTRATANTE
 
 
 ________________________________________________________________
-{{contrada_razao_social}}
+{{contratada_razao_social}}
 CONTRATADA
 
 
@@ -150,9 +164,9 @@ const DEFAULT_TEMPLATE_ALUGUEL = `CONTRATO DE LOCAÇÃO DE IMÓVEL COMERCIAL
 
 LOCADOR: {{contratante_razao_social}}, com sede à {{contratante_endereco}}, inscrita no CNPJ sob o n.º {{contratante_cnpj}}, neste ato representada por {{contratante_representante_nome}}, CPF n.º {{contratante_representante_cpf}}.
 
-LOCATÁRIO: {{contrada_razao_social}}, com sede à {{contrada_endereco}}, inscrita no CNPJ sob o n.º {{contrada_cnpj}}, neste ato representada por {{contrada_representante_nome}}, CPF n.º {{contrada_representante_cpf}}.
+LOCATÁRIO: {{contratada_razao_social}}, com sede à {{contratada_endereco}}, inscrita no CNPJ sob o n.º {{contratada_cnpj}}, neste ato representada por {{contratada_representante_nome}}, CPF n.º {{contratada_representante_cpf}}.
 
-As partes acima qualificadas têm, entre si, justo e contratado a locação do imóvel comercial situado à {{contrada_endereco}}, mediante as seguintes cláusulas:
+As partes acima qualificadas têm, entre si, justo e contratado a locação do imóvel comercial situado à {{contratada_endereco}}, mediante as seguintes cláusulas:
 
 CLÁUSULA PRIMEIRA - DO VALOR DO ALUGUEL
 O valor do aluguel mensal é de R$ {{valor_servico}} ({{valor_servico_extenso}}), a ser pago até o {{dia_util_vencimento}}º dia útil de cada mês vencido.
@@ -174,7 +188,7 @@ LOCADOR
 
 
 ________________________________________________________________
-{{contrada_razao_social}}
+{{contratada_razao_social}}
 LOCATÁRIO`;
 
 interface ExtraData {
@@ -535,12 +549,12 @@ export function Contratos() {
     text = text.replace(/{{contratante_representante_cpf}}/g, contratanteExtra.representante_cpf || '______________');
 
     // Contratado / Locatário
-    text = text.replace(/{{contrada_razao_social}}/g, contratado?.razao_social || '____________________________');
-    text = text.replace(/{{contrada_cnpj}}/g, contratado?.cnpj || '________________');
-    text = text.replace(/{{contrada_ie}}/g, contratado?.ie || '__________________');
-    text = text.replace(/{{contrada_endereco}}/g, getFullAddress(contratadoExtra) || '________________________________________________________');
-    text = text.replace(/{{contrada_representante_nome}}/g, contratadoExtra.representante_nome || '____________________________');
-    text = text.replace(/{{contrada_representante_cpf}}/g, contratadoExtra.representante_cpf || '______________');
+    text = text.replace(/{{contratada_razao_social}}/g, contratado?.razao_social || '____________________________');
+    text = text.replace(/{{contratada_cnpj}}/g, contratado?.cnpj || '________________');
+    text = text.replace(/{{contratada_ie}}/g, contratado?.ie || '__________________');
+    text = text.replace(/{{contratada_endereco}}/g, getFullAddress(contratadoExtra) || '________________________________________________________');
+    text = text.replace(/{{contratada_representante_nome}}/g, contratadoExtra.representante_nome || '____________________________');
+    text = text.replace(/{{contratada_representante_cpf}}/g, contratadoExtra.representante_cpf || '______________');
 
     // Específicos
     text = text.replace(/{{valor_servico}}/g, valor || '_______');
