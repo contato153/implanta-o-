@@ -12,7 +12,7 @@ export function ProtectedLayout() {
     <div className="flex min-h-screen bg-[var(--color-brand-black)] overflow-x-hidden relative">
       <ForcePasswordChangeModal />
       {/* Spacer for fixed sidebar */}
-      <div className={`${isSidebarMinimized ? 'w-[80px]' : 'w-[260px]'} flex-shrink-0 transition-all duration-300`} />
+      <div className={`${isSidebarMinimized ? 'w-[80px]' : 'w-[260px]'} flex-shrink-0 transition-all duration-300 no-print`} />
       
       <Sidebar />
       <main className="flex-1 overflow-x-hidden">

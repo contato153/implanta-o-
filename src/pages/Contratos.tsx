@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Download, Building2, Printer, RotateCcw, Edit3, Eye, Settings, CreditCard, Calendar, Landmark, AlignLeft, AlignCenter, AlignRight, AlignJustify, Undo, Redo, Save } from 'lucide-react';
 import { getSupabase } from '../lib/supabase';
+import { getClients } from '../services/api';
 import { Empresa, Socio } from '../types';
 
 // --- FUNÇÃO AUXILIAR: NÚMEROS POR EXTENSO EM PORTUGUÊS ---
@@ -365,13 +366,12 @@ export function Contratos() {
     }
   }, [contratanteId, contratadoId, contratanteExtra, contratadoExtra, valor, diaUtil, dadosBancarios, foro, cidadeAssinatura, dataAssinatura, tipoContrato, isDirectEditing]);
 
-  // Carregar Empresas do Supabase
+  // Carregar Empresas
   useEffect(() => {
     async function fetchEmpresas() {
       try {
-        const supabase = getSupabase();
-        const { data } = await supabase.from('empresas').select('*').order('nome_fantasia');
-        if (data) {
+        const data = await getClients();
+        if (data && data.length > 0) {
           setEmpresas(data);
         }
       } catch (error) {
@@ -408,7 +408,12 @@ export function Contratos() {
         try {
           const supabase = getSupabase();
           const { data } = await supabase.from('socios').select('nome').eq('empresa_id', contratanteId).limit(1);
-          const socioNome = data && data[0] ? data[0].nome : '';
+          let socioNome = data && data[0] ? data[0].nome : '';
+          
+          if (!socioNome) {
+            if (contratanteId === '1') socioNome = 'Carlos Alpha';
+            else if (contratanteId === '2') socioNome = 'Roberto Beta';
+          }
           
           const defaultExtra = {
             ...emptyExtraData,
@@ -417,7 +422,15 @@ export function Contratos() {
           setContratanteExtra(defaultExtra);
           localStorage.setItem(`empresa_dados_contrato_${contratanteId}`, JSON.stringify(defaultExtra));
         } catch (e) {
-          setContratanteExtra(emptyExtraData);
+          let socioNome = '';
+          if (contratanteId === '1') socioNome = 'Carlos Alpha';
+          else if (contratanteId === '2') socioNome = 'Roberto Beta';
+          
+          const defaultExtra = {
+            ...emptyExtraData,
+            representante_nome: socioNome
+          };
+          setContratanteExtra(defaultExtra);
         }
       }
       fetchFirstSocio();
@@ -441,7 +454,12 @@ export function Contratos() {
         try {
           const supabase = getSupabase();
           const { data } = await supabase.from('socios').select('nome').eq('empresa_id', contratadoId).limit(1);
-          const socioNome = data && data[0] ? data[0].nome : '';
+          let socioNome = data && data[0] ? data[0].nome : '';
+
+          if (!socioNome) {
+            if (contratadoId === '1') socioNome = 'Carlos Alpha';
+            else if (contratadoId === '2') socioNome = 'Roberto Beta';
+          }
 
           const defaultExtra = {
             ...emptyExtraData,
@@ -450,7 +468,15 @@ export function Contratos() {
           setContratadoExtra(defaultExtra);
           localStorage.setItem(`empresa_dados_contrato_${contratadoId}`, JSON.stringify(defaultExtra));
         } catch (e) {
-          setContratadoExtra(emptyExtraData);
+          let socioNome = '';
+          if (contratadoId === '1') socioNome = 'Carlos Alpha';
+          else if (contratadoId === '2') socioNome = 'Roberto Beta';
+
+          const defaultExtra = {
+            ...emptyExtraData,
+            representante_nome: socioNome
+          };
+          setContratadoExtra(defaultExtra);
         }
       }
       fetchFirstSocio();
@@ -565,6 +591,84 @@ export function Contratos() {
       return;
     }
     window.print();
+  };
+
+  // AÇÕES DE ESTILIZAÇÃO DO MODO WORD
+  const applyBlockStyle = (property: string, value: string) => {
+    const selection = window.getSelection();
+    if (!selection) return;
+
+    try {
+      const range = selection.getRangeAt(0);
+      const container = range.commonAncestorContainer;
+
+      const getParagraphs = (node: Node): HTMLElement[] => {
+        const paragraphs: HTMLElement[] = [];
+        if (node.nodeType === Node.TEXT_NODE) {
+          const parent = node.parentElement;
+          const p = parent?.closest('p');
+          if (p) paragraphs.push(p);
+        } else if (node instanceof HTMLElement) {
+          const p = node.closest('p');
+          if (p) {
+            paragraphs.push(p);
+          } else {
+            const childPs = node.querySelectorAll('p');
+            childPs.forEach(child => paragraphs.push(child as HTMLElement));
+          }
+        }
+        return Array.from(new Set(paragraphs));
+      };
+
+      const paras = getParagraphs(container);
+      if (paras.length > 0) {
+        paras.forEach(p => {
+          p.style.setProperty(property, value);
+        });
+        
+        // Atualizar estado
+        const editor = document.querySelector('.print-preview-text');
+        if (editor) {
+          setEditedHtml(editor.innerHTML);
+        }
+      }
+    } catch (error) {
+      console.error('Error applying block style:', error);
+    }
+  };
+
+  const applyInlineStyle = (property: string, value: string) => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    if (selection.isCollapsed) {
+      applyBlockStyle(property, value);
+      return;
+    }
+
+    try {
+      const range = selection.getRangeAt(0);
+      const span = document.createElement('span');
+      span.style.setProperty(property, value);
+
+      span.appendChild(range.extractContents());
+      range.insertNode(span);
+
+      // Re-selecionar o nó inserido
+      selection.removeAllRanges();
+      const newRange = document.createRange();
+      newRange.selectNodeContents(span);
+      selection.addRange(newRange);
+
+      // Atualizar estado
+      const editor = document.querySelector('.print-preview-text');
+      if (editor) {
+        setEditedHtml(editor.innerHTML);
+      }
+    } catch (error) {
+      console.error('Error applying inline style, falling back to block style:', error);
+      applyBlockStyle(property, value);
+    }
   };
 
   // GERAR O HTML DO CONTRATO COM VARIÁVEIS SUBSTITUÍDAS
@@ -701,7 +805,7 @@ export function Contratos() {
             padding: 0 !important;
             margin: 0 !important;
           }
-          .print-preview-a4 {
+           .print-preview-a4 {
             border: none !important;
             box-shadow: none !important;
             padding: 0 !important;
@@ -710,6 +814,11 @@ export function Contratos() {
             color: black !important;
             width: 100% !important;
             height: auto !important;
+            min-height: 0 !important;
+            overflow: visible !important;
+          }
+          p, h1, h2, h3, h4, h5, h6 {
+            page-break-inside: avoid;
           }
           .print-preview-text {
             font-family: 'Arial', sans-serif !important;
@@ -1340,6 +1449,43 @@ export function Contratos() {
                 >
                   Tx
                 </button>
+                <div className="h-6 w-px bg-[#2A2A2A] mx-1" />
+
+                {/* Tamanho da Fonte */}
+                <select
+                  onChange={(e) => applyInlineStyle('font-size', e.target.value)}
+                  defaultValue=""
+                  className="bg-[#111111] border border-[#1E1E1E] rounded px-2 h-8 text-white text-xs focus:outline-none focus:border-[#F4C400] transition-all cursor-pointer font-medium"
+                  title="Tamanho da Fonte"
+                >
+                  <option value="" disabled>Tam. Fonte</option>
+                  <option value="9pt">9pt</option>
+                  <option value="10pt">10pt</option>
+                  <option value="11pt">11pt (Padrão)</option>
+                  <option value="12pt">12pt</option>
+                  <option value="14pt">14pt</option>
+                  <option value="16pt">16pt</option>
+                  <option value="18pt">18pt</option>
+                  <option value="20pt">20pt</option>
+                  <option value="24pt">24pt</option>
+                </select>
+
+                {/* Espaçamento entre Linhas */}
+                <select
+                  onChange={(e) => applyBlockStyle('line-height', e.target.value)}
+                  defaultValue=""
+                  className="bg-[#111111] border border-[#1E1E1E] rounded px-2 h-8 text-white text-xs focus:outline-none focus:border-[#F4C400] transition-all cursor-pointer font-medium"
+                  title="Espaçamento entre Linhas (Line Height)"
+                >
+                  <option value="" disabled>Espaçamento</option>
+                  <option value="1.0">1.0 (Simples)</option>
+                  <option value="1.15">1.15</option>
+                  <option value="1.2">1.2</option>
+                  <option value="1.3">1.3</option>
+                  <option value="1.5">1.5 (Padrão)</option>
+                  <option value="2.0">2.0 (Duplo)</option>
+                </select>
+
                 <div className="h-6 w-px bg-[#2A2A2A] mx-1" />
                 <button
                   type="button"
