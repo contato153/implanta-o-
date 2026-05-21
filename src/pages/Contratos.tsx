@@ -242,23 +242,25 @@ export function Contratos() {
 
   const previewRef = useRef<HTMLDivElement>(null);
 
-  // --- CARREGAR DADOS INICIAIS ---
-  useEffect(() => {
-    if (activeDocumentId) return;
-    if (contratanteId && contratadoId) {
-      const saved = localStorage.getItem(`contrato_editado_${tipoContrato}_${contratanteId}_${contratadoId}`);
-      setSavedContractHtml(saved);
-    } else {
-      setSavedContractHtml(null);
-    }
-  }, [contratanteId, contratadoId, tipoContrato, activeDocumentId]);
+  // --- CARREGAR MODELOS PERSONALIZADOS SALVOS (mas NÃO auto-carregar HTML estático por empresa) ---
+  // O preview sempre mostra a substituição dinâmica ao vivo.
+  // savedContractHtml só é preenchido quando o usuário EXPLICITAMENTE carrega um modelo salvo.
 
   useEffect(() => {
     const saved = localStorage.getItem('contratos_salvos_custom');
     if (saved) {
       try { setSavedDocuments(JSON.parse(saved)); } catch (e) { console.error(e); }
     }
+
+    // Limpar cache antigo de contratos estáticos por empresa (que congelavam o preview)
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('contrato_editado_')) keysToRemove.push(key);
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
   }, []);
+
 
   useEffect(() => {
     async function fetchEmpresas() {
@@ -476,10 +478,10 @@ export function Contratos() {
 
   const handleDiscardEditedContract = () => {
     if (confirm('Descartar edições manuais e voltar ao modelo dinâmico?')) {
-      const key = `contrato_editado_${tipoContrato}_${contratanteId}_${contratadoId}`;
-      localStorage.removeItem(key);
       setSavedContractHtml(null);
-      if (isDirectEditing) setEditedHtml(generateSubstitutedHtml());
+      setEditedHtml('');
+      setIsDirectEditing(false);
+      setActiveDocumentId(null);
     }
   };
 
@@ -1094,7 +1096,7 @@ export function Contratos() {
             <button
               onClick={() => {
                 if (!contratanteId || !contratadoId) { alert('Selecione o Contratante e o Contratado antes de editar.'); return; }
-                if (!isDirectEditing) setEditedHtml(savedContractHtml || generateSubstitutedHtml());
+                if (!isDirectEditing) setEditedHtml(generateSubstitutedHtml());
                 setIsDirectEditing(!isDirectEditing);
               }}
               className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-bold transition-all ${isDirectEditing ? 'bg-blue-600 border-blue-500 text-white hover:bg-blue-500 shadow-md shadow-blue-600/20' : 'border-[#1E1E1E] text-[#BDBDBD] hover:text-white hover:bg-[#1E1E1E]'}`}
@@ -1275,14 +1277,14 @@ export function Contratos() {
               </div>
             )}
 
-            {/* ALERTA DE VERSÃO SALVA */}
+            {/* ALERTA: usuário está vendo modelo personalizado salvo */}
             {!isDirectEditing && savedContractHtml && (
               <div className="flex items-center justify-between gap-4 bg-amber-950/40 border border-amber-900/50 rounded-xl p-4 mb-4 no-print w-full max-w-[794px]">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-amber-500/20 rounded-full text-amber-500"><FileText size={18} /></div>
                   <div>
-                    <p className="font-bold text-white text-xs">Exibindo Versão Personalizada Salva</p>
-                    <p className="text-[#BDBDBD] text-[11px]">Você fez edições manuais. Parâmetros ao lado não serão aplicados até voltar ao padrão.</p>
+                    <p className="font-bold text-white text-xs">Exibindo Modelo Personalizado: {savedDocuments.find(d => d.id === activeDocumentId)?.name || 'Salvo'}</p>
+                    <p className="text-[#BDBDBD] text-[11px]">Este é um modelo fixo salvo. Para retornar ao preview dinâmico com os dados atuais, clique em "Voltar ao Dinâmico".</p>
                   </div>
                 </div>
                 <button onClick={handleDiscardEditedContract} className="px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 border border-red-800 text-red-200 text-xs font-bold rounded-lg transition-all whitespace-nowrap">Voltar ao Dinâmico</button>
@@ -1296,6 +1298,7 @@ export function Contratos() {
               style={{ width: '794px', minHeight: '1123px', padding: '2.5cm', boxSizing: 'border-box' }}
             >
               {isDirectEditing ? (
+                /* MODO WORD: contenteditable com o HTML editado */
                 <div
                   className="print-preview-text text-gray-900 outline-none w-full min-h-[900px]"
                   contentEditable
@@ -1304,27 +1307,20 @@ export function Contratos() {
                   dangerouslySetInnerHTML={{ __html: editedHtml }}
                   style={{ fontFamily: 'Arial, sans-serif', outline: 'none', border: 'none' }}
                 />
+              ) : savedContractHtml && activeDocumentId ? (
+                /* MODELO PERSONALIZADO SALVO: mostra o HTML fixo do modelo */
+                <div
+                  className="print-preview-text text-gray-900"
+                  dangerouslySetInnerHTML={{ __html: savedContractHtml }}
+                  style={{ fontFamily: 'Arial, sans-serif' }}
+                />
               ) : (
-                <div className="print-preview-text text-gray-900" style={{ fontFamily: 'Arial, sans-serif' }}>
-                  {savedContractHtml ? (
-                    <div dangerouslySetInnerHTML={{ __html: savedContractHtml }} style={{ fontFamily: 'Arial, sans-serif' }} />
-                  ) : (
-                    getSubstitutedText().split('\n').map((line, idx) => {
-                      const trimmed = line.trim();
-                      if (!trimmed) return <div key={idx} style={{ height: '6pt' }} />;
-                      if (trimmed.toUpperCase().startsWith('CONTRATO')) {
-                        return <p key={idx} className="text-center font-bold uppercase mb-4" style={{ fontFamily: 'Arial', fontSize: '13pt', lineHeight: '1.2', textAlign: 'center' }}>{line}</p>;
-                      }
-                      if (trimmed.toUpperCase().startsWith('CLÁUSULA')) {
-                        return <p key={idx} className="font-bold mt-4 mb-2 text-left" style={{ fontFamily: 'Arial', fontSize: '11pt', lineHeight: '1.2', textAlign: 'left' }}>{line}</p>;
-                      }
-                      if (trimmed.startsWith('___') || trimmed.includes('CONTRATANTE') || trimmed.includes('CONTRATADA') || trimmed.includes('LOCADOR') || trimmed.includes('LOCATÁRIO') || trimmed.includes('Testemunha')) {
-                        return <p key={idx} className="text-left mt-2" style={{ fontFamily: 'Arial', fontSize: '11pt', lineHeight: '1.2', textAlign: 'left', overflowWrap: 'break-word' }}>{line}</p>;
-                      }
-                      return <p key={idx} className="text-justify mb-2" style={{ fontFamily: 'Arial', fontSize: '11pt', lineHeight: '1.5', textAlign: 'justify', textJustify: 'inter-word', textAlignLast: 'left', overflowWrap: 'break-word' }}>{line}</p>;
-                    })
-                  )}
-                </div>
+                /* MODO DINÂMICO: SEMPRE renderiza com os valores atuais dos campos */
+                <div
+                  className="print-preview-text text-gray-900"
+                  dangerouslySetInnerHTML={{ __html: generateSubstitutedHtml() }}
+                  style={{ fontFamily: 'Arial, sans-serif' }}
+                />
               )}
 
               <div className="mt-8 pt-2 border-t border-gray-200 text-center text-[10px] text-gray-400 no-print">
