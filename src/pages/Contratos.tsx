@@ -222,12 +222,6 @@ export function Contratos() {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [newDocName, setNewDocName] = useState('');
 
-  // CEP Loading
-  const [cepLoadingContratante, setCepLoadingContratante] = useState(false);
-  const [cepLoadingContratado, setCepLoadingContratado] = useState(false);
-  const [cepErrorContratante, setCepErrorContratante] = useState('');
-  const [cepErrorContratado, setCepErrorContratado] = useState('');
-
   // PDF + Validação
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
@@ -278,57 +272,76 @@ export function Contratos() {
     else setTemplateText(tipoContrato === 'terceirizacao' ? DEFAULT_TEMPLATE_TERCEIRIZACAO : DEFAULT_TEMPLATE_ALUGUEL);
   }, [tipoContrato]);
 
+  // Carregar dados extras do Contratante — primeiro do localStorage (memória), senão busca da empresa
   useEffect(() => {
     if (!contratanteId) { setContratanteExtra(emptyExtraData); return; }
+
     const saved = localStorage.getItem(`empresa_dados_contrato_${contratanteId}`);
     if (saved) {
-      setContratanteExtra(JSON.parse(saved));
-    } else {
-      async function fetchFirstSocio() {
-        try {
-          const supabase = getSupabase();
-          const { data } = await supabase.from('socios').select('nome').eq('empresa_id', contratanteId).limit(1);
-          let socioNome = data && data[0] ? data[0].nome : '';
-          if (!socioNome) { if (contratanteId === '1') socioNome = 'Carlos Alpha'; else if (contratanteId === '2') socioNome = 'Roberto Beta'; }
-          const defaultExtra = { ...emptyExtraData, representante_nome: socioNome };
-          setContratanteExtra(defaultExtra);
-          localStorage.setItem(`empresa_dados_contrato_${contratanteId}`, JSON.stringify(defaultExtra));
-        } catch {
-          let socioNome = '';
-          if (contratanteId === '1') socioNome = 'Carlos Alpha'; else if (contratanteId === '2') socioNome = 'Roberto Beta';
-          const defaultExtra = { ...emptyExtraData, representante_nome: socioNome };
-          setContratanteExtra(defaultExtra);
-        }
-      }
-      fetchFirstSocio();
+      // Dados já preenchidos antes: restaura automaticamente da memória
+      try { setContratanteExtra(JSON.parse(saved)); } catch { setContratanteExtra(emptyExtraData); }
+      return;
     }
-  }, [contratanteId]);
 
+    // Primeira vez selecionando esta empresa: busca o nome do representante nos sócios cadastrados
+    // e usa ponto_focal_nome da empresa como fallback
+    const empresa = empresas.find(e => e.id === contratanteId);
+    const pontoFocal = empresa?.ponto_focal_nome || '';
+
+    async function inicializarDadosEmpresa() {
+      try {
+        const supabase = getSupabase();
+        const { data: socios } = await supabase
+          .from('socios')
+          .select('nome')
+          .eq('empresa_id', contratanteId)
+          .limit(5);
+
+        const socioNome = socios && socios[0] ? socios[0].nome : pontoFocal;
+        const defaultExtra: ExtraData = { ...emptyExtraData, representante_nome: socioNome };
+        setContratanteExtra(defaultExtra);
+        localStorage.setItem(`empresa_dados_contrato_${contratanteId}`, JSON.stringify(defaultExtra));
+      } catch {
+        const defaultExtra: ExtraData = { ...emptyExtraData, representante_nome: pontoFocal };
+        setContratanteExtra(defaultExtra);
+      }
+    }
+    inicializarDadosEmpresa();
+  }, [contratanteId, empresas]);
+
+  // Carregar dados extras do Contratado — mesmo padrão
   useEffect(() => {
     if (!contratadoId) { setContratadoExtra(emptyExtraData); return; }
+
     const saved = localStorage.getItem(`empresa_dados_contrato_${contratadoId}`);
     if (saved) {
-      setContratadoExtra(JSON.parse(saved));
-    } else {
-      async function fetchFirstSocio() {
-        try {
-          const supabase = getSupabase();
-          const { data } = await supabase.from('socios').select('nome').eq('empresa_id', contratadoId).limit(1);
-          let socioNome = data && data[0] ? data[0].nome : '';
-          if (!socioNome) { if (contratadoId === '1') socioNome = 'Carlos Alpha'; else if (contratadoId === '2') socioNome = 'Roberto Beta'; }
-          const defaultExtra = { ...emptyExtraData, representante_nome: socioNome };
-          setContratadoExtra(defaultExtra);
-          localStorage.setItem(`empresa_dados_contrato_${contratadoId}`, JSON.stringify(defaultExtra));
-        } catch {
-          let socioNome = '';
-          if (contratadoId === '1') socioNome = 'Carlos Alpha'; else if (contratadoId === '2') socioNome = 'Roberto Beta';
-          const defaultExtra = { ...emptyExtraData, representante_nome: socioNome };
-          setContratadoExtra(defaultExtra);
-        }
-      }
-      fetchFirstSocio();
+      try { setContratadoExtra(JSON.parse(saved)); } catch { setContratadoExtra(emptyExtraData); }
+      return;
     }
-  }, [contratadoId]);
+
+    const empresa = empresas.find(e => e.id === contratadoId);
+    const pontoFocal = empresa?.ponto_focal_nome || '';
+
+    async function inicializarDadosEmpresa() {
+      try {
+        const supabase = getSupabase();
+        const { data: socios } = await supabase
+          .from('socios')
+          .select('nome')
+          .eq('empresa_id', contratadoId)
+          .limit(5);
+
+        const socioNome = socios && socios[0] ? socios[0].nome : pontoFocal;
+        const defaultExtra: ExtraData = { ...emptyExtraData, representante_nome: socioNome };
+        setContratadoExtra(defaultExtra);
+        localStorage.setItem(`empresa_dados_contrato_${contratadoId}`, JSON.stringify(defaultExtra));
+      } catch {
+        const defaultExtra: ExtraData = { ...emptyExtraData, representante_nome: pontoFocal };
+        setContratadoExtra(defaultExtra);
+      }
+    }
+    inicializarDadosEmpresa();
+  }, [contratadoId, empresas]);
 
   useEffect(() => {
     if (!isDirectEditing) setEditedHtml('');
@@ -346,35 +359,6 @@ export function Contratos() {
       }
     }
   }, [contratanteId, contratadoId, tipoContrato]);
-
-  // --- BUSCA CEP ---
-  const fetchCEP = async (cep: string, tipo: 'contratante' | 'contratado') => {
-    const cleanCep = cep.replace(/\D/g, '');
-    if (cleanCep.length !== 8) return;
-
-    const setLoading = tipo === 'contratante' ? setCepLoadingContratante : setCepLoadingContratado;
-    const setError = tipo === 'contratante' ? setCepErrorContratante : setCepErrorContratado;
-    const handleChange = tipo === 'contratante' ? handleContratanteExtraChange : handleContratadoExtraChange;
-
-    setLoading(true);
-    setError('');
-    try {
-      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
-      const data = await response.json();
-      if (data.erro) {
-        setError('CEP não encontrado');
-      } else {
-        handleChange('rua', data.logradouro || '');
-        handleChange('bairro', data.bairro || '');
-        handleChange('cidade', data.localidade || '');
-        handleChange('uf', data.uf || '');
-      }
-    } catch {
-      setError('Erro ao buscar CEP');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // --- VALIDAÇÃO ---
   const getValidationStatus = (): ValidationCheck[] => [
@@ -867,32 +851,10 @@ export function Contratos() {
                   <div className="space-y-3 bg-[#111111] p-3 rounded-lg border border-[#1E1E1E]">
                     <p className="text-[10px] text-[#F4C400] font-bold uppercase tracking-widest">Motor de Dados — Memorização Ativa</p>
 
-                    {/* CEP com busca automática */}
-                    <div>
-                      <label className="block text-[10px] text-[#888888] mb-0.5">CEP * <span className="text-[#F4C400]">(preenchimento automático)</span></label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          value={contratanteExtra.cep}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            handleContratanteExtraChange('cep', val);
-                            setCepErrorContratante('');
-                            if (val.replace(/\D/g, '').length === 8) fetchCEP(val, 'contratante');
-                          }}
-                          placeholder="Ex: 30130-003"
-                          maxLength={9}
-                          className="w-full bg-[#161616] border border-[#1E1E1E] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#F4C400] pr-7"
-                        />
-                        {cepLoadingContratante && <Loader2 size={12} className="absolute right-2 top-1.5 text-[#F4C400] animate-spin" />}
-                      </div>
-                      {cepErrorContratante && <p className="text-red-400 text-[10px] mt-0.5">{cepErrorContratante}</p>}
-                    </div>
-
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="block text-[10px] text-[#888888] mb-0.5">Rua *</label>
-                        <input type="text" value={contratanteExtra.rua} onChange={(e) => handleContratanteExtraChange('rua', e.target.value)} placeholder="Preenchido pelo CEP" className="w-full bg-[#161616] border border-[#1E1E1E] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#F4C400]" />
+                        <input type="text" value={contratanteExtra.rua} onChange={(e) => handleContratanteExtraChange('rua', e.target.value)} placeholder="Ex: Av. Afonso Pena" className="w-full bg-[#161616] border border-[#1E1E1E] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#F4C400]" />
                       </div>
                       <div>
                         <label className="block text-[10px] text-[#888888] mb-0.5">Número *</label>
@@ -900,11 +862,15 @@ export function Contratos() {
                       </div>
                       <div>
                         <label className="block text-[10px] text-[#888888] mb-0.5">Bairro *</label>
-                        <input type="text" value={contratanteExtra.bairro} onChange={(e) => handleContratanteExtraChange('bairro', e.target.value)} placeholder="Preenchido pelo CEP" className="w-full bg-[#161616] border border-[#1E1E1E] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#F4C400]" />
+                        <input type="text" value={contratanteExtra.bairro} onChange={(e) => handleContratanteExtraChange('bairro', e.target.value)} placeholder="Ex: Centro" className="w-full bg-[#161616] border border-[#1E1E1E] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#F4C400]" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-[#888888] mb-0.5">CEP</label>
+                        <input type="text" value={contratanteExtra.cep} onChange={(e) => handleContratanteExtraChange('cep', e.target.value)} placeholder="Ex: 30130-003" maxLength={9} className="w-full bg-[#161616] border border-[#1E1E1E] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#F4C400]" />
                       </div>
                       <div>
                         <label className="block text-[10px] text-[#888888] mb-0.5">Cidade *</label>
-                        <input type="text" value={contratanteExtra.cidade} onChange={(e) => handleContratanteExtraChange('cidade', e.target.value)} placeholder="Preenchido pelo CEP" className="w-full bg-[#161616] border border-[#1E1E1E] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#F4C400]" />
+                        <input type="text" value={contratanteExtra.cidade} onChange={(e) => handleContratanteExtraChange('cidade', e.target.value)} placeholder="Ex: Belo Horizonte" className="w-full bg-[#161616] border border-[#1E1E1E] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#F4C400]" />
                       </div>
                       <div>
                         <label className="block text-[10px] text-[#888888] mb-0.5">Estado (UF) *</label>
@@ -944,31 +910,10 @@ export function Contratos() {
                   <div className="space-y-3 bg-[#111111] p-3 rounded-lg border border-[#1E1E1E]">
                     <p className="text-[10px] text-[#F4C400] font-bold uppercase tracking-widest">Motor de Dados — Memorização Ativa</p>
 
-                    <div>
-                      <label className="block text-[10px] text-[#888888] mb-0.5">CEP * <span className="text-[#F4C400]">(preenchimento automático)</span></label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          value={contratadoExtra.cep}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            handleContratadoExtraChange('cep', val);
-                            setCepErrorContratado('');
-                            if (val.replace(/\D/g, '').length === 8) fetchCEP(val, 'contratado');
-                          }}
-                          placeholder="Ex: 30160-011"
-                          maxLength={9}
-                          className="w-full bg-[#161616] border border-[#1E1E1E] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#F4C400] pr-7"
-                        />
-                        {cepLoadingContratado && <Loader2 size={12} className="absolute right-2 top-1.5 text-[#F4C400] animate-spin" />}
-                      </div>
-                      {cepErrorContratado && <p className="text-red-400 text-[10px] mt-0.5">{cepErrorContratado}</p>}
-                    </div>
-
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="block text-[10px] text-[#888888] mb-0.5">Rua *</label>
-                        <input type="text" value={contratadoExtra.rua} onChange={(e) => handleContratadoExtraChange('rua', e.target.value)} placeholder="Preenchido pelo CEP" className="w-full bg-[#161616] border border-[#1E1E1E] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#F4C400]" />
+                        <input type="text" value={contratadoExtra.rua} onChange={(e) => handleContratadoExtraChange('rua', e.target.value)} placeholder="Ex: Rua da Bahia" className="w-full bg-[#161616] border border-[#1E1E1E] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#F4C400]" />
                       </div>
                       <div>
                         <label className="block text-[10px] text-[#888888] mb-0.5">Número *</label>
@@ -976,11 +921,15 @@ export function Contratos() {
                       </div>
                       <div>
                         <label className="block text-[10px] text-[#888888] mb-0.5">Bairro *</label>
-                        <input type="text" value={contratadoExtra.bairro} onChange={(e) => handleContratadoExtraChange('bairro', e.target.value)} placeholder="Preenchido pelo CEP" className="w-full bg-[#161616] border border-[#1E1E1E] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#F4C400]" />
+                        <input type="text" value={contratadoExtra.bairro} onChange={(e) => handleContratadoExtraChange('bairro', e.target.value)} placeholder="Ex: Lourdes" className="w-full bg-[#161616] border border-[#1E1E1E] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#F4C400]" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-[#888888] mb-0.5">CEP</label>
+                        <input type="text" value={contratadoExtra.cep} onChange={(e) => handleContratadoExtraChange('cep', e.target.value)} placeholder="Ex: 30160-011" maxLength={9} className="w-full bg-[#161616] border border-[#1E1E1E] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#F4C400]" />
                       </div>
                       <div>
                         <label className="block text-[10px] text-[#888888] mb-0.5">Cidade *</label>
-                        <input type="text" value={contratadoExtra.cidade} onChange={(e) => handleContratadoExtraChange('cidade', e.target.value)} placeholder="Preenchido pelo CEP" className="w-full bg-[#161616] border border-[#1E1E1E] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#F4C400]" />
+                        <input type="text" value={contratadoExtra.cidade} onChange={(e) => handleContratadoExtraChange('cidade', e.target.value)} placeholder="Ex: Belo Horizonte" className="w-full bg-[#161616] border border-[#1E1E1E] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#F4C400]" />
                       </div>
                       <div>
                         <label className="block text-[10px] text-[#888888] mb-0.5">Estado (UF) *</label>
@@ -1336,7 +1285,7 @@ export function Contratos() {
         <div className="p-2 bg-[#F4C400]/20 rounded-full text-[#F4C400]"><FileText size={18} /></div>
         <div>
           <p className="font-bold text-white mb-1">Como funciona a memorização?</p>
-          <p>Ao preencher o endereço ou CPF do representante de uma empresa, o sistema armazena esses dados permanentemente no navegador. Na próxima seleção, os dados são restaurados automaticamente. O CEP preenche automaticamente Rua, Bairro, Cidade e Estado via ViaCEP.</p>
+          <p>Ao preencher os dados de endereço e representante de uma empresa, o sistema salva automaticamente essas informações no navegador. Na próxima vez que a empresa for selecionada, todos os dados são restaurados automaticamente — sem precisar redigitar nada.</p>
         </div>
       </div>
 
