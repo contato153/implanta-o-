@@ -1808,44 +1808,53 @@ export const TasksTable: React.FC<TasksTableProps> = ({
         </div>
 
         {selectedTasks.length > 0 && (
-          <div className="flex flex-wrap items-center gap-4 p-4 bg-brand-gray rounded-lg mb-4 border border-brand-accent/20">
-            <span className="text-brand-text-primary font-bold">{selectedTasks.length} tarefas selecionadas</span>
-            
-            <div className="flex items-center gap-2 border-l border-brand-gray/50 pl-4">
-              <span className="text-xs text-brand-text-muted uppercase font-bold">Aplicação:</span>
-              <button 
-                onClick={() => handleBulkUpdate('aplicacao', 'APLICA')} 
-                className="px-3 py-1.5 bg-brand-accent text-brand-black font-bold rounded hover:bg-brand-accent-hover transition-all text-[10px] uppercase tracking-widest"
-              >
-                APLICA
-              </button>
-              <button 
-                onClick={() => handleBulkUpdate('aplicacao', 'NÃO APLICA')} 
-                className="px-3 py-1.5 bg-red-600 text-white font-bold rounded hover:bg-red-500 transition-all text-[10px] uppercase tracking-widest"
-              >
-                NÃO APLICA
-              </button>
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex flex-wrap items-center justify-between gap-4 p-4 bg-brand-dark/95 backdrop-blur-md rounded-xl border border-brand-accent/30 shadow-2xl animate-in slide-in-from-bottom-5 duration-300 w-[95%] max-w-4xl">
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="text-brand-text-primary font-bold text-sm">{selectedTasks.length} tarefas selecionadas</span>
+              
+              <div className="flex items-center gap-2 border-l border-brand-gray/50 pl-4">
+                <span className="text-xs text-brand-text-muted uppercase font-bold">Aplicação:</span>
+                <button 
+                  onClick={() => handleBulkUpdate('aplicacao', 'APLICA')} 
+                  className="px-3 py-1.5 bg-brand-accent text-brand-black font-bold rounded hover:bg-brand-accent-hover transition-all text-[10px] uppercase tracking-widest cursor-pointer"
+                >
+                  APLICA
+                </button>
+                <button 
+                  onClick={() => handleBulkUpdate('aplicacao', 'NÃO APLICA')} 
+                  className="px-3 py-1.5 bg-red-600 text-white font-bold rounded hover:bg-red-500 transition-all text-[10px] uppercase tracking-widest cursor-pointer"
+                >
+                  NÃO APLICA
+                </button>
+              </div>
+
+              {role === 'admin' && (
+                <div className="flex items-center gap-2 border-l border-brand-gray/50 pl-4">
+                  <span className="text-xs text-brand-text-muted uppercase font-bold">Departamento:</span>
+                  <select
+                    onChange={(e) => handleBulkUpdate('proprietario', e.target.value)}
+                    value=""
+                    className="px-3 py-1.5 bg-brand-black text-brand-text-primary font-bold rounded hover:bg-brand-gray transition-all text-[10px] uppercase tracking-widest border border-brand-gray/50 cursor-pointer outline-none"
+                  >
+                    <option value="" disabled>Alterar para...</option>
+                    <option value="">-</option>
+                    <option value="DITE">DITE</option>
+                    <option value="FISCAL">FISCAL</option>
+                    <option value="CLIENTE">CLIENTE</option>
+                    <option value="PESSOAL">PESSOAL</option>
+                    <option value="CONTÁBIL">CONTÁBIL</option>
+                    <option value="SUCESSO DO CLIENTE">SUCESSO DO CLIENTE</option>
+                  </select>
+                </div>
+              )}
             </div>
 
-            {role === 'admin' && (
-              <div className="flex items-center gap-2 border-l border-brand-gray/50 pl-4">
-                <span className="text-xs text-brand-text-muted uppercase font-bold">Departamento:</span>
-                <select
-                  onChange={(e) => handleBulkUpdate('proprietario', e.target.value)}
-                  value=""
-                  className="px-3 py-1.5 bg-brand-black text-brand-text-primary font-bold rounded hover:bg-brand-gray transition-all text-[10px] uppercase tracking-widest border border-brand-gray/50 cursor-pointer outline-none"
-                >
-                  <option value="" disabled>Alterar para...</option>
-                  <option value="">-</option>
-                  <option value="DITE">DITE</option>
-                  <option value="FISCAL">FISCAL</option>
-                  <option value="CLIENTE">CLIENTE</option>
-                  <option value="PESSOAL">PESSOAL</option>
-                  <option value="CONTÁBIL">CONTÁBIL</option>
-                  <option value="SUCESSO DO CLIENTE">SUCESSO DO CLIENTE</option>
-                </select>
-              </div>
-            )}
+            <button
+              onClick={() => setSelectedTasks([])}
+              className="px-3 py-1.5 text-xs text-brand-text-muted hover:text-brand-text-primary border border-brand-gray rounded hover:bg-brand-gray transition-all cursor-pointer font-bold uppercase tracking-wider text-[10px]"
+            >
+              Limpar Seleção
+            </button>
           </div>
         )}
         {/* Desktop View: Table */}
