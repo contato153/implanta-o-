@@ -1458,11 +1458,11 @@ export const TasksTable: React.FC<TasksTableProps> = ({
       prioridade: role === 'admin' ? updatedTask.prioridade : editingTask.prioridade,
       status: updatedTask.status,
       proprietario: updatedTask.proprietario,
-      data_tarefa: updatedTask.data_tarefa,
-      data_termino: updatedTask.data_termino,
+      data_tarefa: updatedTask.data_tarefa || null,
+      data_termino: updatedTask.data_termino || null,
       aplicacao: updatedTask.aplicacao,
       observacoes: updatedTask.observacoes,
-      data_conclusao: updatedTask.data_conclusao,
+      data_conclusao: updatedTask.data_conclusao || null,
       // ✅ concluida coerente com status (normalizado)
       concluida: normalizeStatus(updatedTask.status) === 'CONCLUIDA'
     };
@@ -1553,11 +1553,11 @@ export const TasksTable: React.FC<TasksTableProps> = ({
         prioridade: formData.prioridade,
         proprietario: formData.proprietario,
         status: formData.status,
-        data_tarefa: formData.data_tarefa,
-        data_termino: formData.data_termino,
+        data_tarefa: formData.data_tarefa || null,
+        data_termino: formData.data_termino || null,
         aplicacao: formData.aplicacao,
         observacoes: formData.observacoes,
-        data_conclusao: formData.data_conclusao,
+        data_conclusao: formData.data_conclusao || null,
         concluida: normalizeStatus(formData.status) === 'CONCLUIDA'
       };
 
