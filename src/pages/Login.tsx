@@ -57,14 +57,22 @@ export function Login() {
 
       <div className="max-w-md w-full rounded-2xl shadow-2xl border p-8 relative z-10 bg-[var(--color-brand-dark)] border-[var(--color-brand-gray)]">
         
-        {/* Logo */}
-        <div className="flex justify-center items-center gap-2 mb-8">
+        {/* Logos */}
+        <div className="flex flex-col items-center gap-4 mb-8">
           <img 
-            src={currentLogo} 
-            alt="L&M Logo" 
-            className="h-16 w-auto object-contain"
-            referrerPolicy="no-referrer"
+            src="/logo-implantacao.png" 
+            alt="Implantação Logo" 
+            className="h-48 w-auto object-contain login-logo-implantacao"
           />
+          <div className="flex flex-col items-center gap-1 mt-1">
+            <span className="text-[9px] uppercase tracking-wider text-[var(--color-brand-text-muted)] opacity-60 font-semibold">Parceria</span>
+            <img 
+              src={currentLogo} 
+              alt="L&M Logo" 
+              className="h-7 w-auto object-contain"
+              referrerPolicy="no-referrer"
+            />
+          </div>
         </div>
 
         <div className="text-center mb-8">

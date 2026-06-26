@@ -54,13 +54,32 @@ export function Sidebar() {
         >
           <Menu size={16} />
         </button>
-        <div className="flex justify-center items-center mb-4 py-2">
-          <img 
-            src="https://i.imgur.com/8SuQt5R.png" 
-            alt="L&M Logo" 
-            className={`object-contain transition-all duration-300 ${isSidebarMinimized ? 'h-8 w-8' : 'h-12 w-auto'}`}
-            referrerPolicy="no-referrer"
-          />
+        <div className="flex flex-col items-center justify-center mb-4 py-2 gap-2">
+          {isSidebarMinimized ? (
+            <div className="flex items-center justify-center">
+              <img 
+                src="/logo-implantacao.png" 
+                alt="Implantação Icon" 
+                className="h-8 w-8 object-cover object-left rounded-md"
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2.5 w-full">
+              <div className="flex justify-center items-center w-full max-w-[240px]">
+                <img 
+                  src="/logo-implantacao.png" 
+                  alt="Implantação Logo" 
+                  className="h-20 w-auto object-contain"
+                />
+              </div>
+              <img 
+                src="https://i.imgur.com/8SuQt5R.png" 
+                alt="L&M Logo" 
+                className="h-5 w-auto object-contain opacity-75 hover:opacity-100 transition-opacity"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+          )}
         </div>
       </div>
 

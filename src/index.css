@@ -266,3 +266,8 @@ body.light-theme .theme-border-soft {
 .highlighted-task-row td:last-child {
   box-shadow: inset -2px 0 0 0 var(--color-brand-accent), inset 0 2px 0 0 var(--color-brand-accent), inset 0 -2px 0 0 var(--color-brand-accent) !important;
 }
+
+/* In light theme, the login screen has a white card, so we invert the logo colors to make the white text black, and rotate hue back to preserve the turquoise color. */
+body.light-theme .login-logo-implantacao {
+  filter: invert(1) hue-rotate(180deg) contrast(1.1);
+}
